@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: triton-postgres
+    environment:
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - triton-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: triton-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - triton-net
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: triton-auth
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: db_auth
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SESSION_SECRET: triton_session_super_secret_2024_change_this
+      SESSION_MAX_AGE_MS: 28800000
+      PORT: 4001
+    ports:
+      - "4001:4001"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - triton-net
+
+  user-service:
+    build: ./services/user-service
+    container_name: triton-user
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: db_user
+      PORT: 4002
+    ports:
+      - "4002:4002"
+    depends_on:
+      - postgres
+    networks:
+      - triton-net
+
+  soal-service:
+    build: ./services/soal-service
+    container_name: triton-soal
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: db_soal
+      PORT: 4003
+    ports:
+      - "4003:4003"
+    depends_on:
+      - postgres
+    networks:
+      - triton-net
+
+  jawaban-service:
+    build: ./services/jawaban-service
+    container_name: triton-jawaban
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: db_jawaban
+      SOAL_SERVICE_URL: http://soal-service:4003
+      USER_SERVICE_URL: http://user-service:4002
+      PORT: 4004
+    ports:
+      - "4004:4004"
+    depends_on:
+      - postgres
+    networks:
+      - triton-net
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: triton-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:4001
+      USER_SERVICE_URL: http://user-service:4002
+      SOAL_SERVICE_URL: http://soal-service:4003
+      JAWABAN_SERVICE_URL: http://jawaban-service:4004
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth-service
+      - user-service
+      - soal-service
+      - jawaban-service
+    networks:
+      - triton-net
+
+networks:
+  triton-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
