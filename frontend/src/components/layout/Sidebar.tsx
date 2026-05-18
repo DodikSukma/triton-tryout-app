@@ -1,0 +1,187 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import {
+  LogOut, LayoutDashboard, Users, BookOpen, GraduationCap,
+  User, BarChart2, FileText, X,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import api from '@/lib/api'
+import { Role } from '@/types'
+import { useProfile } from '@/hooks/useAuth'
+
+type NavItem =
+  | { type: 'link'; label: string; href: string; icon: React.ReactNode }
+  | { type: 'divider' }
+
+const adminNav: NavItem[] = [
+  { type: 'link', label: 'Dashboard',    href: '/admin/dashboard',        icon: <LayoutDashboard size={18} /> },
+  { type: 'link', label: 'Kelola Guru',  href: '/admin/users?role=guru',  icon: <GraduationCap size={18} /> },
+  { type: 'link', label: 'Kelola Siswa', href: '/admin/users?role=siswa', icon: <Users size={18} /> },
+  { type: 'divider' },
+  { type: 'link', label: 'Profil Saya',  href: '/admin/profil',           icon: <User size={18} /> },
+]
+
+const guruNav: NavItem[] = [
+  { type: 'link', label: 'Dashboard',   href: '/guru/dashboard', icon: <LayoutDashboard size={18} /> },
+  { type: 'link', label: 'Tryout Saya', href: '/guru/tryout',    icon: <BookOpen size={18} /> },
+  { type: 'divider' },
+  { type: 'link', label: 'Profil Saya', href: '/guru/profil',    icon: <User size={18} /> },
+]
+
+const siswaNav: NavItem[] = [
+  { type: 'link', label: 'Dashboard',       href: '/siswa/dashboard', icon: <LayoutDashboard size={18} /> },
+  { type: 'link', label: 'Tryout Tersedia', href: '/siswa/tryout',    icon: <FileText size={18} /> },
+  { type: 'link', label: 'Riwayat & Nilai', href: '/siswa/riwayat',   icon: <BarChart2 size={18} /> },
+  { type: 'divider' },
+  { type: 'link', label: 'Profil Saya',     href: '/siswa/profil',    icon: <User size={18} /> },
+]
+
+const navByRole: Record<Role, NavItem[]> = { admin: adminNav, guru: guruNav, siswa: siswaNav }
+
+interface SidebarProps {
+  role: Role
+  fallbackName?: string
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobileClose }: SidebarProps) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { profile } = useProfile()
+  const navItems = navByRole[role]
+
+  const displayName = profile?.nama_lengkap || fallbackName || 'User'
+  const initial = displayName.charAt(0).toUpperCase()
+
+  async function handleLogout() {
+    try {
+      await api.post('/auth/logout')
+      toast.success('Berhasil keluar.')
+      router.push('/login')
+    } catch {
+      toast.error('Gagal keluar. Silakan coba lagi.')
+    }
+  }
+
+  function isActive(href: string) {
+    const [hrefPath, hrefQuery] = href.split('?')
+    if (hrefQuery) {
+      const hrefParams = new URLSearchParams(hrefQuery)
+      let match = pathname === hrefPath
+      hrefParams.forEach((v, k) => { if (searchParams?.get(k) !== v) match = false })
+      return match
+    }
+    return pathname === hrefPath || pathname?.startsWith(hrefPath + '/')
+  }
+
+  const sidebarContent = (
+    <>
+      <div className="px-6 pt-8 pb-6 border-b border-slate-100/60 flex items-center justify-between">
+        <Link href={`/${role}/dashboard`} className="inline-block hover:opacity-80 transition-opacity" onClick={onMobileClose}>
+          <div className="w-32 h-10 relative">
+            <Image src="/logo.png" alt="Triton Denpasar" fill priority className="object-contain" />
+          </div>
+        </Link>
+        {onMobileClose && (
+          <button
+            onClick={onMobileClose}
+            className="lg:hidden text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
+        {navItems.map((item, idx) => {
+          if (item.type === 'divider') {
+            return <div key={`d-${idx}`} className="border-t border-slate-100 my-4 mx-2" />
+          }
+          const active = isActive(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onMobileClose}
+              className={`group relative flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                active
+                  ? 'bg-gradient-to-r from-blue-50 to-blue-50/50 text-blue-700 shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+              }`}
+            >
+              {active && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              )}
+              <span className={`transition-transform duration-300 ${active ? 'text-blue-600 scale-110' : 'text-slate-400 group-hover:scale-110'}`}>
+                {item.icon}
+              </span>
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="border-t border-slate-100/80 p-4 space-y-2 bg-slate-50/50">
+        <Link
+          href={`/${role}/profil`}
+          onClick={onMobileClose}
+          className="flex items-center gap-3.5 px-3 py-3 rounded-2xl hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all group"
+        >
+          {profile?.avatar_url ? (
+            <div className="relative w-11 h-11 shrink-0">
+              <Image
+                src={profile.avatar_url}
+                alt={displayName}
+                fill
+                unoptimized
+                className="rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-100 transition-all"
+              />
+            </div>
+          ) : (
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm group-hover:shadow-md transition-all">
+              {initial}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-700 transition-colors">{displayName}</p>
+            <p className="text-xs font-medium text-slate-500 capitalize mt-0.5">{role}</p>
+          </div>
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all group"
+        >
+          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+          Keluar
+        </button>
+      </div>
+    </>
+  )
+
+  return (
+    <>
+      {/* Desktop sidebar — visible lg+ */}
+      <aside className="hidden lg:flex w-64 shrink-0 fixed left-0 top-0 h-screen flex-col bg-white border-r border-slate-100 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile overlay + drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={onMobileClose}
+          />
+          <aside className="absolute left-0 top-0 h-full w-[280px] flex flex-col bg-white shadow-xl z-50 animate-slide-in-left">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
+  )
+}

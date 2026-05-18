@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Triton Denpasar — Dokumentasi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            triton: {
+              blue: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8' },
+              red: { 50: '#FEF2F2', 100: '#FEE2E2', 500: '#EF4444', 600: '#DC2626', 700: '#B91C1C' },
+              neutral: { 50: '#F8FAFC', 100: '#F1F5F9', 800: '#1E293B', 900: '#0F172A' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    pre {
+      tab-size: 2;
+    }
+
+    .sidebar-link {
+      @apply block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all;
+    }
+
+    .sidebar-link.active {
+      @apply bg-gradient-to-r from-triton-blue-50 to-transparent text-triton-blue-700 border-l-4 border-triton-blue-600 font-bold;
+    }
+
+    .badge-get {
+      background: #DBEAFE;
+      color: #1D4ED8;
+    }
+
+    .badge-post {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .badge-put {
+      background: #FEF9C3;
+      color: #854D0E;
+    }
+
+    .badge-patch {
+      background: #EDE9FE;
+      color: #5B21B6;
+    }
+
+    .badge-delete {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 font-sans text-slate-800 selection:bg-triton-blue-200 selection:text-triton-blue-900">
+
+  <!-- Top nav -->
+  <nav
+    class="fixed top-0 left-0 right-0 z-50 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center px-4 sm:px-6 gap-4 shadow-sm">
+    <button id="mobile-menu-btn"
+      class="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" x2="20" y1="12" y2="12" />
+        <line x1="4" x2="20" y1="6" y2="6" />
+        <line x1="4" x2="20" y1="18" y2="18" />
+      </svg>
+    </button>
+    <div class="flex items-center gap-3">
+      <span
+        class="w-8 h-8 rounded-lg bg-gradient-to-br from-triton-blue-600 to-triton-blue-800 text-white flex items-center justify-center font-bold text-sm shadow-md">T</span>
+      <span class="text-slate-900 font-extrabold text-lg tracking-tight">Triton Docs</span>
+    </div>
+    <span
+      class="hidden md:inline-block px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold ml-2 border border-slate-200">Platform
+      Tryout Online</span>
+
+    <div class="ml-auto hidden sm:flex gap-6 text-sm font-medium">
+      <a href="#setup" class="text-slate-500 hover:text-triton-blue-600 transition-colors">Setup</a>
+      <a href="#api" class="text-slate-500 hover:text-triton-blue-600 transition-colors">API Reference</a>
+      <a href="#frontend" class="text-slate-500 hover:text-triton-blue-600 transition-colors">Frontend</a>
+    </div>
+  </nav>
+
+  <div class="flex pt-16 min-h-screen relative">
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden opacity-0 transition-opacity duration-300">
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+      class="fixed inset-y-0 left-0 z-50 w-72 bg-white/95 backdrop-blur-xl border-r border-slate-200 overflow-y-auto pt-20 pb-10 px-5 flex flex-col gap-1 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl lg:shadow-none lg:w-64 lg:pt-6 lg:z-0 lg:top-16">
+
+      <div class="lg:hidden absolute top-4 right-4">
+        <button id="close-sidebar-btn"
+          class="p-2 text-slate-400 hover:text-slate-700 bg-slate-50 rounded-full transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 px-4 mb-2 mt-2">Mulai</p>
+      <a href="#intro" class="sidebar-link">Pengenalan</a>
+      <a href="#arsitektur" class="sidebar-link">Arsitektur</a>
+      <a href="#setup" class="sidebar-link">Cara Instalasi</a>
+      <a href="#database" class="sidebar-link">Database</a>
+      <a href="#env" class="sidebar-link">Environment Variables</a>
+
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 px-3 mb-1 mt-4">API Reference</p>
+      <a href="#api-auth" class="sidebar-link">Auth Service</a>
+      <a href="#api-user" class="sidebar-link">User Service</a>
+      <a href="#api-soal" class="sidebar-link">Soal Service</a>
+      <a href="#api-jawaban" class="sidebar-link">Jawaban Service</a>
+      <a href="#api-gateway" class="sidebar-link">API Gateway</a>
+
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 px-3 mb-1 mt-4">Frontend</p>
+      <a href="#frontend" class="sidebar-link">Halaman & Routes</a>
+      <a href="#komponen" class="sidebar-link">Komponen</a>
+      <a href="#auth-flow" class="sidebar-link">Alur Auth</a>
+
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 px-3 mb-1 mt-4">Fitur</p>
+      <a href="#fitur-admin" class="sidebar-link">Admin</a>
+      <a href="#fitur-guru" class="sidebar-link">Guru</a>
+      <a href="#fitur-siswa" class="sidebar-link">Siswa</a>
+      <a href="#akun-default" class="sidebar-link">Akun Default</a>
+    </aside>
+
+    <!-- Main content -->
+    <main class="lg:ml-64 flex-1 max-w-4xl mx-auto px-4 sm:px-8 py-12 space-y-20 w-full overflow-x-hidden">
+
+      <!-- ── INTRO ── -->
+      <section id="intro">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold mb-4">
+          v1.0.0</div>
+        <h1 class="text-4xl font-extrabold text-triton-neutral-900 mb-3">Triton Denpasar</h1>
+        <p class="text-lg text-slate-500 mb-6">Platform tryout online berbasis microservices untuk siswa, guru, dan
+          admin Triton Denpasar.</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-4 text-center">
+            <p class="text-2xl font-extrabold text-triton-blue-600">5</p>
+            <p class="text-xs text-slate-500 mt-1">Microservices</p>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-4 text-center">
+            <p class="text-2xl font-extrabold text-triton-blue-600">4</p>
+            <p class="text-xs text-slate-500 mt-1">Database</p>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-4 text-center">
+            <p class="text-2xl font-extrabold text-triton-red-600">3</p>
+            <p class="text-xs text-slate-500 mt-1">Role Pengguna</p>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-4 text-center">
+            <p class="text-2xl font-extrabold text-triton-blue-600">Redis</p>
+            <p class="text-xs text-slate-500 mt-1">Session Store</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ARSITEKTUR ── -->
+      <section id="arsitektur">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Arsitektur Sistem</h2>
+        <div
+          class="bg-triton-neutral-900 rounded-2xl p-6 text-green-400 font-mono text-sm leading-relaxed overflow-x-auto mb-6">
+          <pre>Browser (port 3000)
+    │
+    ▼
+Next.js 14 Frontend
+    │  axios + withCredentials: true
+    ▼
+API Gateway (port 4000)
+    │  requireAuth → GET /auth/me → Redis lookup
+    │  requireRole → inject X-User-Id, X-User-Role
+    ├──► Auth Service    (port 4001)  →  db_auth    (users)
+    ├──► User Service    (port 4002)  →  db_user    (profiles)
+    ├──► Soal Service    (port 4003)  →  db_soal    (tryouts, soal, opsi)
+    └──► Jawaban Service (port 4004)  →  db_jawaban (sesi, jawaban, hasil)</pre>
+        </div>
+
+        <h3 class="text-lg font-bold mb-3">Port Map</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-triton-blue-100 rounded-xl overflow-hidden">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-4 py-3">Service</th>
+                <th class="text-left px-4 py-3">Port</th>
+                <th class="text-left px-4 py-3">Database</th>
+                <th class="text-left px-4 py-3">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              <tr>
+                <td class="px-4 py-3 font-medium">Frontend</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">3000</td>
+                <td class="px-4 py-3 text-slate-400">—</td>
+                <td class="px-4 py-3 text-slate-500">Next.js 14 App Router</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">API Gateway</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">4000</td>
+                <td class="px-4 py-3 text-slate-400">—</td>
+                <td class="px-4 py-3 text-slate-500">Reverse proxy + auth middleware</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">Auth Service</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">4001</td>
+                <td class="px-4 py-3 font-mono text-slate-600">db_auth</td>
+                <td class="px-4 py-3 text-slate-500">Login, logout, session</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">User Service</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">4002</td>
+                <td class="px-4 py-3 font-mono text-slate-600">db_user</td>
+                <td class="px-4 py-3 text-slate-500">Profil pengguna</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">Soal Service</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">4003</td>
+                <td class="px-4 py-3 font-mono text-slate-600">db_soal</td>
+                <td class="px-4 py-3 text-slate-500">Tryout, soal, opsi jawaban</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">Jawaban Service</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">4004</td>
+                <td class="px-4 py-3 font-mono text-slate-600">db_jawaban</td>
+                <td class="px-4 py-3 text-slate-500">Sesi tryout, jawaban, hasil</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">PostgreSQL</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">5432</td>
+                <td class="px-4 py-3 text-slate-400">—</td>
+                <td class="px-4 py-3 text-slate-500">Database utama</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">Redis</td>
+                <td class="px-4 py-3 font-mono text-triton-blue-600">6379</td>
+                <td class="px-4 py-3 text-slate-400">—</td>
+                <td class="px-4 py-3 text-slate-500">Session store</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── SETUP ── -->
+      <section id="setup">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Cara Instalasi & Menjalankan</h2>
+
+        <div class="space-y-6">
+
+          <!-- Step 1 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+              <span class="text-white font-semibold">Prasyarat — Install dependensi sistem</span>
+            </div>
+            <div class="p-5 space-y-3">
+              <p class="text-sm text-slate-600">Pastikan sudah terinstall:</p>
+              <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+                <li>Node.js v18+ — <span class="font-mono text-triton-blue-600">node -v</span></li>
+                <li>PostgreSQL 16 — <span class="font-mono text-triton-blue-600">psql --version</span></li>
+                <li>Redis — <span class="font-mono text-triton-blue-600">redis-cli ping</span> harus mengembalikan PONG
+                </li>
+              </ul>
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400">
+                <p class="text-slate-400"># Jika belum ada Redis (macOS)</p>
+                <p>brew install redis</p>
+                <p>brew services start redis</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+              <span class="text-white font-semibold">Buat user & database PostgreSQL</span>
+            </div>
+            <div class="p-5 space-y-3">
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400 space-y-1">
+                <p class="text-slate-400"># Masuk ke psql sebagai superuser</p>
+                <p>psql -U postgres</p>
+                <p class="mt-2 text-slate-400"># Buat user</p>
+                <p>CREATE USER triton_user WITH PASSWORD 'triton_secret_2024';</p>
+                <p class="mt-2 text-slate-400"># Buat 4 database</p>
+                <p>CREATE DATABASE db_auth OWNER triton_user;</p>
+                <p>CREATE DATABASE db_user OWNER triton_user;</p>
+                <p>CREATE DATABASE db_soal OWNER triton_user;</p>
+                <p>CREATE DATABASE db_jawaban OWNER triton_user;</p>
+                <p>\q</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+              <span class="text-white font-semibold">Inisialisasi skema tabel</span>
+            </div>
+            <div class="p-5">
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400 space-y-1">
+                <p>psql -U triton_user -d db_auth -f services/auth-service/src/db/schema.sql</p>
+                <p>psql -U triton_user -d db_user -f services/user-service/src/db/schema.sql</p>
+                <p>psql -U triton_user -d db_soal -f services/soal-service/src/db/schema.sql</p>
+                <p>psql -U triton_user -d db_jawaban -f services/jawaban-service/src/db/schema.sql</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+              <span class="text-white font-semibold">Install & build semua service</span>
+            </div>
+            <div class="p-5">
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400 space-y-1">
+                <p class="text-slate-400"># Install setiap service (jalankan dari root project)</p>
+                <p>for dir in services/auth-service services/user-service services/soal-service services/jawaban-service
+                  services/api-gateway; do</p>
+                <p> (cd "$dir" && npm install && npm run build)</p>
+                <p>done</p>
+                <p class="mt-2 text-slate-400"># Install frontend</p>
+                <p>cd frontend && npm install</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">5</span>
+              <span class="text-white font-semibold">Jalankan semua service (5 terminal terpisah)</span>
+            </div>
+            <div class="p-5 space-y-3">
+              <p class="text-sm text-slate-500 mb-2">Buka 6 tab/terminal, jalankan masing-masing:</p>
+              <div class="space-y-2">
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 1 — Auth Service</p>
+                  <p>cd services/auth-service</p>
+                  <p>POSTGRES_HOST=localhost POSTGRES_DB=db_auth PORT=4001 npm start</p>
+                </div>
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 2 — User Service</p>
+                  <p>cd services/user-service</p>
+                  <p>POSTGRES_HOST=localhost POSTGRES_DB=db_user PORT=4002 npm start</p>
+                </div>
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 3 — Soal Service</p>
+                  <p>cd services/soal-service</p>
+                  <p>POSTGRES_HOST=localhost POSTGRES_DB=db_soal PORT=4003 npm start</p>
+                </div>
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 4 — Jawaban Service</p>
+                  <p>cd services/jawaban-service</p>
+                  <p>POSTGRES_HOST=localhost POSTGRES_DB=db_jawaban PORT=4004 npm start</p>
+                </div>
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 5 — API Gateway</p>
+                  <p>cd services/api-gateway</p>
+                  <p>AUTH_SERVICE_URL=http://localhost:4001 USER_SERVICE_URL=http://localhost:4002
+                    SOAL_SERVICE_URL=http://localhost:4003 JAWABAN_SERVICE_URL=http://localhost:4004 PORT=4000 npm start
+                  </p>
+                </div>
+                <div class="bg-triton-neutral-900 rounded-xl p-3 font-mono text-xs text-green-400">
+                  <p class="text-slate-400"># Terminal 6 — Frontend</p>
+                  <p>cd frontend && npm run dev</p>
+                  <p class="text-slate-400"># Buka http://localhost:3000</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 6 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">6</span>
+              <span class="text-white font-semibold">Seed data awal (opsional tapi disarankan)</span>
+            </div>
+            <div class="p-5">
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400 space-y-1">
+                <p>cd scripts && npm install</p>
+                <p>npx ts-node seed.ts</p>
+              </div>
+              <p class="text-sm text-slate-500 mt-3">Membuat 8 akun: 1 admin, 2 guru, 5 siswa. Lihat <a
+                  href="#akun-default" class="text-triton-blue-600 hover:underline">Akun Default</a>.</p>
+            </div>
+          </div>
+
+          <!-- Step 7 -->
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-triton-blue-600 px-5 py-3 flex items-center gap-3">
+              <span
+                class="w-6 h-6 bg-white text-triton-blue-600 rounded-full flex items-center justify-center text-xs font-bold">7</span>
+              <span class="text-white font-semibold">Tambahkan logo</span>
+            </div>
+            <div class="p-5">
+              <p class="text-sm text-slate-600">Salin file logo ke:</p>
+              <div class="bg-triton-neutral-900 rounded-xl p-4 font-mono text-sm text-green-400 mt-2">
+                <p>cp /path/to/logo.png frontend/public/logo.png</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── DATABASE ── -->
+      <section id="database">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Skema Database</h2>
+
+        <div class="space-y-6">
+
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-slate-800 px-5 py-3"><span class="text-green-400 font-mono font-bold">db_auth</span><span
+                class="text-slate-400 font-mono text-sm ml-3">— Autentikasi pengguna</span></div>
+            <div class="p-5">
+              <pre class="bg-triton-neutral-900 rounded-xl p-4 text-xs text-green-400 overflow-x-auto">CREATE TABLE users (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role          VARCHAR(20) NOT NULL CHECK (role IN ('admin','guru','siswa')),
+  is_active     BOOLEAN DEFAULT true,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);</pre>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-slate-800 px-5 py-3"><span class="text-green-400 font-mono font-bold">db_user</span><span
+                class="text-slate-400 font-mono text-sm ml-3">— Profil pengguna</span></div>
+            <div class="p-5">
+              <pre class="bg-triton-neutral-900 rounded-xl p-4 text-xs text-green-400 overflow-x-auto">CREATE TABLE profiles (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id        UUID UNIQUE NOT NULL,
+  nama_lengkap   VARCHAR(255) NOT NULL,
+  no_telepon     VARCHAR(20),
+  kelas          VARCHAR(50),
+  mata_pelajaran VARCHAR(255),
+  avatar_url     TEXT,
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ DEFAULT NOW()
+);</pre>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-slate-800 px-5 py-3"><span class="text-green-400 font-mono font-bold">db_soal</span><span
+                class="text-slate-400 font-mono text-sm ml-3">— Tryout, soal, dan opsi</span></div>
+            <div class="p-5">
+              <pre class="bg-triton-neutral-900 rounded-xl p-4 text-xs text-green-400 overflow-x-auto">CREATE TABLE tryouts (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nama_tryout    VARCHAR(255) NOT NULL,
+  mata_pelajaran VARCHAR(100) NOT NULL,
+  durasi_menit   INTEGER NOT NULL DEFAULT 90,
+  dibuat_oleh    UUID NOT NULL,
+  status         VARCHAR(20) DEFAULT 'draft'
+                 CHECK (status IN ('draft','published','closed')),
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE soal (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tryout_id  UUID NOT NULL REFERENCES tryouts(id) ON DELETE CASCADE,
+  nomor_soal INTEGER NOT NULL,
+  tipe       VARCHAR(20) NOT NULL CHECK (tipe IN ('pilihan_ganda','essay')),
+  pertanyaan TEXT NOT NULL,
+  gambar_url TEXT,
+  equation   TEXT,
+  bobot      INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE opsi_jawaban (
+  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  soal_id  UUID NOT NULL REFERENCES soal(id) ON DELETE CASCADE,
+  huruf    CHAR(1) NOT NULL,
+  teks     TEXT NOT NULL,
+  is_benar BOOLEAN DEFAULT false
+);</pre>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+            <div class="bg-slate-800 px-5 py-3"><span class="text-green-400 font-mono font-bold">db_jawaban</span><span
+                class="text-slate-400 font-mono text-sm ml-3">— Sesi, jawaban, dan hasil</span></div>
+            <div class="p-5">
+              <pre class="bg-triton-neutral-900 rounded-xl p-4 text-xs text-green-400 overflow-x-auto">CREATE TABLE sesi_tryout (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  siswa_id   UUID NOT NULL,
+  tryout_id  UUID NOT NULL,
+  mulai_at   TIMESTAMPTZ DEFAULT NOW(),
+  selesai_at TIMESTAMPTZ,
+  status     VARCHAR(20) DEFAULT 'berlangsung'
+             CHECK (status IN ('berlangsung','selesai','timeout')),
+  UNIQUE(siswa_id, tryout_id)
+);
+
+CREATE TABLE jawaban (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sesi_id      UUID NOT NULL REFERENCES sesi_tryout(id),
+  soal_id      UUID NOT NULL,
+  jawaban_teks TEXT,
+  opsi_id      UUID,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(sesi_id, soal_id)
+);
+
+CREATE TABLE hasil (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sesi_id     UUID UNIQUE NOT NULL REFERENCES sesi_tryout(id),
+  siswa_id    UUID NOT NULL,
+  tryout_id   UUID NOT NULL,
+  total_benar INTEGER DEFAULT 0,
+  total_soal  INTEGER NOT NULL,
+  nilai       NUMERIC(5,2),
+  dihitung_at TIMESTAMPTZ DEFAULT NOW()
+);</pre>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── ENV ── -->
+      <section id="env">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Environment Variables</h2>
+        <div class="bg-white rounded-2xl border border-triton-blue-100 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+                <tr>
+                  <th class="text-left px-5 py-3">Variable</th>
+                  <th class="text-left px-5 py-3">Nilai Default</th>
+                  <th class="text-left px-5 py-3">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">POSTGRES_HOST</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">localhost</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Host PostgreSQL</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">POSTGRES_PORT</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">5432</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Port PostgreSQL</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">POSTGRES_USER</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">triton_user</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">User PostgreSQL</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">POSTGRES_PASSWORD</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">triton_secret_2024</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Password PostgreSQL</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">REDIS_HOST</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">localhost</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Host Redis</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">REDIS_PORT</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">6379</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Port Redis</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">SESSION_SECRET</td>
+                  <td class="px-5 py-3 font-mono text-xs text-triton-red-500">WAJIB DIGANTI</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">Secret untuk enkripsi sesi</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">SESSION_MAX_AGE_MS</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">28800000</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">8 jam dalam ms</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">AUTH_SERVICE_URL</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">http://localhost:4001</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">URL Auth Service (untuk gateway)</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-mono text-xs">NEXT_PUBLIC_API_URL</td>
+                  <td class="px-5 py-3 font-mono text-xs text-slate-500">http://localhost:4000</td>
+                  <td class="px-5 py-3 text-slate-500 text-xs">URL gateway (untuk frontend)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── API AUTH ── -->
+      <section id="api">
+        <h2 class="text-3xl font-extrabold text-triton-neutral-900 mb-2">API Reference</h2>
+        <p class="text-slate-500 mb-8">Semua request via frontend melalui API Gateway di <span
+            class="font-mono text-triton-blue-600">http://localhost:4000</span>. Kecuali disebutkan lain, semua endpoint
+          butuh autentikasi.</p>
+      </section>
+
+      <section id="api-auth">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-2 h-8 bg-triton-blue-500 rounded-full"></div>
+          <h3 class="text-xl font-extrabold text-triton-neutral-900">Auth Service <span
+              class="text-base font-normal text-slate-400">— port 4001</span></h3>
+        </div>
+        <div class="space-y-3">
+
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="badge-post px-2.5 py-0.5 rounded-full text-xs font-bold">POST</span>
+              <span class="font-mono text-sm font-semibold">/auth/login</span>
+              <span class="ml-auto text-xs text-slate-400">Publik</span>
+            </div>
+            <p class="text-sm text-slate-500 mb-3">Login dengan email dan password. Membuat sesi Redis dan set cookie
+              <code class="text-xs bg-slate-100 px-1 rounded">triton.sid</code>.
+            </p>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div>
+                <p class="text-xs font-bold text-slate-400 mb-1">REQUEST BODY</p>
+                <pre class="bg-triton-neutral-900 rounded-lg p-3 text-xs text-green-400">{ "email": "admin@triton.id",
+  "password": "admin123" }</pre>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-400 mb-1">RESPONSE 200</p>
+                <pre class="bg-triton-neutral-900 rounded-lg p-3 text-xs text-green-400">{ "success": true,
+  "data": {
+    "userId": "uuid",
+    "role": "admin",
+    "email": "admin@triton.id"
+  }
+}</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="badge-post px-2.5 py-0.5 rounded-full text-xs font-bold">POST</span>
+              <span class="font-mono text-sm font-semibold">/auth/logout</span>
+              <span class="ml-auto text-xs text-slate-400">Butuh sesi</span>
+            </div>
+            <p class="text-sm text-slate-500">Menghapus sesi Redis dan clear cookie.</p>
+          </div>
+
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="badge-get px-2.5 py-0.5 rounded-full text-xs font-bold">GET</span>
+              <span class="font-mono text-sm font-semibold">/auth/me</span>
+              <span class="ml-auto text-xs text-slate-400">Butuh sesi</span>
+            </div>
+            <p class="text-sm text-slate-500 mb-3">Cek sesi aktif. Digunakan oleh API Gateway untuk validasi setiap
+              request.</p>
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-1">RESPONSE 200</p>
+              <pre
+                class="bg-triton-neutral-900 rounded-lg p-3 text-xs text-green-400 w-fit">{ "success": true, "data": { "userId": "uuid", "role": "admin", "email": "..." } }</pre>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="badge-post px-2.5 py-0.5 rounded-full text-xs font-bold">POST</span>
+              <span class="font-mono text-sm font-semibold">/auth/change-password</span>
+              <span class="ml-auto text-xs text-slate-400">Semua role</span>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-1">REQUEST BODY</p>
+              <pre
+                class="bg-triton-neutral-900 rounded-lg p-3 text-xs text-green-400 w-fit">{ "oldPassword": "...", "newPassword": "..." }</pre>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="api-user" class="mt-10">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-2 h-8 bg-triton-blue-500 rounded-full"></div>
+          <h3 class="text-xl font-extrabold text-triton-neutral-900">User Service <span
+              class="text-base font-normal text-slate-400">— via Gateway /users</span></h3>
+        </div>
+        <div class="overflow-x-auto bg-white rounded-2xl border border-triton-blue-100">
+          <table class="w-full text-sm">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-5 py-3">Method</th>
+                <th class="text-left px-5 py-3">Path</th>
+                <th class="text-left px-5 py-3">Role</th>
+                <th class="text-left px-5 py-3">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/users</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Daftar semua profil user</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/users/profile/me</td>
+                <td class="px-5 py-3 text-xs text-slate-500">semua</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Profil pengguna yang sedang login</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-put px-2 py-0.5 rounded text-xs font-bold">PUT</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/users/profile/me</td>
+                <td class="px-5 py-3 text-xs text-slate-500">semua</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Update profil sendiri</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/users/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Detail profil user berdasarkan ID</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-put px-2 py-0.5 rounded text-xs font-bold">PUT</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/users/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Update profil user</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-delete px-2 py-0.5 rounded text-xs font-bold">DELETE</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">/users/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Hapus profil user</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="api-soal" class="mt-10">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-2 h-8 bg-triton-blue-500 rounded-full"></div>
+          <h3 class="text-xl font-extrabold text-triton-neutral-900">Soal Service <span
+              class="text-base font-normal text-slate-400">— via Gateway /tryouts, /soal</span></h3>
+        </div>
+        <div class="overflow-x-auto bg-white rounded-2xl border border-triton-blue-100">
+          <table class="w-full text-sm">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-5 py-3">Method</th>
+                <th class="text-left px-5 py-3">Path</th>
+                <th class="text-left px-5 py-3">Role</th>
+                <th class="text-left px-5 py-3">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Daftar tryout milik guru</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-post px-2 py-0.5 rounded text-xs font-bold">POST</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Buat tryout baru</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Detail tryout + daftar soal</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-put px-2 py-0.5 rounded text-xs font-bold">PUT</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Update info tryout</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-patch px-2 py-0.5 rounded text-xs font-bold">PATCH</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/:id/publish</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Ubah status: draft/published/closed</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-delete px-2 py-0.5 rounded text-xs font-bold">DELETE</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/:id</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Hapus tryout + semua soalnya</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-post px-2 py-0.5 rounded text-xs font-bold">POST</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/:id/soal</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Tambah soal ke tryout</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-put px-2 py-0.5 rounded text-xs font-bold">PUT</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/soal/:soalId</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Edit soal</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-delete px-2 py-0.5 rounded text-xs font-bold">DELETE</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">/soal/:soalId</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Hapus soal</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/tryouts/available</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Daftar tryout yang sudah published</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="api-jawaban" class="mt-10">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-2 h-8 bg-triton-blue-500 rounded-full"></div>
+          <h3 class="text-xl font-extrabold text-triton-neutral-900">Jawaban Service <span
+              class="text-base font-normal text-slate-400">— via Gateway /sesi, /hasil</span></h3>
+        </div>
+        <div class="overflow-x-auto bg-white rounded-2xl border border-triton-blue-100">
+          <table class="w-full text-sm">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-5 py-3">Method</th>
+                <th class="text-left px-5 py-3">Path</th>
+                <th class="text-left px-5 py-3">Role</th>
+                <th class="text-left px-5 py-3">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-3"><span class="badge-post px-2 py-0.5 rounded text-xs font-bold">POST</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/sesi</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Mulai sesi tryout (body: <code
+                    class="bg-slate-100 px-1 rounded">tryout_id</code>)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/sesi/:sesiId</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Detail sesi + semua jawaban</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-post px-2 py-0.5 rounded text-xs font-bold">POST</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/sesi/:sesiId/jawab</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Simpan/update jawaban satu soal</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-post px-2 py-0.5 rounded text-xs font-bold">POST</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/sesi/:sesiId/selesai</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Tandai tryout selesai</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/hasil/:tryoutId</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Hasil tryout milik siswa yang login</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span class="badge-get px-2 py-0.5 rounded text-xs font-bold">GET</span></td>
+                <td class="px-5 py-3 font-mono text-xs">/hasil/rekap/:tryoutId</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Rekap nilai semua siswa untuk tryout ini</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="api-gateway" class="mt-10">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-2 h-8 bg-triton-blue-500 rounded-full"></div>
+          <h3 class="text-xl font-extrabold text-triton-neutral-900">API Gateway <span
+              class="text-base font-normal text-slate-400">— port 4000</span></h3>
+        </div>
+        <div class="bg-white rounded-2xl border border-triton-blue-100 p-5">
+          <p class="text-sm text-slate-600 mb-4">Gateway memvalidasi sesi di setiap request terproteksi, lalu meneruskan
+            ke service yang tepat dengan header tambahan:</p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-2">HEADER YANG DIINJEKSIKAN</p>
+              <pre class="bg-triton-neutral-900 rounded-xl p-3 text-xs text-green-400">X-User-Id   → UUID pengguna
+X-User-Role → admin | guru | siswa</pre>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-2">ROUTING TABLE</p>
+              <pre class="bg-triton-neutral-900 rounded-xl p-3 text-xs text-green-400">/auth/*              → 4001 (publik)
+/users/profile/me    → 4002 (semua)
+/users/*             → 4002 (admin)
+/tryouts/available   → 4003 (siswa)
+/tryouts/* /soal/*   → 4003 (guru)
+/sesi/*              → 4004 (siswa)
+/hasil/*             → 4004 (siswa/guru)</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── FRONTEND ── -->
+      <section id="frontend" class="mt-10">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Frontend — Halaman & Routes</h2>
+        <div class="overflow-x-auto bg-white rounded-2xl border border-triton-blue-100">
+          <table class="w-full text-sm">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-5 py-3">Route</th>
+                <th class="text-left px-5 py-3">Akses</th>
+                <th class="text-left px-5 py-3">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Publik</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Landing page — hero, fitur, footer</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/login</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Publik</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Form login — redirect otomatis ke dashboard role</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/admin/dashboard</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Statistik total user, tryout aktif</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/admin/users</td>
+                <td class="px-5 py-3 text-xs text-slate-500">admin</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Tabel daftar seluruh pengguna</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/guru/dashboard</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Daftar tryout yang dibuat guru</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/guru/tryout</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Form buat tryout baru</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/guru/tryout/[id]/soal</td>
+                <td class="px-5 py-3 text-xs text-slate-500">guru</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Kelola soal, tambah/hapus, publikasikan tryout</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/siswa/dashboard</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Daftar tryout yang tersedia (status published)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-xs">/siswa/tryout/[id]</td>
+                <td class="px-5 py-3 text-xs text-slate-500">siswa</td>
+                <td class="px-5 py-3 text-xs text-slate-500">Halaman pengerjaan tryout navigasi per soal</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="komponen" class="mt-10">
+        <h3 class="text-xl font-extrabold text-triton-neutral-900 mb-5">Komponen Utama</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-2xl border border-triton-blue-100 p-5">
+            <p class="font-bold text-triton-blue-700 mb-2 font-mono text-sm">Navbar</p>
+            <p class="text-sm text-slate-500">Sticky navbar untuk halaman publik. Logo, link navigasi, tombol "Masuk".
+              Responsif dengan mobile hamburger menu.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-triton-blue-100 p-5">
+            <p class="font-bold text-triton-blue-700 mb-2 font-mono text-sm">Sidebar</p>
+            <p class="text-sm text-slate-500">Sidebar dashboard untuk semua role. Nav items role-spesifik, highlight
+              item aktif, avatar pengguna, tombol logout.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-triton-blue-100 p-5">
+            <p class="font-bold text-triton-blue-700 mb-2 font-mono text-sm">RoleGuard</p>
+            <p class="text-sm text-slate-500">Wrapper komponen yang cek sesi via <code
+                class="text-xs bg-slate-100 px-1 rounded">/auth/me</code>. Redirect ke login jika tidak ada sesi, atau
+              ke dashboard yang sesuai jika role salah.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-triton-blue-100 p-5">
+            <p class="font-bold text-triton-blue-700 mb-2 font-mono text-sm">api.ts</p>
+            <p class="text-sm text-slate-500">Axios instance dengan <code
+                class="text-xs bg-slate-100 px-1 rounded">withCredentials: true</code> dan interceptor yang redirect ke
+              /login jika response 401.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="auth-flow" class="mt-10">
+        <h3 class="text-xl font-extrabold text-triton-neutral-900 mb-5">Alur Autentikasi</h3>
+        <div class="bg-white rounded-2xl border border-triton-blue-100 p-6">
+          <ol class="space-y-4">
+            <li class="flex gap-4">
+              <span
+                class="w-6 h-6 bg-triton-blue-100 text-triton-blue-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+              <div>
+                <p class="font-semibold text-sm">Pengguna submit form login</p>
+                <p class="text-sm text-slate-500">Frontend POST <code
+                    class="text-xs bg-slate-100 px-1 rounded">/auth/login</code> ke API Gateway → diteruskan ke Auth
+                  Service</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span
+                class="w-6 h-6 bg-triton-blue-100 text-triton-blue-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+              <div>
+                <p class="font-semibold text-sm">Auth Service verifikasi bcrypt</p>
+                <p class="text-sm text-slate-500">Cek email di db_auth, bandingkan hash password dengan bcrypt</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span
+                class="w-6 h-6 bg-triton-blue-100 text-triton-blue-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+              <div>
+                <p class="font-semibold text-sm">Buat sesi Redis</p>
+                <p class="text-sm text-slate-500">Simpan <code
+                    class="text-xs bg-slate-100 px-1 rounded">{"{userId, role, email}"}</code> di Redis, set cookie
+                  <code class="text-xs bg-slate-100 px-1 rounded">triton.sid</code> HttpOnly 8 jam
+                </p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span
+                class="w-6 h-6 bg-triton-blue-100 text-triton-blue-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</span>
+              <div>
+                <p class="font-semibold text-sm">Frontend redirect ke dashboard</p>
+                <p class="text-sm text-slate-500">GET <code class="text-xs bg-slate-100 px-1 rounded">/auth/me</code> →
+                  ambil role → <code class="text-xs bg-slate-100 px-1 rounded">router.push("/admin/dashboard")</code>
+                </p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span
+                class="w-6 h-6 bg-triton-blue-100 text-triton-blue-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">5</span>
+              <div>
+                <p class="font-semibold text-sm">Setiap request selanjutnya</p>
+                <p class="text-sm text-slate-500">Browser kirim cookie otomatis → Gateway validasi ke <code
+                    class="text-xs bg-slate-100 px-1 rounded">/auth/me</code> → inject header <code
+                    class="text-xs bg-slate-100 px-1 rounded">X-User-Id</code> dan <code
+                    class="text-xs bg-slate-100 px-1 rounded">X-User-Role</code></p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ── FITUR ── -->
+      <section id="fitur" class="mt-10">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Fitur Lengkap</h2>
+      </section>
+
+      <section id="fitur-admin">
+        <div class="flex items-center gap-3 mb-4">
+          <span
+            class="px-3 py-1 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold uppercase tracking-wider">Admin</span>
+          <h3 class="text-lg font-bold text-triton-neutral-900">Dashboard Admin</h3>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Manajemen User</p>
+              <p class="text-xs text-slate-500 mt-1">Lihat semua user (nama, kelas, telepon) dalam tabel yang dapat
+                diurutkan.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Statistik Dashboard</p>
+              <p class="text-xs text-slate-500 mt-1">Jumlah total user, tryout aktif, dan sesi yang sedang berlangsung.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="fitur-guru">
+        <div class="flex items-center gap-3 mb-4">
+          <span
+            class="px-3 py-1 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold uppercase tracking-wider">Guru</span>
+          <h3 class="text-lg font-bold text-triton-neutral-900">Dashboard Guru</h3>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Buat Tryout</p>
+              <p class="text-xs text-slate-500 mt-1">Form dengan nama tryout, mata pelajaran, dan durasi menit. Disimpan
+                sebagai status "draft".</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Kelola Soal</p>
+              <p class="text-xs text-slate-500 mt-1">Tambah soal pilihan ganda/esai, lihat daftar soal, hapus soal dari
+                tryout.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Publikasikan Tryout</p>
+              <p class="text-xs text-slate-500 mt-1">Ubah status tryout dari "draft" → "published" agar dapat dikerjakan
+                siswa, atau "closed" untuk menutup.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Rekap Nilai</p>
+              <p class="text-xs text-slate-500 mt-1">Lihat rekap nilai semua siswa untuk setiap tryout via GET
+                /hasil/rekap/:tryoutId.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="fitur-siswa">
+        <div class="flex items-center gap-3 mb-4">
+          <span
+            class="px-3 py-1 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold uppercase tracking-wider">Siswa</span>
+          <h3 class="text-lg font-bold text-triton-neutral-900">Dashboard Siswa</h3>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-8">
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Pilih Tryout</p>
+              <p class="text-xs text-slate-500 mt-1">Daftar tryout yang tersedia (status published), lengkap dengan mata
+                pelajaran dan durasi.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Kerjakan Tryout</p>
+              <p class="text-xs text-slate-500 mt-1">Navigasi soal per soal, pilih opsi jawaban, jawaban tersimpan
+                otomatis ke server.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Selesaikan Tryout</p>
+              <p class="text-xs text-slate-500 mt-1">Tombol "Selesai & Kumpulkan" di soal terakhir menandai sesi sebagai
+                selesai.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border border-triton-blue-100 p-5 flex gap-3">
+            <div class="w-8 h-8 bg-triton-blue-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-triton-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-slate-800">Lihat Hasil</p>
+              <p class="text-xs text-slate-500 mt-1">Hasil nilai tersimpan dan dapat dilihat kembali lewat endpoint
+                /hasil/:tryoutId.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── AKUN DEFAULT ── -->
+      <section id="akun-default" class="mt-4">
+        <h2 class="text-2xl font-extrabold text-triton-neutral-900 mb-6">Akun Default (setelah seed)</h2>
+        <div class="overflow-x-auto bg-white rounded-2xl border border-triton-blue-100">
+          <table class="w-full text-sm">
+            <thead class="bg-triton-blue-50 text-triton-blue-700 font-semibold">
+              <tr>
+                <th class="text-left px-5 py-3">Role</th>
+                <th class="text-left px-5 py-3">Email</th>
+                <th class="text-left px-5 py-3">Password</th>
+                <th class="text-left px-5 py-3">Nama</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-triton-red-100 text-triton-red-600 rounded-full text-xs font-bold">admin</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">admin@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">admin123</td>
+                <td class="px-5 py-3 text-slate-600">Administrator</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold">guru</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">guru1@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">guru123</td>
+                <td class="px-5 py-3 text-slate-600">Bapak Agus</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-triton-blue-100 text-triton-blue-700 rounded-full text-xs font-bold">guru</span>
+                </td>
+                <td class="px-5 py-3 font-mono text-xs">guru2@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">guru123</td>
+                <td class="px-5 py-3 text-slate-600">Ibu Dewi</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">siswa</span></td>
+                <td class="px-5 py-3 font-mono text-xs">siswa1@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">siswa123</td>
+                <td class="px-5 py-3 text-slate-600">Budi Santoso (XII IPA 1)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">siswa</span></td>
+                <td class="px-5 py-3 font-mono text-xs">siswa2@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">siswa123</td>
+                <td class="px-5 py-3 text-slate-600">Ani Rahayu (XII IPA 2)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">siswa</span></td>
+                <td class="px-5 py-3 font-mono text-xs">siswa3@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">siswa123</td>
+                <td class="px-5 py-3 text-slate-600">Candra Wijaya (XII IPS 1)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">siswa</span></td>
+                <td class="px-5 py-3 font-mono text-xs">siswa4@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">siswa123</td>
+                <td class="px-5 py-3 text-slate-600">Dina Puspita (XII IPS 2)</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3"><span
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">siswa</span></td>
+                <td class="px-5 py-3 font-mono text-xs">siswa5@triton.id</td>
+                <td class="px-5 py-3 font-mono text-xs">siswa123</td>
+                <td class="px-5 py-3 text-slate-600">Eko Prasetyo (XII IPA 1)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4 bg-triton-red-50 border border-triton-red-100 rounded-xl px-5 py-4">
+          <p class="text-sm text-triton-red-700 font-semibold">⚠ Penting — Ganti password sebelum deploy ke production!
+          </p>
+          <p class="text-xs text-triton-red-500 mt-1">Password di atas hanya untuk pengembangan lokal. Jangan gunakan di
+            environment production.</p>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="mt-16 pt-8 border-t border-triton-blue-100 text-center">
+        <p class="text-sm text-slate-400">Triton Denpasar — Platform Tryout Online · Dokumentasi v1.0.0 · 2024</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    // Mobile Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('close-sidebar-btn');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+      // small delay for transition
+      setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('opacity-0');
+      setTimeout(() => overlay.classList.add('hidden'), 300);
+      document.body.style.overflow = '';
+    }
+
+    menuBtn.addEventListener('click', openSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar on mobile when a link is clicked
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth < 1024) closeSidebar();
+      });
+    });
+
+    // Active sidebar link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const links = document.querySelectorAll('aside a.sidebar-link');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`aside a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+  </script>
+
+</body>
+
+</html>

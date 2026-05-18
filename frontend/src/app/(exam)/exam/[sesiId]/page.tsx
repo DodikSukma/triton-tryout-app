@@ -1,0 +1,508 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import {
+  Flag, AlertTriangle, Loader2, Send, ChevronLeft, ChevronRight, Save,
+} from 'lucide-react'
+import api, { getErrorMessage } from '@/lib/api'
+import { ApiResponse, SesiTryout, Soal, TryoutDetail } from '@/types'
+import RenderHTML from '@/components/shared/RenderHTML'
+
+interface SesiWithAnswers {
+  sesi: SesiTryout
+  answers: Record<string, { opsi_id: string | null; jawaban_teks: string | null }>
+}
+
+export default function ExamPage() {
+  const { sesiId } = useParams<{ sesiId: string }>()
+  const router = useRouter()
+
+  const [sesi, setSesi] = useState<SesiTryout | null>(null)
+  const [tryout, setTryout] = useState<TryoutDetail | null>(null)
+  const [answers, setAnswers] = useState<Record<string, { opsi_id?: string | null; jawaban_teks?: string | null }>>({})
+  const [flagged, setFlagged] = useState<Set<string>>(new Set())
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [savingIndicator, setSavingIndicator] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [submitting, setSubmitting] = useState(false)
+  const [showSubmit, setShowSubmit] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(0)
+  const submittedRef = useRef(false)
+
+  // ─── Load sesi + tryout ──────────────────────────────────
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const sRes = await api.get<ApiResponse<SesiWithAnswers>>(`/sesi/${sesiId}`)
+        if (cancelled) return
+        const s = sRes.data.data
+        if (!s) throw new Error('Sesi tidak ditemukan')
+
+        if (s.sesi.status === 'selesai') {
+          toast.info('Tryout sudah selesai.')
+          router.replace(`/siswa/hasil/${sesiId}`)
+          return
+        }
+
+        setSesi(s.sesi)
+        setAnswers(s.answers ?? {})
+
+        const tRes = await api.get<ApiResponse<TryoutDetail>>(`/tryouts/${s.sesi.tryout_id}`)
+        if (cancelled) return
+        setTryout(tRes.data.data ?? null)
+
+        // Restore flagged from sessionStorage
+        const flaggedKey = `triton-flagged-${sesiId}`
+        const savedFlagged = typeof window !== 'undefined' ? window.sessionStorage.getItem(flaggedKey) : null
+        if (savedFlagged) {
+          try { setFlagged(new Set(JSON.parse(savedFlagged))) } catch { /* ignore */ }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(getErrorMessage(err, 'Gagal memuat sesi tryout.'))
+          router.replace('/siswa/tryout')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [sesiId, router])
+
+  // ─── Persist flagged ─────────────────────────────────────
+  useEffect(() => {
+    if (sesiId && typeof window !== 'undefined') {
+      window.sessionStorage.setItem(`triton-flagged-${sesiId}`, JSON.stringify(Array.from(flagged)))
+    }
+  }, [flagged, sesiId])
+
+  // ─── Timer ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!sesi || !tryout) return
+    const start = new Date(sesi.mulai_at).getTime()
+    const deadline = start + tryout.durasi_menit * 60_000
+
+    function tick() {
+      const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000))
+      setTimeLeft(remaining)
+      if (remaining <= 0 && !submittedRef.current) {
+        submittedRef.current = true
+        autoSubmit()
+      }
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sesi, tryout])
+
+  const soalList: Soal[] = tryout?.soal ?? []
+  const currentSoal: Soal | undefined = soalList[currentIdx]
+  const total = soalList.length
+  const answeredCount = useMemo(
+    () => Object.values(answers).filter((a) => !!a.opsi_id || (a.jawaban_teks && a.jawaban_teks.trim() !== '')).length,
+    [answers]
+  )
+  const unanswered = total - answeredCount
+
+  // ─── Save one answer ─────────────────────────────────────
+  const saveAnswer = useCallback(async (soalId: string, payload: { opsi_id?: string; jawaban_teks?: string }) => {
+    setSavingIndicator('saving')
+    try {
+      await api.post(`/sesi/${sesiId}/jawab`, { soal_id: soalId, ...payload })
+      setSavingIndicator('saved')
+      setTimeout(() => setSavingIndicator('idle'), 1200)
+    } catch (err) {
+      setSavingIndicator('idle')
+      toast.error(getErrorMessage(err, 'Gagal menyimpan jawaban.'))
+    }
+  }, [sesiId])
+
+  function pickOpsi(opsiId: string) {
+    if (!currentSoal) return
+    setAnswers((prev) => ({ ...prev, [currentSoal.id]: { ...prev[currentSoal.id], opsi_id: opsiId, jawaban_teks: null } }))
+    saveAnswer(currentSoal.id, { opsi_id: opsiId })
+  }
+
+  function setEssay(text: string) {
+    if (!currentSoal) return
+    setAnswers((prev) => ({ ...prev, [currentSoal.id]: { ...prev[currentSoal.id], jawaban_teks: text, opsi_id: null } }))
+  }
+
+  async function blurEssay() {
+    if (!currentSoal) return
+    const text = answers[currentSoal.id]?.jawaban_teks ?? ''
+    if (text.trim()) {
+      await saveAnswer(currentSoal.id, { jawaban_teks: text })
+    }
+  }
+
+  function toggleFlag(soalId: string) {
+    setFlagged((prev) => {
+      const next = new Set(prev)
+      if (next.has(soalId)) next.delete(soalId)
+      else next.add(soalId)
+      return next
+    })
+  }
+
+  // ─── Submit ──────────────────────────────────────────────
+  async function autoSubmit() {
+    toast.warning('Waktu habis! Jawaban dikumpulkan otomatis.', { duration: 5000 })
+    await doSubmit()
+  }
+
+  async function doSubmit() {
+    setSubmitting(true)
+    try {
+      await api.post<ApiResponse<unknown>>(`/sesi/${sesiId}/selesai`)
+      if (typeof window !== 'undefined') window.sessionStorage.removeItem(`triton-flagged-${sesiId}`)
+      toast.success('Jawaban berhasil dikumpulkan!')
+      router.replace(`/siswa/hasil/${sesiId}`)
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Gagal mengumpulkan jawaban. Silakan coba lagi.'))
+      setSubmitting(false)
+    }
+  }
+
+  // ─── Render ──────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-triton-blue-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!tryout || !currentSoal) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Soal tidak tersedia untuk tryout ini.
+      </div>
+    )
+  }
+
+  const minutes = Math.floor(timeLeft / 60)
+  const seconds = timeLeft % 60
+  const isRed = timeLeft <= 600 && timeLeft > 0
+  const isCritical = timeLeft <= 60 && timeLeft > 0
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+
+      {/* ─── HEADER (fixed) ─── */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-24 h-8 relative shrink-0">
+              <Image src="/logo.png" alt="Triton Denpasar" fill className="object-contain" />
+            </div>
+            <div className="w-px h-6 bg-slate-200 hidden md:block" />
+            <p className="font-semibold text-slate-800 text-sm truncate hidden md:block max-w-[260px]">
+              {tryout.nama_tryout}
+            </p>
+          </div>
+
+          <div className={`px-5 py-2 rounded-full font-mono font-bold text-base md:text-lg tabular-nums transition-colors ${
+            isRed ? 'bg-red-500 text-white' : 'bg-slate-900 text-white'
+          } ${isCritical ? 'animate-pulse' : ''}`}>
+            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:block text-sm text-slate-500 tabular-nums">
+              <strong className="text-slate-900">{answeredCount}</strong>/{total} dijawab
+            </span>
+            <button
+              onClick={() => setShowSubmit(true)}
+              className="bg-triton-red-500 hover:bg-triton-red-600 text-white rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm"
+            >
+              <Send size={14} />
+              Kumpulkan
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex pt-16">
+
+        {/* ─── Navigation Panel ─── */}
+        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-slate-100 flex-col z-30">
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-700 text-sm">Navigasi Soal</h2>
+            <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-triton-blue-500 transition-all duration-300"
+                style={{ width: `${total ? (answeredCount / total) * 100 : 0}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-2">{answeredCount}/{total} dijawab</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="grid grid-cols-5 gap-2">
+              {soalList.map((s, idx) => {
+                const ans = answers[s.id]
+                const isAnswered = !!ans?.opsi_id || !!(ans?.jawaban_teks && ans.jawaban_teks.trim())
+                const isCurrent = idx === currentIdx
+                const isFlag = flagged.has(s.id)
+                let cls = 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                if (isAnswered) cls = 'bg-triton-blue-500 text-white shadow-sm hover:bg-triton-blue-600'
+                if (isCurrent) cls += ' ring-2 ring-offset-2 ring-triton-blue-500'
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setCurrentIdx(idx)}
+                    className={`relative w-10 h-10 rounded-xl text-sm font-bold transition-all ${cls}`}
+                  >
+                    {idx + 1}
+                    {isFlag && (
+                      <Flag size={9} className="absolute top-0.5 right-0.5 text-orange-400 fill-orange-400" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-slate-100 space-y-2 text-xs">
+            <div className="flex items-center gap-2 text-slate-500">
+              <span className="w-3 h-3 rounded bg-slate-100 border border-slate-200" />
+              Belum dijawab
+            </div>
+            <div className="flex items-center gap-2 text-slate-500">
+              <span className="w-3 h-3 rounded bg-triton-blue-500" />
+              Sudah dijawab
+            </div>
+            <div className="flex items-center gap-2 text-slate-500">
+              <Flag size={11} className="text-orange-400 fill-orange-400" />
+              Ditandai ragu-ragu
+            </div>
+          </div>
+        </aside>
+
+        {/* ─── Main exam content ─── */}
+        <main className="flex-1 lg:ml-64 pb-24 px-4 md:px-8">
+          <div className="max-w-3xl mx-auto py-8">
+
+            <article className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+
+              <header className="px-6 md:px-8 pt-7 pb-4 border-b border-slate-50 flex flex-wrap items-center gap-3">
+                <span className="bg-triton-blue-500 text-white rounded-full px-3.5 py-1.5 text-xs font-bold">
+                  Soal {currentIdx + 1}
+                </span>
+                <span className="text-xs font-medium text-slate-500 bg-slate-100 rounded-md px-2 py-1">
+                  {currentSoal.tipe === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Essay'}
+                </span>
+                <span className="text-xs text-slate-400">Bobot: {currentSoal.bobot}</span>
+                <div className="flex-1" />
+                <button
+                  onClick={() => toggleFlag(currentSoal.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                    flagged.has(currentSoal.id)
+                      ? 'bg-orange-50 text-orange-600 border-orange-200'
+                      : 'text-slate-500 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <Flag size={12} className={flagged.has(currentSoal.id) ? 'fill-orange-500' : ''} />
+                  {flagged.has(currentSoal.id) ? 'Ditandai' : 'Tandai Ragu'}
+                </button>
+              </header>
+
+              <div className="px-6 md:px-8 py-6">
+                <RenderHTML
+                  html={currentSoal.pertanyaan_html || currentSoal.pertanyaan}
+                  className="text-base leading-relaxed text-slate-800"
+                />
+              </div>
+
+              {/* Answer section */}
+              <div className="px-6 md:px-8 pb-8">
+                {currentSoal.tipe === 'pilihan_ganda' ? (
+                  <div className="space-y-3">
+                    {(currentSoal.opsi ?? []).map((opsi) => {
+                      const selected = answers[currentSoal.id]?.opsi_id === opsi.id
+                      return (
+                        <button
+                          key={opsi.id}
+                          onClick={() => pickOpsi(opsi.id)}
+                          className={`w-full text-left flex items-start gap-4 p-4 rounded-xl border-2 transition-all duration-150 cursor-pointer group ${
+                            selected
+                              ? 'border-triton-blue-500 bg-triton-blue-50'
+                              : 'border-slate-200 bg-white hover:border-triton-blue-300 hover:bg-triton-blue-50/40'
+                          }`}
+                        >
+                          <span className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 mt-0.5 transition-all ${
+                            selected
+                              ? 'bg-triton-blue-500 text-white'
+                              : 'bg-slate-100 text-slate-500 group-hover:bg-triton-blue-100 group-hover:text-triton-blue-700'
+                          }`}>
+                            {opsi.huruf}
+                          </span>
+                          <div className="flex-1">
+                            <RenderHTML
+                              html={opsi.teks_html || opsi.teks}
+                              className="text-sm text-slate-700 leading-relaxed"
+                            />
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">Jawaban Anda:</label>
+                    <textarea
+                      value={answers[currentSoal.id]?.jawaban_teks ?? ''}
+                      onChange={(e) => setEssay(e.target.value)}
+                      onBlur={blurEssay}
+                      placeholder="Tuliskan jawaban lengkap Anda di sini..."
+                      rows={8}
+                      className="w-full min-h-[200px] border-2 border-slate-200 rounded-xl p-4 text-slate-800 text-base leading-relaxed resize-y outline-none focus:border-triton-blue-500 focus:ring-4 focus:ring-triton-blue-500/10 transition-all"
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-slate-400 tabular-nums">
+                        {(answers[currentSoal.id]?.jawaban_teks ?? '').trim().split(/\s+/).filter(Boolean).length} kata
+                      </span>
+                      <span className={`text-xs inline-flex items-center gap-1 transition-opacity ${
+                        savingIndicator === 'idle' ? 'opacity-0' : 'opacity-100 text-slate-500'
+                      }`}>
+                        {savingIndicator === 'saving' ? (
+                          <><Loader2 size={11} className="animate-spin" /> Menyimpan...</>
+                        ) : (
+                          <><Save size={11} className="text-green-500" /> Tersimpan</>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </article>
+
+          </div>
+        </main>
+      </div>
+
+      {/* ─── Bottom Navigation (fixed) ─── */}
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-slate-100 shadow-lg z-40">
+        <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4">
+          <button
+            onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+            disabled={currentIdx === 0}
+            className="inline-flex items-center gap-1.5 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Sebelumnya
+          </button>
+
+          <span className="text-sm font-semibold text-slate-600 tabular-nums">
+            {currentIdx + 1} / {total}
+          </span>
+
+          {currentIdx < total - 1 ? (
+            <button
+              onClick={() => setCurrentIdx((i) => Math.min(total - 1, i + 1))}
+              className="inline-flex items-center gap-1.5 bg-triton-blue-500 hover:bg-triton-blue-600 text-white rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors shadow-sm"
+            >
+              Berikutnya
+              <ChevronRight size={16} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowSubmit(true)}
+              className="inline-flex items-center gap-1.5 bg-triton-red-500 hover:bg-triton-red-600 text-white rounded-xl px-5 py-2.5 text-sm font-bold transition-colors shadow-sm"
+            >
+              Selesai & Kumpulkan
+              <Send size={14} />
+            </button>
+          )}
+        </div>
+      </footer>
+
+      {/* ─── Submit Dialog ─── */}
+      {showSubmit && (
+        <SubmitDialog
+          total={total}
+          answered={answeredCount}
+          unanswered={unanswered}
+          flagged={flagged.size}
+          onCancel={() => setShowSubmit(false)}
+          onConfirm={doSubmit}
+          submitting={submitting}
+        />
+      )}
+
+      {/* Small hidden link for routing back to dashboard */}
+      <Link href="/siswa/dashboard" className="sr-only">dashboard</Link>
+    </div>
+  )
+}
+
+// ─── Submit Dialog ──────────────────────────────────────────
+function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfirm, submitting }: {
+  total: number; answered: number; unanswered: number; flagged: number
+  onCancel: () => void; onConfirm: () => void; submitting: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={submitting ? undefined : onCancel}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+            <AlertTriangle size={22} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Kumpulkan Jawaban?</h3>
+            <p className="text-sm text-slate-500">Setelah dikumpulkan, jawaban tidak dapat diubah.</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 rounded-xl p-5 space-y-2.5 text-sm">
+          <Row label="Total soal" value={total} valueClass="text-slate-900" />
+          <Row label="Sudah dijawab" value={answered} valueClass="text-green-600" />
+          <Row label="Belum dijawab" value={unanswered} valueClass={unanswered > 0 ? 'text-red-500' : 'text-slate-400'} />
+          <Row label="Ditandai ragu-ragu" value={flagged} valueClass={flagged > 0 ? 'text-orange-500' : 'text-slate-400'} />
+        </div>
+
+        {unanswered > 0 && (
+          <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 flex gap-2">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+            <span>Masih ada <strong>{unanswered}</strong> soal yang belum dijawab. Jawaban yang belum diisi akan dihitung salah.</span>
+          </div>
+        )}
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={submitting}
+            className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
+          >
+            Periksa Lagi
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={submitting}
+            className="flex-1 bg-triton-red-500 hover:bg-triton-red-600 text-white font-bold rounded-xl py-2.5 text-sm transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-70"
+          >
+            {submitting && <Loader2 size={14} className="animate-spin" />}
+            {submitting ? 'Mengumpulkan...' : 'Kumpulkan Sekarang'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Row({ label, value, valueClass }: { label: string; value: number; valueClass: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-slate-500">{label}</span>
+      <span className={`font-bold ${valueClass}`}>{value}</span>
+    </div>
+  )
+}
