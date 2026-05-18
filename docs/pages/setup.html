@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup & Instalasi — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body data-page="setup">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo"><img src="../logo.png" alt="Triton Denpasar" /><div class="version">Documentation v1.0</div></div>
+    <div class="sidebar-progress"><div class="label">Progress membaca: <span id="progress-text">0%</span></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button></div>
+  </aside>
+
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Memulai</div>
+      <h1>Setup & Instalasi</h1>
+      <p>Cara menjalankan Triton Denpasar di mesin lokal.</p>
+    </div>
+
+    <!-- Prerequisites -->
+    <div class="section-title mt-0"><div class="icon" style="background:#F0FDF4;">📦</div> Prerequisites</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Versi</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td><b>Node.js</b></td><td>≥ 18.x</td><td>Runtime untuk semua service dan frontend</td></tr>
+          <tr><td><b>PostgreSQL</b></td><td>≥ 14.x</td><td>Database (bisa via Docker)</td></tr>
+          <tr><td><b>Make</b></td><td>any</td><td>Untuk menjalankan <code>make dev</code> / <code>make stop</code></td></tr>
+          <tr><td><b>Docker</b> (opsional)</td><td>any</td><td>Untuk PostgreSQL + Redis via docker compose</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Steps -->
+    <div class="section-title"><div class="icon" style="background:#EFF6FF;">🚀</div> Langkah Setup</div>
+
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Clone repository</h4>
+        <pre class="code">git clone https://github.com/your-org/tritonapp.git
+cd tritonapp</pre>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Jalankan PostgreSQL (via Docker)</h4>
+        <pre class="code">docker compose up -d postgres redis</pre>
+        <p>Atau gunakan instalasi PostgreSQL lokal di port 5432.</p>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Buat 4 database</h4>
+        <pre class="code">docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_auth;"
+docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_user;"
+docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_soal;"
+docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_jawaban;"</pre>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Jalankan schema migration</h4>
+        <pre class="code">docker exec -i triton-postgres psql -U triton_user -d db_auth    &lt; services/auth-service/src/db/schema.sql
+docker exec -i triton-postgres psql -U triton_user -d db_user    &lt; services/user-service/src/db/schema.sql
+docker exec -i triton-postgres psql -U triton_user -d db_soal    &lt; services/soal-service/src/db/schema.sql
+docker exec -i triton-postgres psql -U triton_user -d db_jawaban &lt; services/jawaban-service/src/db/schema.sql</pre>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Seed data awal</h4>
+        <pre class="code">cd scripts
+npm install
+npm run seed</pre>
+        <p>Membuat akun default untuk testing (lihat tabel di bawah).</p>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Install dependencies semua service</h4>
+        <pre class="code">cd services/auth-service    && npm install && cd ../..
+cd services/user-service    && npm install && cd ../..
+cd services/soal-service    && npm install && cd ../..
+cd services/jawaban-service && npm install && cd ../..
+cd services/api-gateway     && npm install && cd ../..
+cd frontend                 && npm install && cd ..</pre>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h4>Jalankan semua service (development)</h4>
+        <pre class="code">make dev       # jalankan semua service dengan ts-node-dev (hot-reload)</pre>
+        <p>Atau untuk berhenti:</p>
+        <pre class="code">make stop      # hentikan semua service</pre>
+        <div class="info-box amber" style="margin-top:12px;">
+          <span>⚠️</span>
+          <span>Logs service disimpan ke file, bukan ke terminal. Cek di <code>logs/</code> per service jika ada masalah.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h4>Jalankan frontend</h4>
+        <pre class="code">cd frontend
+npm run dev</pre>
+        <p>Frontend tersedia di <b>http://localhost:3000</b>, API Gateway di <b>http://localhost:4000</b>.</p>
+      </div>
+    </div>
+
+    <!-- Default Accounts -->
+    <div class="section-title"><div class="icon" style="background:#FEF3C7;">🔑</div> Akun Default (Setelah Seed)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Password</th><th>Role</th><th>Nama</th></tr></thead>
+        <tbody>
+          <tr><td><code>admin@triton.id</code></td><td><code>admin123</code></td><td><span class="badge" style="background:#EDE9FE;color:#5B21B6;">admin</span></td><td>Administrator</td></tr>
+          <tr><td><code>guru1@triton.id</code></td><td><code>guru123</code></td><td><span class="badge badge-blue">guru</span></td><td>Bapak Agus</td></tr>
+          <tr><td><code>guru2@triton.id</code></td><td><code>guru123</code></td><td><span class="badge badge-blue">guru</span></td><td>Ibu Dewi</td></tr>
+          <tr><td><code>siswa1@triton.id</code></td><td><code>siswa123</code></td><td><span class="badge badge-get">siswa</span></td><td>Budi Santoso (XII IPA 1)</td></tr>
+          <tr><td><code>siswa2@triton.id</code></td><td><code>siswa123</code></td><td><span class="badge badge-get">siswa</span></td><td>Ani Rahayu (XII IPA 2)</td></tr>
+          <tr><td><code>siswa3@triton.id</code></td><td><code>siswa123</code></td><td><span class="badge badge-get">siswa</span></td><td>Candra Wijaya (XII IPS 1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Environment Variables -->
+    <div class="section-title"><div class="icon" style="background:#FEF2F2;">⚙️</div> Environment Variables</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Default</th><th>Service</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td><code>POSTGRES_HOST</code></td><td>localhost</td><td>semua</td><td>Host database PostgreSQL</td></tr>
+          <tr><td><code>POSTGRES_PORT</code></td><td>5432</td><td>semua</td><td>Port database</td></tr>
+          <tr><td><code>POSTGRES_USER</code></td><td>triton_user</td><td>semua</td><td>Username PostgreSQL</td></tr>
+          <tr><td><code>POSTGRES_PASSWORD</code></td><td>triton_secret_2024</td><td>semua</td><td>Password PostgreSQL</td></tr>
+          <tr><td><code>POSTGRES_DB</code></td><td>db_auth / db_user / ...</td><td>per service</td><td>Nama database masing-masing service</td></tr>
+          <tr><td><code>SESSION_SECRET</code></td><td>triton-secret-key-2024</td><td>auth-service</td><td>Secret untuk signing cookie session</td></tr>
+          <tr><td><code>PORT</code></td><td>4001 / 4002 / 4003 / 4004</td><td>per service</td><td>Port listening</td></tr>
+          <tr><td><code>AUTH_SERVICE_URL</code></td><td>http://localhost:4001</td><td>gateway, user, jawaban</td><td>URL internal auth-service</td></tr>
+          <tr><td><code>USER_SERVICE_URL</code></td><td>http://localhost:4002</td><td>gateway, jawaban</td><td>URL internal user-service</td></tr>
+          <tr><td><code>SOAL_SERVICE_URL</code></td><td>http://localhost:4003</td><td>gateway, jawaban</td><td>URL internal soal-service</td></tr>
+          <tr><td><code>JAWABAN_SERVICE_URL</code></td><td>http://localhost:4004</td><td>gateway</td><td>URL internal jawaban-service</td></tr>
+          <tr><td><code>FRONTEND_URL</code></td><td>http://localhost:3000</td><td>gateway (CORS)</td><td>Origin yang diizinkan untuk CORS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text"><div class="title">🤖 Triton AI Assistant</div><div class="sub">Tanya apa saja tentang dokumentasi ini</div></div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages"><div class="bot-msg">Halo! Tanya saya tentang setup, API, database, atau flow pengguna. 👋</div></div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Akun default setelah seeding?')">Akun default</button>
+      <button class="quick-btn" onclick="askQuestion('Port masing-masing service?')">Port services</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana cara setup project?')">Setup steps</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

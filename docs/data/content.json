@@ -1,0 +1,684 @@
+{
+  "project": {
+    "name": "Triton Denpasar",
+    "description": "Platform tryout online untuk bimbel Triton Denpasar. Mendukung soal pilihan ganda, essay, gambar, dan persamaan matematika (LaTeX). Nilai dihitung otomatis.",
+    "stack": {
+      "frontend": "Next.js 14 App Router + TypeScript + Tailwind CSS",
+      "backend": "Express.js microservices (ts-node-dev)",
+      "database": "PostgreSQL per service (4 database terpisah)",
+      "auth": "Session-based (express-session + connect-pg-simple atau Redis)",
+      "gateway": "http-proxy-middleware — satu entry point port 4000",
+      "ports": {
+        "frontend": 3000,
+        "gateway": 4000,
+        "auth_service": 4001,
+        "user_service": 4002,
+        "soal_service": 4003,
+        "jawaban_service": 4004
+      }
+    }
+  },
+  "roles": ["admin", "guru", "siswa"],
+  "pages": [
+    {
+      "path": "/",
+      "title": "Landing Page",
+      "role": "public",
+      "file": "app/(public)/page.tsx",
+      "description": "Halaman utama publik dengan hero, stats bar, fitur, how-it-works, testimonial, CTA, dan footer. Mascot Einstein SVG."
+    },
+    {
+      "path": "/login",
+      "title": "Login",
+      "role": "public",
+      "file": "app/(public)/login/page.tsx",
+      "description": "Form login email + password. Redirect otomatis ke dashboard sesuai role setelah POST /auth/login."
+    },
+    {
+      "path": "/admin/dashboard",
+      "title": "Admin Dashboard",
+      "role": "admin",
+      "file": "app/(admin)/admin/dashboard/page.tsx",
+      "description": "Statistik total users, tryout aktif, sesi aktif. Quick actions ke Kelola Guru dan Kelola Siswa."
+    },
+    {
+      "path": "/admin/users?role=guru",
+      "title": "Kelola Guru",
+      "role": "admin",
+      "file": "app/(admin)/admin/users/page.tsx",
+      "description": "Daftar semua guru. Tambah, edit, toggle aktif/nonaktif, hapus. Filter by role=guru via query param."
+    },
+    {
+      "path": "/admin/users?role=siswa",
+      "title": "Kelola Siswa",
+      "role": "admin",
+      "file": "app/(admin)/admin/users/page.tsx",
+      "description": "Daftar semua siswa. Tambah (dengan field kelas), edit, toggle aktif/nonaktif, hapus. Filter by role=siswa."
+    },
+    {
+      "path": "/admin/profil",
+      "title": "Profil Admin",
+      "role": "admin",
+      "file": "app/(admin)/admin/profil/page.tsx",
+      "description": "Edit profil admin: nama, telepon, bio, foto. Ganti password."
+    },
+    {
+      "path": "/guru/dashboard",
+      "title": "Guru Dashboard",
+      "role": "guru",
+      "file": "app/(guru)/guru/dashboard/page.tsx",
+      "description": "Selamat datang + stats tryout dibuat, soal dibuat, siswa mengerjakan. Grid kartu tryout dengan aksi: Kelola Soal, Edit, Publish/Unpublish, Hapus."
+    },
+    {
+      "path": "/guru/tryout/[id]/soal",
+      "title": "Question Builder",
+      "role": "guru",
+      "file": "app/(guru)/guru/tryout/[id]/soal/page.tsx",
+      "description": "Editor soal. Panel kiri: daftar soal. Panel kanan: form edit. Tambah manual atau generate AI. Tipe: PG atau essay. RichTextEditor + EquationDialog + upload gambar."
+    },
+    {
+      "path": "/guru/tryout/[id]/hasil",
+      "title": "Rekap Hasil Siswa",
+      "role": "guru",
+      "file": "app/(guru)/guru/tryout/[id]/hasil/page.tsx",
+      "description": "Tabel rekap semua siswa yang mengerjakan tryout: nama, kelas, nilai, benar/total, waktu selesai, durasi. Summary cards: total peserta, rata-rata, tertinggi, terendah."
+    },
+    {
+      "path": "/guru/profil",
+      "title": "Profil Guru",
+      "role": "guru",
+      "file": "app/(guru)/guru/profil/page.tsx",
+      "description": "Edit profil guru: nama, telepon, mata pelajaran, bio, foto. Ganti password."
+    },
+    {
+      "path": "/siswa/dashboard",
+      "title": "Siswa Dashboard",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/dashboard/page.tsx",
+      "description": "Stats: tryout tersedia, selesai, berlangsung, rata-rata nilai. Rekomendasi tryout yang belum dikerjakan."
+    },
+    {
+      "path": "/siswa/tryout",
+      "title": "Daftar Tryout",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/tryout/page.tsx",
+      "description": "Semua tryout published. Filter by nama dan mata pelajaran. Status per tryout: belum mulai, sedang berlangsung, sudah selesai. Tombol: Mulai / Lanjutkan / Lihat Hasil."
+    },
+    {
+      "path": "/siswa/tryout/[id]",
+      "title": "Konfirmasi Tryout",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/tryout/[id]/page.tsx",
+      "description": "Info tryout, aturan, checkbox persetujuan. Klik Mulai → POST /sesi → redirect ke exam."
+    },
+    {
+      "path": "/exam/[sesiId]",
+      "title": "Halaman Ujian",
+      "role": "siswa",
+      "file": "app/(exam)/exam/[sesiId]/page.tsx",
+      "description": "Mode full-screen. Header: logo + nama tryout + timer countdown + progress. Panel kiri: navigasi soal (grid answered/unanswered). Main: soal dengan KaTeX dan gambar. Auto-save per jawaban. Submit manual atau auto saat timer habis."
+    },
+    {
+      "path": "/siswa/hasil/[sesiId]",
+      "title": "Hasil Tryout",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/hasil/[sesiId]/page.tsx",
+      "description": "Nilai final, grade (A/B/C/D), statistik benar/salah/tidak dijawab. Breakdown per soal dengan jawaban benar ditampilkan."
+    },
+    {
+      "path": "/siswa/riwayat",
+      "title": "Riwayat & Nilai",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/riwayat/page.tsx",
+      "description": "Tabel semua sesi tryout yang pernah dikerjakan: nama tryout, nilai, tanggal, mata pelajaran, durasi."
+    },
+    {
+      "path": "/siswa/profil",
+      "title": "Profil Siswa",
+      "role": "siswa",
+      "file": "app/(siswa)/siswa/profil/page.tsx",
+      "description": "Edit profil siswa: nama, telepon, kelas, bio, foto. Ganti password."
+    }
+  ],
+  "components": [
+    { "file": "components/layout/Navbar.tsx", "description": "Navbar sticky untuk landing page publik. Logo + nav links + tombol Masuk." },
+    { "file": "components/layout/Sidebar.tsx", "description": "Sidebar navigasi untuk dashboard admin/guru/siswa. Links dinamis per role, avatar user, tombol logout." },
+    { "file": "components/editor/RichTextEditor.tsx", "description": "contentEditable editor dengan toolbar (bold, italic, underline, list). Mendukung placeholder." },
+    { "file": "components/editor/EquationDialog.tsx", "description": "Modal input persamaan matematika LaTeX. Preview real-time dengan KaTeX." },
+    { "file": "components/editor/AIGeneratorModal.tsx", "description": "Modal generate soal dengan AI (demo/static preset). Pilih mata pelajaran dan jumlah soal." },
+    { "file": "components/profile/ProfilePage.tsx", "description": "Komponen profil reusable untuk semua role. Upload avatar base64, edit form, ganti password." },
+    { "file": "components/shared/RoleGuard.tsx", "description": "Guard komponen yang redirect jika role tidak sesuai." },
+    { "file": "components/shared/RenderHTML.tsx", "description": "Render HTML string dengan KaTeX equation support (data-equation attribute)." }
+  ],
+  "api": [
+    {
+      "service": "auth-service",
+      "method": "POST",
+      "path": "/auth/login",
+      "auth": false,
+      "body": { "email": "string", "password": "string (min 6)" },
+      "response": { "success": true, "data": { "userId": "uuid", "role": "admin|guru|siswa", "email": "string" } },
+      "description": "Login user, buat session. Cookie triton.sid di-set otomatis."
+    },
+    {
+      "service": "auth-service",
+      "method": "POST",
+      "path": "/auth/logout",
+      "auth": true,
+      "body": null,
+      "response": { "success": true, "data": null, "message": "Berhasil logout" },
+      "description": "Hapus session, clear cookie triton.sid."
+    },
+    {
+      "service": "auth-service",
+      "method": "GET",
+      "path": "/auth/me",
+      "auth": true,
+      "body": null,
+      "response": { "success": true, "data": { "userId": "uuid", "role": "string", "email": "string" } },
+      "description": "Cek session aktif. Digunakan gateway untuk validasi setiap request."
+    },
+    {
+      "service": "auth-service",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "auth": true,
+      "body": { "oldPassword": "string", "newPassword": "string (min 6)" },
+      "response": { "success": true, "data": null, "message": "Password berhasil diubah" },
+      "description": "Ganti password user yang sedang login."
+    },
+    {
+      "service": "user-service",
+      "method": "GET",
+      "path": "/users",
+      "auth": true,
+      "roles": ["admin"],
+      "query": "?role=guru|siswa (opsional)",
+      "body": null,
+      "response": { "success": true, "data": [{ "id": "uuid", "email": "string", "role": "string", "is_active": true, "profile": {} }] },
+      "description": "Daftar semua user. Admin only. Mendukung filter ?role=."
+    },
+    {
+      "service": "user-service",
+      "method": "POST",
+      "path": "/users",
+      "auth": true,
+      "roles": ["admin"],
+      "body": { "email": "string", "password": "string", "role": "admin|guru|siswa", "nama_lengkap": "string", "no_telepon": "string?", "kelas": "string?", "mata_pelajaran": "string?" },
+      "response": { "success": true, "data": { "id": "uuid", "email": "string", "role": "string", "profile": {} } },
+      "description": "Buat user baru (auth + profile). Memanggil auth-service internal."
+    },
+    {
+      "service": "user-service",
+      "method": "PATCH",
+      "path": "/users/:id/active",
+      "auth": true,
+      "roles": ["admin"],
+      "body": { "is_active": "boolean" },
+      "response": { "success": true, "data": { "id": "uuid", "is_active": true } },
+      "description": "Toggle aktif/nonaktif user."
+    },
+    {
+      "service": "user-service",
+      "method": "GET",
+      "path": "/users/profile/me",
+      "auth": true,
+      "roles": ["admin", "guru", "siswa"],
+      "body": null,
+      "response": { "success": true, "data": { "id": "uuid", "user_id": "uuid", "nama_lengkap": "string", "kelas": "string?", "mata_pelajaran": "string?", "avatar_url": "string?", "bio": "string?" } },
+      "description": "Ambil profil user yang sedang login."
+    },
+    {
+      "service": "user-service",
+      "method": "PUT",
+      "path": "/users/profile/me",
+      "auth": true,
+      "roles": ["admin", "guru", "siswa"],
+      "body": { "nama_lengkap": "string?", "no_telepon": "string?", "kelas": "string?", "mata_pelajaran": "string?", "bio": "string?", "avatar_url": "string?" },
+      "response": { "success": true, "data": {} },
+      "description": "Update profil user yang sedang login. Upsert (buat jika belum ada)."
+    },
+    {
+      "service": "user-service",
+      "method": "POST",
+      "path": "/users/profile/avatar",
+      "auth": true,
+      "roles": ["admin", "guru", "siswa"],
+      "body": { "avatar_base64": "string (max 2MB)", "mime_type": "image/jpeg|png|webp|gif" },
+      "response": { "success": true, "data": { "avatar_url": "data:image/...;base64,..." } },
+      "description": "Upload foto profil sebagai base64 data URI. Max 2MB."
+    },
+    {
+      "service": "user-service",
+      "method": "DELETE",
+      "path": "/users/:id",
+      "auth": true,
+      "roles": ["admin"],
+      "body": null,
+      "response": { "success": true, "data": null, "message": "Pengguna dihapus." },
+      "description": "Hapus user (profile + auth). Cascade-safe."
+    },
+    {
+      "service": "soal-service",
+      "method": "GET",
+      "path": "/tryouts",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": null,
+      "response": { "success": true, "data": [{ "id": "uuid", "nama_tryout": "string", "mata_pelajaran": "string", "durasi_menit": 90, "status": "draft|published|closed", "soal_count": 10, "total_bobot": 10 }] },
+      "description": "Daftar tryout. Guru hanya melihat miliknya sendiri, admin melihat semua."
+    },
+    {
+      "service": "soal-service",
+      "method": "GET",
+      "path": "/tryouts/available",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": null,
+      "response": { "success": true, "data": [{}] },
+      "description": "Daftar tryout berstatus published. Untuk siswa."
+    },
+    {
+      "service": "soal-service",
+      "method": "POST",
+      "path": "/tryouts",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": { "nama_tryout": "string", "mata_pelajaran": "string", "durasi_menit": 90 },
+      "response": { "success": true, "data": { "id": "uuid", "nama_tryout": "string", "status": "draft" } },
+      "description": "Buat tryout baru. Status default: draft."
+    },
+    {
+      "service": "soal-service",
+      "method": "GET",
+      "path": "/tryouts/:id",
+      "auth": true,
+      "roles": ["admin", "guru", "siswa"],
+      "body": null,
+      "response": { "success": true, "data": { "id": "uuid", "nama_tryout": "string", "soal": [] } },
+      "description": "Detail tryout beserta semua soal dan opsi. Untuk siswa, is_benar dan panduan_essay disembunyikan."
+    },
+    {
+      "service": "soal-service",
+      "method": "PUT",
+      "path": "/tryouts/:id",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": { "nama_tryout": "string?", "mata_pelajaran": "string?", "durasi_menit": "number?" },
+      "response": { "success": true, "data": {} },
+      "description": "Update info tryout (nama, mapel, durasi)."
+    },
+    {
+      "service": "soal-service",
+      "method": "PATCH",
+      "path": "/tryouts/:id/publish",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": { "status": "draft|published|closed" },
+      "response": { "success": true, "data": {} },
+      "description": "Ubah status tryout. Published = siswa bisa mengakses."
+    },
+    {
+      "service": "soal-service",
+      "method": "DELETE",
+      "path": "/tryouts/:id",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": null,
+      "response": { "success": true, "data": null },
+      "description": "Hapus tryout beserta semua soal dan opsi (cascade)."
+    },
+    {
+      "service": "soal-service",
+      "method": "POST",
+      "path": "/tryouts/:id/soal",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": { "tipe": "pilihan_ganda|essay", "pertanyaan": "string", "pertanyaan_html": "string?", "gambar_base64": "string?", "equation_latex": "string?", "panduan_essay": "string?", "bobot": 1, "opsi": [{ "huruf": "A", "teks": "string", "is_benar": false }] },
+      "response": { "success": true, "data": { "id": "uuid", "opsi": [] } },
+      "description": "Tambah soal ke tryout. Transaction: insert soal + semua opsi sekaligus."
+    },
+    {
+      "service": "soal-service",
+      "method": "PUT",
+      "path": "/soal/:soalId",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": { "pertanyaan": "string?", "tipe": "string?", "bobot": "number?", "opsi": [] },
+      "response": { "success": true, "data": {} },
+      "description": "Update soal + replace semua opsi. Transaction dengan rollback."
+    },
+    {
+      "service": "soal-service",
+      "method": "DELETE",
+      "path": "/soal/:soalId",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": null,
+      "response": { "success": true, "data": null },
+      "description": "Hapus soal (cascade hapus opsi_jawaban)."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "POST",
+      "path": "/sesi",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": { "tryout_id": "uuid" },
+      "response": { "success": true, "data": { "id": "uuid", "status": "berlangsung", "mulai_at": "timestamp" } },
+      "description": "Mulai atau lanjutkan sesi tryout. Jika sudah ada sesi berlangsung, kembalikan sesi existing. Jika sudah selesai, return 409 ALREADY_COMPLETED."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/sesi/by-tryout/:tryoutId",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": null,
+      "response": { "success": true, "data": { "id": "uuid", "status": "berlangsung|selesai|timeout" } },
+      "description": "Cek sesi existing untuk tryout tertentu. Null jika belum pernah mulai."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/sesi/:sesiId",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": null,
+      "response": { "success": true, "data": { "sesi": {}, "answers": { "soal_id": { "opsi_id": "uuid|null", "jawaban_teks": "string|null" } } } },
+      "description": "Ambil detail sesi + semua jawaban yang sudah disimpan. Untuk restore state saat lanjutkan ujian."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "POST",
+      "path": "/sesi/:sesiId/jawab",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": { "soal_id": "uuid", "opsi_id": "uuid?", "jawaban_teks": "string?" },
+      "response": { "success": true, "data": {} },
+      "description": "Simpan atau update satu jawaban (upsert ON CONFLICT). Auto-save per soal."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "POST",
+      "path": "/sesi/:sesiId/selesai",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": null,
+      "response": { "success": true, "data": { "id": "uuid", "nilai": 87.50, "total_benar": 35, "total_soal": 40 } },
+      "description": "Selesaikan sesi + hitung nilai otomatis. Memanggil soal-service untuk data opsi benar. Nilai = (bobot benar / total bobot) × 100."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/hasil/counts",
+      "auth": true,
+      "query": "?tryout_ids=uuid1,uuid2,...",
+      "body": null,
+      "response": { "success": true, "data": { "tryout_id": "count" } },
+      "description": "Batch count peserta per tryout. Digunakan guru dashboard. UUID cast diperlukan: ANY($1::uuid[])."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/hasil/:sesiId",
+      "auth": true,
+      "roles": ["siswa", "guru", "admin"],
+      "body": null,
+      "response": { "success": true, "data": { "hasil": {}, "sesi": {}, "tryout": {}, "detail": [] } },
+      "description": "Hasil lengkap dengan breakdown per soal (jawaban siswa, jawaban benar, is_correct, is_skipped)."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/hasil/rekap/:tryoutId",
+      "auth": true,
+      "roles": ["guru", "admin"],
+      "body": null,
+      "response": { "success": true, "data": { "summary": { "total_peserta": 0, "rata_rata_nilai": 0, "nilai_tertinggi": 0, "nilai_terendah": 0 }, "hasil": [] } },
+      "description": "Rekap semua siswa untuk satu tryout. Memanggil user-service untuk nama dan kelas siswa."
+    },
+    {
+      "service": "jawaban-service",
+      "method": "GET",
+      "path": "/riwayat",
+      "auth": true,
+      "roles": ["siswa"],
+      "body": null,
+      "response": { "success": true, "data": [{ "sesi_id": "uuid", "tryout_id": "uuid", "nilai": 87.5, "status": "selesai", "mulai_at": "timestamp" }] },
+      "description": "Semua sesi tryout milik siswa yang login. Join dengan hasil untuk nilai."
+    }
+  ],
+  "database": [
+    {
+      "service": "auth-service",
+      "db": "db_auth",
+      "tables": [
+        {
+          "name": "users",
+          "description": "Akun autentikasi semua pengguna",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK DEFAULT gen_random_uuid()", "description": "Primary key" },
+            { "name": "email", "type": "VARCHAR(255)", "constraint": "UNIQUE NOT NULL", "description": "Email login" },
+            { "name": "password_hash", "type": "VARCHAR(255)", "constraint": "NOT NULL", "description": "bcrypt hash (cost 12)" },
+            { "name": "role", "type": "VARCHAR(20)", "constraint": "CHECK admin|guru|siswa", "description": "Role pengguna" },
+            { "name": "is_active", "type": "BOOLEAN", "constraint": "DEFAULT true", "description": "Status aktif/nonaktif" },
+            { "name": "created_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "Waktu dibuat" },
+            { "name": "updated_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "Waktu diperbarui" }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "user-service",
+      "db": "db_user",
+      "tables": [
+        {
+          "name": "profiles",
+          "description": "Data profil pengguna (pisah dari auth)",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK DEFAULT gen_random_uuid()", "description": "Primary key" },
+            { "name": "user_id", "type": "UUID", "constraint": "UNIQUE NOT NULL", "description": "FK ke auth.users.id (tidak ada FK constraint antar DB)" },
+            { "name": "nama_lengkap", "type": "VARCHAR(255)", "constraint": "NOT NULL", "description": "Nama lengkap" },
+            { "name": "no_telepon", "type": "VARCHAR(20)", "constraint": "nullable", "description": "Nomor telepon" },
+            { "name": "kelas", "type": "VARCHAR(50)", "constraint": "nullable", "description": "Kelas siswa (XII IPA 1, dll)" },
+            { "name": "mata_pelajaran", "type": "VARCHAR(255)", "constraint": "nullable", "description": "Mata pelajaran guru" },
+            { "name": "avatar_url", "type": "TEXT", "constraint": "nullable", "description": "Data URI base64 foto profil" },
+            { "name": "bio", "type": "TEXT", "constraint": "nullable", "description": "Bio singkat" },
+            { "name": "created_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" },
+            { "name": "updated_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "soal-service",
+      "db": "db_soal",
+      "tables": [
+        {
+          "name": "tryouts",
+          "description": "Paket ujian yang dibuat guru",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "nama_tryout", "type": "VARCHAR(255)", "constraint": "NOT NULL", "description": "Nama tryout" },
+            { "name": "mata_pelajaran", "type": "VARCHAR(100)", "constraint": "NOT NULL", "description": "Mata pelajaran" },
+            { "name": "durasi_menit", "type": "INTEGER", "constraint": "DEFAULT 90", "description": "Durasi ujian dalam menit" },
+            { "name": "dibuat_oleh", "type": "UUID", "constraint": "NOT NULL", "description": "FK ke auth.users.id (guru)" },
+            { "name": "status", "type": "VARCHAR(20)", "constraint": "CHECK draft|published|closed DEFAULT draft", "description": "Status: draft=hanya guru, published=siswa bisa akses, closed=tutup" },
+            { "name": "created_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" },
+            { "name": "updated_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" }
+          ]
+        },
+        {
+          "name": "soal",
+          "description": "Pertanyaan dalam tryout",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "tryout_id", "type": "UUID", "constraint": "FK tryouts ON DELETE CASCADE", "description": "" },
+            { "name": "nomor_soal", "type": "INTEGER", "constraint": "NOT NULL", "description": "Urutan soal (auto-increment jika tidak disuplai)" },
+            { "name": "tipe", "type": "VARCHAR(20)", "constraint": "CHECK pilihan_ganda|essay", "description": "Tipe soal" },
+            { "name": "pertanyaan", "type": "TEXT", "constraint": "NOT NULL", "description": "Plain text pertanyaan" },
+            { "name": "pertanyaan_html", "type": "TEXT", "constraint": "nullable", "description": "HTML rich text pertanyaan" },
+            { "name": "gambar_url", "type": "TEXT", "constraint": "nullable", "description": "URL gambar soal" },
+            { "name": "gambar_base64", "type": "TEXT", "constraint": "nullable", "description": "Gambar soal sebagai base64" },
+            { "name": "equation", "type": "TEXT", "constraint": "nullable", "description": "Persamaan teks biasa" },
+            { "name": "equation_latex", "type": "TEXT", "constraint": "nullable", "description": "Persamaan LaTeX untuk KaTeX" },
+            { "name": "panduan_essay", "type": "TEXT", "constraint": "nullable", "description": "Panduan penilaian essay (hanya guru/admin)" },
+            { "name": "bobot", "type": "INTEGER", "constraint": "NOT NULL DEFAULT 1", "description": "Bobot poin soal ini" },
+            { "name": "created_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" }
+          ]
+        },
+        {
+          "name": "opsi_jawaban",
+          "description": "Pilihan ganda untuk soal PG",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "soal_id", "type": "UUID", "constraint": "FK soal ON DELETE CASCADE", "description": "" },
+            { "name": "huruf", "type": "CHAR(1)", "constraint": "NOT NULL", "description": "A, B, C, D, atau E" },
+            { "name": "teks", "type": "TEXT", "constraint": "NOT NULL", "description": "Teks pilihan" },
+            { "name": "teks_html", "type": "TEXT", "constraint": "nullable", "description": "HTML teks pilihan" },
+            { "name": "is_benar", "type": "BOOLEAN", "constraint": "DEFAULT false", "description": "Apakah ini jawaban benar" }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "jawaban-service",
+      "db": "db_jawaban",
+      "tables": [
+        {
+          "name": "sesi_tryout",
+          "description": "Sesi ujian siswa (satu siswa satu tryout, tidak bisa diulang)",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "siswa_id", "type": "UUID", "constraint": "NOT NULL", "description": "FK ke auth.users.id" },
+            { "name": "tryout_id", "type": "UUID", "constraint": "NOT NULL", "description": "FK ke soal.tryouts.id" },
+            { "name": "mulai_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "Waktu mulai" },
+            { "name": "selesai_at", "type": "TIMESTAMPTZ", "constraint": "nullable", "description": "Waktu selesai" },
+            { "name": "status", "type": "VARCHAR(20)", "constraint": "CHECK berlangsung|selesai|timeout DEFAULT berlangsung", "description": "Status sesi" },
+            { "name": "(unique)", "type": "", "constraint": "UNIQUE(siswa_id, tryout_id)", "description": "Satu siswa hanya bisa punya satu sesi per tryout" }
+          ]
+        },
+        {
+          "name": "jawaban",
+          "description": "Jawaban siswa per soal",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "sesi_id", "type": "UUID", "constraint": "FK sesi_tryout", "description": "" },
+            { "name": "soal_id", "type": "UUID", "constraint": "NOT NULL", "description": "FK ke soal.soal.id (lintas DB, no constraint)" },
+            { "name": "jawaban_teks", "type": "TEXT", "constraint": "nullable", "description": "Jawaban essay" },
+            { "name": "opsi_id", "type": "UUID", "constraint": "nullable", "description": "FK ke opsi_jawaban.id untuk PG" },
+            { "name": "created_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" },
+            { "name": "updated_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "" },
+            { "name": "(unique)", "type": "", "constraint": "UNIQUE(sesi_id, soal_id)", "description": "Satu jawaban per soal per sesi — upsert ON CONFLICT" }
+          ]
+        },
+        {
+          "name": "hasil",
+          "description": "Rekap nilai final per sesi",
+          "columns": [
+            { "name": "id", "type": "UUID", "constraint": "PK", "description": "" },
+            { "name": "sesi_id", "type": "UUID", "constraint": "UNIQUE FK sesi_tryout", "description": "Satu hasil per sesi" },
+            { "name": "siswa_id", "type": "UUID", "constraint": "NOT NULL", "description": "" },
+            { "name": "tryout_id", "type": "UUID", "constraint": "NOT NULL", "description": "" },
+            { "name": "total_benar", "type": "INTEGER", "constraint": "DEFAULT 0", "description": "Jumlah soal PG yang benar" },
+            { "name": "total_soal", "type": "INTEGER", "constraint": "NOT NULL", "description": "Total soal dalam tryout" },
+            { "name": "nilai", "type": "NUMERIC(5,2)", "constraint": "nullable", "description": "Nilai 0–100, formula: (bobot_benar/total_bobot)×100" },
+            { "name": "dihitung_at", "type": "TIMESTAMPTZ", "constraint": "DEFAULT NOW()", "description": "Waktu nilai dihitung" }
+          ]
+        }
+      ]
+    }
+  ],
+  "flows": {
+    "admin": [
+      "Login (/login) → POST /auth/login → /admin/dashboard",
+      "/admin/dashboard → sidebar Kelola Guru → /admin/users?role=guru",
+      "Tambah Guru → Dialog form → POST /users (email, password, role=guru, nama, mata_pelajaran)",
+      "Toggle aktif/nonaktif → PATCH /users/:id/active",
+      "Edit guru → PUT /users/:id (profile) atau PATCH /auth/internal/users/:id (auth)",
+      "Hapus guru → Konfirmasi → DELETE /users/:id (hapus profile + auth)",
+      "/admin/dashboard → sidebar Kelola Siswa → /admin/users?role=siswa",
+      "Tambah Siswa → Dialog form → POST /users (dengan field kelas)",
+      "Admin Profile → /admin/profil → PUT /users/profile/me, POST /users/profile/avatar"
+    ],
+    "guru": [
+      "Login (/login) → POST /auth/login → /guru/dashboard",
+      "/guru/dashboard → menampilkan tryout milik guru → GET /tryouts",
+      "Buat Tryout → Dialog → POST /tryouts → redirect ke /guru/tryout/{id}/soal",
+      "Tambah Soal Manual → form → POST /tryouts/{id}/soal (tipe, pertanyaan, opsi, bobot)",
+      "Generate AI → pilih mapel → return static preset → POST batch ke /tryouts/{id}/soal",
+      "Edit Soal → PUT /soal/{soalId} (replace opsi)",
+      "Hapus Soal → DELETE /soal/{soalId}",
+      "Publish → validasi minimal 1 soal & PG ada jawaban benar → PATCH /tryouts/{id}/publish {status: published}",
+      "Lihat Hasil Siswa → /guru/tryout/{id}/hasil → GET /hasil/rekap/{tryoutId}",
+      "Guru Profile → /guru/profil → PUT /users/profile/me"
+    ],
+    "siswa": [
+      "Login (/login) → POST /auth/login → /siswa/dashboard",
+      "/siswa/dashboard → stats + rekomendasi → GET /tryouts/available + GET /hasil/counts",
+      "Daftar Tryout → /siswa/tryout → GET /tryouts/available",
+      "Cek status sesi per tryout → GET /sesi/by-tryout/{tryoutId}",
+      "Mulai Tryout → /siswa/tryout/{id} (konfirmasi) → POST /sesi → redirect ke /exam/{sesiId}",
+      "Lanjutkan Tryout → GET /sesi/{sesiId} (restore answers) → /exam/{sesiId}",
+      "Jawab Soal → POST /sesi/{sesiId}/jawab (auto-save tiap soal)",
+      "Timer habis / kumpulkan → POST /sesi/{sesiId}/selesai → nilai dihitung otomatis",
+      "Lihat Hasil → /siswa/hasil/{sesiId} → GET /hasil/{sesiId}",
+      "Riwayat → /siswa/riwayat → GET /riwayat",
+      "Siswa Profile → /siswa/profil → PUT /users/profile/me"
+    ]
+  },
+  "auth_flow": {
+    "type": "Session-based (cookie)",
+    "cookie_name": "triton.sid",
+    "cookie_settings": { "httpOnly": true, "sameSite": "lax", "secure": false },
+    "session_data": { "userId": "uuid", "role": "admin|guru|siswa", "email": "string" },
+    "gateway_flow": [
+      "1. Request masuk ke API Gateway (port 4000)",
+      "2. requireAuth middleware: GET /auth/me dengan cookie session",
+      "3. Auth service validasi session → return { userId, role }",
+      "4. Gateway inject x-user-id dan x-user-role ke request header",
+      "5. Request di-proxy ke service target",
+      "6. Service baca x-user-id / x-user-role dari header untuk otorisasi"
+    ],
+    "role_middleware": [
+      "requireRole('admin') → hanya admin",
+      "requireRole('guru', 'admin') → guru atau admin",
+      "requireRole('siswa') → hanya siswa",
+      "requireAuth saja → semua role yang login"
+    ]
+  },
+  "seed_accounts": [
+    { "email": "admin@triton.id", "password": "admin123", "role": "admin", "nama": "Administrator" },
+    { "email": "guru1@triton.id", "password": "guru123", "role": "guru", "nama": "Bapak Agus" },
+    { "email": "guru2@triton.id", "password": "guru123", "role": "guru", "nama": "Ibu Dewi" },
+    { "email": "siswa1@triton.id", "password": "siswa123", "role": "siswa", "nama": "Budi Santoso", "kelas": "XII IPA 1" },
+    { "email": "siswa2@triton.id", "password": "siswa123", "role": "siswa", "nama": "Ani Rahayu", "kelas": "XII IPA 2" }
+  ],
+  "env_vars": [
+    { "key": "POSTGRES_HOST", "default": "localhost", "services": "semua service", "description": "Host PostgreSQL" },
+    { "key": "POSTGRES_PORT", "default": "5432", "services": "semua service", "description": "Port PostgreSQL" },
+    { "key": "POSTGRES_USER", "default": "triton_user", "services": "semua service", "description": "Username PostgreSQL" },
+    { "key": "POSTGRES_PASSWORD", "default": "triton_secret_2024", "services": "semua service", "description": "Password PostgreSQL" },
+    { "key": "POSTGRES_DB", "default": "db_auth/db_user/db_soal/db_jawaban", "services": "per service", "description": "Nama database masing-masing service" },
+    { "key": "SESSION_SECRET", "default": "triton-secret-key-2024", "services": "auth-service", "description": "Secret untuk signing session cookie" },
+    { "key": "PORT", "default": "4001/4002/4003/4004", "services": "per service", "description": "Port listening service" },
+    { "key": "AUTH_SERVICE_URL", "default": "http://localhost:4001", "services": "gateway, user-service, jawaban-service", "description": "URL auth-service" },
+    { "key": "USER_SERVICE_URL", "default": "http://localhost:4002", "services": "gateway, jawaban-service", "description": "URL user-service" },
+    { "key": "SOAL_SERVICE_URL", "default": "http://localhost:4003", "services": "gateway, jawaban-service", "description": "URL soal-service" },
+    { "key": "JAWABAN_SERVICE_URL", "default": "http://localhost:4004", "services": "gateway", "description": "URL jawaban-service" },
+    { "key": "FRONTEND_URL", "default": "http://localhost:3000", "services": "gateway (CORS)", "description": "URL frontend untuk CORS whitelist" }
+  ],
+  "faq": [
+    { "q": "bagaimana cara menambah siswa", "a": "Login sebagai Admin → Kelola Siswa (/admin/users?role=siswa) → Tambah Siswa → isi email, password, nama, kelas → POST /users." },
+    { "q": "bagaimana guru membuat soal", "a": "Login sebagai Guru → Dashboard → Buat Tryout → redirect ke /guru/tryout/{id}/soal → Tambah Soal (manual atau AI generate) → isi pertanyaan, pilihan, tandai jawaban benar → Publish." },
+    { "q": "bagaimana siswa memulai tryout", "a": "Login sebagai Siswa → Tryout Tersedia → pilih tryout → Mulai Tryout → baca aturan → Mulai → kerjakan soal → Kumpulkan." },
+    { "q": "bagaimana nilai dihitung", "a": "Nilai = (total bobot soal benar / total bobot semua soal) × 100. Soal essay tidak dihitung otomatis (panduan tersedia untuk guru). Dihitung saat POST /sesi/:sesiId/selesai." },
+    { "q": "apa itu session based auth", "a": "Auth menggunakan cookie session (triton.sid), bukan JWT. Session disimpan di database PostgreSQL (connect-pg-simple) atau Redis. Gateway memvalidasi setiap request ke /auth/me dan inject x-user-id + x-user-role ke header." },
+    { "q": "berapa port masing masing service", "a": "Frontend: 3000, Gateway: 4000, Auth-service: 4001, User-service: 4002, Soal-service: 4003, Jawaban-service: 4004." },
+    { "q": "api endpoint yang tersedia", "a": "Auth: POST /auth/login, POST /auth/logout, GET /auth/me, POST /auth/change-password. User: GET/POST /users, PATCH /users/:id/active, GET/PUT /users/profile/me, POST /users/profile/avatar. Soal: GET/POST /tryouts, GET /tryouts/available, GET/PUT/PATCH/DELETE /tryouts/:id, POST /tryouts/:id/soal, PUT/DELETE /soal/:soalId. Jawaban: POST/GET /sesi, POST /sesi/:sesiId/jawab, POST /sesi/:sesiId/selesai, GET /hasil/*, GET /riwayat." },
+    { "q": "tabel apa saja di database", "a": "db_auth: users. db_user: profiles. db_soal: tryouts, soal, opsi_jawaban. db_jawaban: sesi_tryout, jawaban, hasil. Total 7 tabel di 4 database terpisah." },
+    { "q": "bagaimana cara setup project", "a": "1. docker compose up -d postgres redis. 2. Buat 4 database (db_auth, db_user, db_soal, db_jawaban). 3. Jalankan schema migration tiap service. 4. cd scripts && npm run seed. 5. make dev (atau ts-node-dev per service). 6. cd frontend && npm run dev." },
+    { "q": "akun default setelah seeding", "a": "admin@triton.id / admin123, guru1@triton.id / guru123, guru2@triton.id / guru123, siswa1@triton.id / siswa123, siswa2@triton.id / siswa123." }
+  ]
+}

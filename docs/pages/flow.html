@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Flow — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body data-page="flow">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo"><img src="../logo.png" alt="Triton Denpasar" /><div class="version">Documentation v1.0</div></div>
+    <div class="sidebar-progress"><div class="label">Progress membaca: <span id="progress-text">0%</span></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button></div>
+  </aside>
+
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Arsitektur</div>
+      <h1>User Flow</h1>
+      <p>Alur penggunaan platform untuk setiap role pengguna.</p>
+    </div>
+
+    <!-- Quick Summary -->
+    <div class="info-box blue" style="margin-bottom:32px;">
+      <span>ℹ️</span>
+      <span>Semua role menggunakan halaman login yang sama (<code>/login</code>). Setelah login, sistem redirect otomatis ke dashboard sesuai role berdasarkan data session.</span>
+    </div>
+
+    <!-- Three column flows -->
+    <div class="flows-grid">
+
+      <!-- ADMIN -->
+      <div class="flow-col">
+        <h3><span style="background:#EDE9FE;color:#5B21B6;padding:4px 10px;border-radius:8px;font-size:12px;">ADMIN</span></h3>
+        <ul class="flow-list">
+          <li>Login → <code>/admin/dashboard</code></li>
+          <li>Sidebar: Kelola Guru → <code>/admin/users?role=guru</code></li>
+          <li>Tambah Guru → Dialog form → <code>POST /users</code></li>
+          <li>Toggle aktif/nonaktif guru → <code>PATCH /users/:id/active</code></li>
+          <li>Edit profil guru → <code>PUT /users/:id</code></li>
+          <li>Hapus guru → <code>DELETE /users/:id</code></li>
+          <li>Sidebar: Kelola Siswa → <code>/admin/users?role=siswa</code></li>
+          <li>Tambah Siswa (+ kelas) → <code>POST /users</code></li>
+          <li>Profil Admin → <code>/admin/profil</code></li>
+        </ul>
+      </div>
+
+      <!-- GURU -->
+      <div class="flow-col">
+        <h3><span style="background:#EFF6FF;color:#1E40AF;padding:4px 10px;border-radius:8px;font-size:12px;">GURU</span></h3>
+        <ul class="flow-list">
+          <li>Login → <code>/guru/dashboard</code></li>
+          <li>Lihat tryout milik sendiri → <code>GET /tryouts</code></li>
+          <li>Buat Tryout → <code>POST /tryouts</code> → redirect ke soal builder</li>
+          <li>Tambah Soal Manual → <code>POST /tryouts/:id/soal</code></li>
+          <li>Generate AI → pilih mapel → batch POST soal</li>
+          <li>Edit Soal → <code>PUT /soal/:soalId</code></li>
+          <li>Hapus Soal → <code>DELETE /soal/:soalId</code></li>
+          <li>Publish → <code>PATCH /tryouts/:id/publish</code></li>
+          <li>Lihat Hasil → <code>GET /hasil/rekap/:tryoutId</code></li>
+          <li>Profil Guru → <code>/guru/profil</code></li>
+        </ul>
+      </div>
+
+      <!-- SISWA -->
+      <div class="flow-col">
+        <h3><span style="background:#F0FDF4;color:#166534;padding:4px 10px;border-radius:8px;font-size:12px;">SISWA</span></h3>
+        <ul class="flow-list">
+          <li>Login → <code>/siswa/dashboard</code></li>
+          <li>Lihat tryout → <code>GET /tryouts/available</code></li>
+          <li>Cek status sesi → <code>GET /sesi/by-tryout/:id</code></li>
+          <li>Konfirmasi → <code>/siswa/tryout/:id</code></li>
+          <li>Mulai Tryout → <code>POST /sesi</code> → <code>/exam/:sesiId</code></li>
+          <li>Lanjutkan → restore jawaban dari <code>GET /sesi/:sesiId</code></li>
+          <li>Jawab soal (auto-save) → <code>POST /sesi/:id/jawab</code></li>
+          <li>Kumpulkan / timer habis → <code>POST /sesi/:id/selesai</code></li>
+          <li>Lihat Hasil → <code>GET /hasil/:sesiId</code></li>
+          <li>Riwayat → <code>GET /riwayat</code></li>
+          <li>Profil Siswa → <code>/siswa/profil</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Exam Flow Detail -->
+    <div class="section-title" style="margin-top:40px;"><div class="icon" style="background:#FFFBEB;">📝</div> Detail Flow Ujian (Exam Page)</div>
+    <div class="card">
+      <div class="flow-container">
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">1</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Siswa klik "Mulai Tryout"</h4>
+            <p>Halaman konfirmasi <code>/siswa/tryout/:id</code> menampilkan info tryout, aturan, dan checkbox persetujuan.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">2</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>POST /sesi → buat sesi baru</h4>
+            <p>Server buat record <code>sesi_tryout</code> dengan status <code>berlangsung</code>. Redirect ke <code>/exam/:sesiId</code>.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">3</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Exam Page load</h4>
+            <p>Fetch <code>GET /tryouts/:id</code> untuk data soal (is_benar disembunyikan untuk siswa). Fetch <code>GET /sesi/:sesiId</code> untuk restore jawaban yang sudah ada.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num green">4</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Siswa menjawab soal (auto-save)</h4>
+            <p>Setiap kali siswa memilih opsi atau mengetik essay, langsung <code>POST /sesi/:sesiId/jawab</code> (upsert ON CONFLICT).</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num red">5</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Timer habis atau klik Kumpulkan</h4>
+            <p>Konfirmasi dialog → <code>POST /sesi/:sesiId/selesai</code>. Server fetch data soal dari soal-service (dengan role admin untuk mendapat is_benar), hitung nilai, simpan ke tabel <code>hasil</code>.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num green">6</div></div>
+          <div class="flow-content">
+            <h4>Redirect ke halaman hasil</h4>
+            <p>Nilai, grade, statistik benar/salah/skip, dan breakdown per soal ditampilkan di <code>/siswa/hasil/:sesiId</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Auth Flow -->
+    <div class="section-title"><div class="icon" style="background:#F0FDF4;">🔐</div> Flow Autentikasi (Semua Role)</div>
+    <div class="card">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#1E40AF;">Halaman Protected</div>
+        <div style="color:#94A3B8;font-size:18px;">→</div>
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">check session di frontend</div>
+        <div style="color:#94A3B8;font-size:18px;">→</div>
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">401? redirect /login</div>
+        <div style="color:#94A3B8;font-size:18px;">→</div>
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#334155;">role mismatch? redirect dashboard</div>
+        <div style="color:#94A3B8;font-size:18px;">→</div>
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#166534;">✓ Render halaman</div>
+      </div>
+    </div>
+  </main>
+
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text"><div class="title">🤖 Triton AI Assistant</div><div class="sub">Tanya apa saja tentang dokumentasi ini</div></div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages"><div class="bot-msg">Halo! Tanya saya tentang flow, API, database, atau cara setup. 👋</div></div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Flow login admin?')">Flow admin</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana flow guru membuat soal?')">Flow guru</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana siswa memulai tryout?')">Flow siswa</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana nilai dihitung?')">Hitung nilai</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>
