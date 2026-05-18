@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview & Stack — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+</head>
+<body data-page="overview">
+
+  <!-- ── SIDEBAR ───────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <img src="../logo.png" alt="Triton Denpasar" />
+      <div class="version">Documentation v1.0</div>
+    </div>
+    <div class="sidebar-progress">
+      <div class="label">Progress membaca: <span id="progress-text">0%</span></div>
+      <div class="progress-track"><div id="progress-bar"></div></div>
+    </div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Memulai</div>
+      <h1>Overview & Stack</h1>
+      <p>Gambaran umum platform Triton Denpasar dan teknologi yang digunakan.</p>
+    </div>
+
+    <!-- What is Triton -->
+    <div class="card mb-24">
+      <h2 style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:12px;">Apa itu Triton Denpasar?</h2>
+      <p style="color:#475569;line-height:1.8;">
+        Triton Denpasar adalah platform tryout online yang dirancang khusus untuk bimbel Triton Denpasar.
+        Platform ini mendukung tiga role pengguna: <b>Admin</b> (mengelola akun), <b>Guru</b> (membuat soal dan tryout),
+        dan <b>Siswa</b> (mengerjakan tryout dan melihat hasil). Soal yang didukung meliputi pilihan ganda,
+        essay, gambar, dan persamaan matematika (LaTeX via KaTeX). Nilai dihitung secara otomatis setelah tryout selesai.
+      </p>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="section-title mt-0">
+      <div class="icon" style="background:#EFF6FF;">⚡</div>
+      Tech Stack
+    </div>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);gap:16px;">
+      <div class="stack-card">
+        <div class="label">Frontend</div>
+        <div class="value">Next.js 14 App Router</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">TypeScript · Tailwind CSS · KaTeX</div>
+      </div>
+      <div class="stack-card">
+        <div class="label">Backend</div>
+        <div class="value">Express.js Microservices</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">TypeScript · ts-node-dev · Zod validation</div>
+      </div>
+      <div class="stack-card">
+        <div class="label">Database</div>
+        <div class="value">PostgreSQL (4 DB terpisah)</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">db_auth · db_user · db_soal · db_jawaban</div>
+      </div>
+      <div class="stack-card">
+        <div class="label">Autentikasi</div>
+        <div class="value">Session-based Cookie</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">express-session · bcrypt (cost 12)</div>
+      </div>
+      <div class="stack-card">
+        <div class="label">API Gateway</div>
+        <div class="value">http-proxy-middleware</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">Satu entry point port 4000 · CORS</div>
+      </div>
+      <div class="stack-card">
+        <div class="label">Dev Tools</div>
+        <div class="value">Make + Shell Scripts</div>
+        <div style="font-size:12px;color:#94A3B8;margin-top:4px;">make dev · make stop · per-service logs</div>
+      </div>
+    </div>
+
+    <!-- Port Map -->
+    <div class="section-title">
+      <div class="icon" style="background:#F0FDF4;">🔌</div>
+      Port Map
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Service</th><th>Port</th><th>Database</th><th>Keterangan</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="mono">frontend</span></td><td><span class="badge badge-blue">3000</span></td><td>—</td><td>Next.js dev server</td></tr>
+          <tr><td><span class="mono">api-gateway</span></td><td><span class="badge badge-blue">4000</span></td><td>—</td><td>Proxy semua request, validasi auth</td></tr>
+          <tr><td><span class="mono">auth-service</span></td><td><span class="badge badge-blue">4001</span></td><td>db_auth</td><td>Login, logout, session, change-password</td></tr>
+          <tr><td><span class="mono">user-service</span></td><td><span class="badge badge-blue">4002</span></td><td>db_user</td><td>Profil pengguna, kelola user (admin)</td></tr>
+          <tr><td><span class="mono">soal-service</span></td><td><span class="badge badge-blue">4003</span></td><td>db_soal</td><td>Tryout, soal, opsi jawaban</td></tr>
+          <tr><td><span class="mono">jawaban-service</span></td><td><span class="badge badge-blue">4004</span></td><td>db_jawaban</td><td>Sesi ujian, jawaban, hasil/nilai</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Microservices Diagram -->
+    <div class="section-title">
+      <div class="icon" style="background:#FEF3C7;">🗺️</div>
+      Diagram Microservices
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <div style="display:flex;align-items:flex-start;gap:0;min-width:580px;padding:8px 0;">
+
+        <!-- Browser -->
+        <div style="text-align:center;flex-shrink:0;">
+          <div style="background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#334155;">
+            🌐 Browser<br/><span style="font-size:11px;color:#94A3B8;">localhost:3000</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;padding:0 8px;margin-top:14px;">
+          <div style="height:2px;width:40px;background:#3B82F6;"></div>
+          <div style="width:0;height:0;border-left:8px solid #3B82F6;border-top:5px solid transparent;border-bottom:5px solid transparent;"></div>
+        </div>
+
+        <!-- Gateway -->
+        <div style="text-align:center;flex-shrink:0;">
+          <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:700;color:#1E40AF;">
+            🔀 API Gateway<br/><span style="font-size:11px;font-weight:400;">localhost:4000</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;padding:0 8px;margin-top:14px;">
+          <div style="height:2px;width:40px;background:#E2E8F0;"></div>
+          <div style="width:0;height:0;border-left:8px solid #E2E8F0;border-top:5px solid transparent;border-bottom:5px solid transparent;"></div>
+        </div>
+
+        <!-- Services -->
+        <div style="display:flex;flex-direction:column;gap:10px;flex-shrink:0;">
+          <div style="background:white;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#334155;">
+            🔐 Auth Service <span style="color:#94A3B8;font-weight:400;">:4001 · db_auth</span>
+          </div>
+          <div style="background:white;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#334155;">
+            👤 User Service <span style="color:#94A3B8;font-weight:400;">:4002 · db_user</span>
+          </div>
+          <div style="background:white;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#334155;">
+            📝 Soal Service <span style="color:#94A3B8;font-weight:400;">:4003 · db_soal</span>
+          </div>
+          <div style="background:white;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#334155;">
+            ✅ Jawaban Service <span style="color:#94A3B8;font-weight:400;">:4004 · db_jawaban</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box blue mt-16" style="margin-top:16px;">
+        <span>ℹ️</span>
+        <span>Semua request dari browser melewati Gateway di port 4000. Gateway memvalidasi session, lalu proxy ke service yang sesuai. Service-to-service communication (mis. jawaban-service → soal-service untuk scoring) dilakukan langsung, bukan lewat gateway.</span>
+      </div>
+    </div>
+
+    <!-- Role Overview -->
+    <div class="section-title">
+      <div class="icon" style="background:#EDE9FE;">👥</div>
+      Role Pengguna
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      <div class="card" style="border-top:3px solid #7C3AED;">
+        <div style="font-size:24px;margin-bottom:8px;">🛡️</div>
+        <h3 style="font-size:15px;font-weight:700;color:#1E293B;">Admin</h3>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;line-height:1.6;">Mengelola akun guru dan siswa. Membuat, mengedit, mengaktifkan/menonaktifkan, dan menghapus pengguna.</p>
+        <div style="margin-top:12px;font-size:12px;color:#94A3B8;">Dashboard: /admin/dashboard</div>
+      </div>
+      <div class="card" style="border-top:3px solid #3B82F6;">
+        <div style="font-size:24px;margin-bottom:8px;">👨‍🏫</div>
+        <h3 style="font-size:15px;font-weight:700;color:#1E293B;">Guru</h3>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;line-height:1.6;">Membuat tryout, menambahkan soal (manual/AI), mempublish tryout, dan melihat rekap nilai siswa.</p>
+        <div style="margin-top:12px;font-size:12px;color:#94A3B8;">Dashboard: /guru/dashboard</div>
+      </div>
+      <div class="card" style="border-top:3px solid #22C55E;">
+        <div style="font-size:24px;margin-bottom:8px;">🎓</div>
+        <h3 style="font-size:15px;font-weight:700;color:#1E293B;">Siswa</h3>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;line-height:1.6;">Memilih tryout yang tersedia, mengerjakan soal dalam batas waktu, dan melihat hasil/nilai secara instan.</p>
+        <div style="margin-top:12px;font-size:12px;color:#94A3B8;">Dashboard: /siswa/dashboard</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── CHATBOT ─────────────────────────────────────────────── -->
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text">
+        <div class="title">🤖 Triton AI Assistant</div>
+        <div class="sub">Tanya apa saja tentang dokumentasi ini</div>
+      </div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages">
+      <div class="bot-msg">Halo! Saya AI Assistant dokumentasi Triton Denpasar. 👋<br/>Tanya tentang API, database, flow, atau cara setup.</div>
+    </div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Apa saja API endpoint yang tersedia?')">API endpoints</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana flow login siswa?')">Flow siswa</button>
+      <button class="quick-btn" onclick="askQuestion('Tabel apa saja di database?')">Database</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana cara setup project?')">Setup</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autentikasi — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body data-page="auth">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo"><img src="../logo.png" alt="Triton Denpasar" /><div class="version">Documentation v1.0</div></div>
+    <div class="sidebar-progress"><div class="label">Progress membaca: <span id="progress-text">0%</span></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button></div>
+  </aside>
+
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Arsitektur</div>
+      <h1>Autentikasi</h1>
+      <p>Mekanisme session-based authentication dan gateway middleware.</p>
+    </div>
+
+    <!-- Why session-based -->
+    <div class="section-title mt-0"><div class="icon" style="background:#EFF6FF;">🍪</div> Mengapa Session-Based (bukan JWT)?</div>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <h4 style="font-size:14px;font-weight:700;color:#166534;margin-bottom:10px;">✅ Keuntungan Session</h4>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#475569;">
+            <li>🔒 Session bisa di-invalidate server-side (logout instan)</li>
+            <li>🔒 Tidak ada token di client — lebih aman dari XSS</li>
+            <li>🍪 Cookie HttpOnly — tidak bisa diakses JavaScript</li>
+            <li>🔄 Auto-renew saat ada aktivitas (rolling session)</li>
+            <li>🛑 Bisa paksa logout semua device dari server</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-size:14px;font-weight:700;color:#991B1B;margin-bottom:10px;">⚠️ Trade-off</h4>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#475569;">
+            <li>🔌 Perlu database/Redis untuk menyimpan session</li>
+            <li>🔄 Setiap request ke gateway butuh validasi ke auth-service</li>
+            <li>🌐 Tidak stateless (berbeda dari REST pure)</li>
+            <li>📦 Session store harus di-share antar instance</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Structure -->
+    <div class="section-title"><div class="icon" style="background:#F0FDF4;">📋</div> Struktur Session</div>
+    <div class="card">
+      <p style="font-size:13px;color:#64748B;margin-bottom:12px;">Data yang disimpan di session setelah login berhasil:</p>
+      <pre class="code">// Session data (auth-service, express-session)
+{
+  userId: "uuid",           // ID pengguna dari db_auth.users
+  role:   "admin|guru|siswa",
+  email:  "user@triton.id"
+}
+
+// Cookie yang dikirim ke browser
+Set-Cookie: triton.sid=s%3A...; Path=/; HttpOnly; SameSite=Lax</pre>
+      <div class="info-box amber" style="margin-top:12px;">
+        <span>⚠️</span>
+        <span>Cookie <code>triton.sid</code> wajib dikirim di setiap request ke API. Frontend menggunakan <code>axios</code> dengan <code>withCredentials: true</code> untuk memastikan ini.</span>
+      </div>
+    </div>
+
+    <!-- Cookie Settings -->
+    <div class="section-title"><div class="icon" style="background:#FEF3C7;">🔧</div> Cookie Settings</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Setting</th><th>Nilai</th><th>Alasan</th></tr></thead>
+        <tbody>
+          <tr><td><code>httpOnly</code></td><td><span class="badge badge-get">true</span></td><td>Mencegah akses JavaScript → proteksi XSS</td></tr>
+          <tr><td><code>sameSite</code></td><td><code>'lax'</code></td><td>Proteksi CSRF dasar, masih bisa cross-site GET</td></tr>
+          <tr><td><code>secure</code></td><td><span class="badge badge-delete">false</span> (dev)</td><td>Set <code>true</code> di production (HTTPS only)</td></tr>
+          <tr><td><code>maxAge</code></td><td>24 jam</td><td>Session expired setelah 24 jam tanpa aktivitas</td></tr>
+          <tr><td><code>name</code></td><td><code>triton.sid</code></td><td>Nama cookie custom (bukan default connect.sid)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Gateway Auth Flow -->
+    <div class="section-title"><div class="icon" style="background:#EDE9FE;">🔀</div> Gateway Auth Middleware Flow</div>
+    <div class="card">
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;">Setiap request ke API Gateway melalui proses berikut:</p>
+
+      <div class="flow-container">
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">1</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Request masuk ke API Gateway (port 4000)</h4>
+            <p>Browser mengirim request dengan cookie <code>triton.sid</code> secara otomatis.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">2</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>requireAuth middleware</h4>
+            <p>Gateway fetch <code>GET /auth/me</code> ke auth-service dengan meneruskan cookie. Jika 401, return 401 ke client.</p>
+            <pre class="code" style="margin-top:8px;">// auth.middleware.ts
+const r = await fetch(`${AUTH_SERVICE_URL}/auth/me`, {
+  headers: { cookie: req.headers.cookie ?? '' }
+})
+if (!r.ok) return res.status(401).json({ error: 'Unauthorized' })</pre>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">3</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>Inject headers ke downstream request</h4>
+            <p>Gateway menambahkan <code>x-user-id</code> dan <code>x-user-role</code> ke request sebelum di-proxy ke service target.</p>
+            <pre class="code" style="margin-top:8px;">req.headers['x-user-id']   = data.userId
+req.headers['x-user-role'] = data.role</pre>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num blue">4</div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <h4>requireRole middleware (opsional)</h4>
+            <p>Beberapa route punya role check tambahan. Jika role tidak sesuai, return 403.</p>
+            <pre class="code" style="margin-top:8px;">// Contoh: hanya admin yang bisa akses /users
+app.use('/users', requireAuth, requireRole('admin'), proxy(...))</pre>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-connector"><div class="flow-num green">5</div></div>
+          <div class="flow-content">
+            <h4>Request di-proxy ke service target</h4>
+            <p>Service membaca <code>x-user-id</code> dan <code>x-user-role</code> dari header untuk otorisasi internal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Middleware Map -->
+    <div class="section-title"><div class="icon" style="background:#FEF2F2;">🛡️</div> Route Protection Map</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Path Pattern</th><th>Auth Required</th><th>Role Restriction</th></tr></thead>
+        <tbody>
+          <tr><td><code>/auth/*</code></td><td><span class="badge badge-public">PUBLIC</span></td><td>Tidak ada (login endpoint)</td></tr>
+          <tr><td><code>/users/profile/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td>Semua role (akses profil sendiri)</td></tr>
+          <tr><td><code>/users/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge" style="background:#EDE9FE;color:#5B21B6;">admin only</span></td></tr>
+          <tr><td><code>/tryouts/available</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge badge-get">siswa only</span></td></tr>
+          <tr><td><code>GET /tryouts/:id</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td>Semua role</td></tr>
+          <tr><td><code>POST/PUT/PATCH/DELETE /tryouts/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge badge-blue">guru / admin</span></td></tr>
+          <tr><td><code>/soal/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge badge-blue">guru / admin</span></td></tr>
+          <tr><td><code>/sesi/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge badge-get">siswa only</span></td></tr>
+          <tr><td><code>/hasil/*</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td>Semua role (siswa hanya hasil sendiri)</td></tr>
+          <tr><td><code>/riwayat</code></td><td><span class="badge badge-auth">✓ Auth</span></td><td><span class="badge badge-get">siswa only</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text"><div class="title">🤖 Triton AI Assistant</div><div class="sub">Tanya apa saja tentang dokumentasi ini</div></div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages"><div class="bot-msg">Halo! Tanya saya tentang auth, session, API, atau database. 👋</div></div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Apa itu session based auth?')">Session auth</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana cara login?')">Login flow</button>
+      <button class="quick-btn" onclick="askQuestion('Port masing-masing service?')">Port services</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database Schema — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body data-page="database">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo"><img src="../logo.png" alt="Triton Denpasar" /><div class="version">Documentation v1.0</div></div>
+    <div class="sidebar-progress"><div class="label">Progress membaca: <span id="progress-text">0%</span></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button></div>
+  </aside>
+
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Arsitektur</div>
+      <h1>Database Schema</h1>
+      <p>Skema 4 database PostgreSQL — satu per microservice.</p>
+    </div>
+
+    <div class="info-box blue" style="margin-bottom:24px;">
+      <span>ℹ️</span>
+      <span>Setiap service punya database sendiri. Tidak ada FK constraint antar-database — konsistensi lintas service dijaga di application layer. UUID digunakan sebagai primary key di semua tabel.</span>
+    </div>
+
+    <!-- DB Overview -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:40px;">
+      <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;">
+        <div class="db-badge" style="display:inline-block;margin-bottom:8px;">db_auth</div>
+        <div style="font-size:12px;color:#64748B;">1 tabel</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:4px;">users</div>
+      </div>
+      <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;">
+        <div class="db-badge" style="display:inline-block;margin-bottom:8px;">db_user</div>
+        <div style="font-size:12px;color:#64748B;">1 tabel</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:4px;">profiles</div>
+      </div>
+      <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;">
+        <div class="db-badge" style="display:inline-block;margin-bottom:8px;">db_soal</div>
+        <div style="font-size:12px;color:#64748B;">3 tabel</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:4px;">tryouts · soal · opsi_jawaban</div>
+      </div>
+      <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:16px;text-align:center;">
+        <div class="db-badge" style="display:inline-block;margin-bottom:8px;">db_jawaban</div>
+        <div style="font-size:12px;color:#64748B;">3 tabel</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:4px;">sesi_tryout · jawaban · hasil</div>
+      </div>
+    </div>
+
+    <!-- db_auth -->
+    <div class="db-section">
+      <div class="db-header">
+        <span class="db-badge">db_auth</span>
+        <span style="font-size:13px;color:#64748B;">auth-service · port 4001</span>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-name">users</span>
+          <span class="table-desc">Akun autentikasi semua pengguna</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK DEFAULT gen_random_uuid()</td><td>Primary key</td></tr>
+              <tr><td><code>email</code></td><td>VARCHAR(255)</td><td>UNIQUE NOT NULL</td><td>Email login — harus unik</td></tr>
+              <tr><td><code>password_hash</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>bcrypt hash dengan cost 12</td></tr>
+              <tr><td><code>role</code></td><td>VARCHAR(20)</td><td>CHECK (admin|guru|siswa)</td><td>Role pengguna</td></tr>
+              <tr><td><code>is_active</code></td><td>BOOLEAN</td><td>DEFAULT true</td><td>Admin bisa nonaktifkan akun</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td>Waktu dibuat</td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td>Waktu diperbarui</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- db_user -->
+    <div class="db-section">
+      <div class="db-header">
+        <span class="db-badge">db_user</span>
+        <span style="font-size:13px;color:#64748B;">user-service · port 4002</span>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-name">profiles</span>
+          <span class="table-desc">Data profil pengguna</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td>Primary key</td></tr>
+              <tr><td><code>user_id</code></td><td>UUID</td><td>UNIQUE NOT NULL</td><td>Referensi ke db_auth.users.id (no FK constraint antar-DB)</td></tr>
+              <tr><td><code>nama_lengkap</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Nama lengkap pengguna</td></tr>
+              <tr><td><code>no_telepon</code></td><td>VARCHAR(20)</td><td>nullable</td><td>Nomor telepon</td></tr>
+              <tr><td><code>kelas</code></td><td>VARCHAR(50)</td><td>nullable</td><td>Kelas siswa, misal: XII IPA 1</td></tr>
+              <tr><td><code>mata_pelajaran</code></td><td>VARCHAR(255)</td><td>nullable</td><td>Mata pelajaran yang diajar guru</td></tr>
+              <tr><td><code>avatar_url</code></td><td>TEXT</td><td>nullable</td><td>Data URI base64 (data:image/...;base64,...). Max ~2MB.</td></tr>
+              <tr><td><code>bio</code></td><td>TEXT</td><td>nullable</td><td>Bio singkat pengguna</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- db_soal -->
+    <div class="db-section">
+      <div class="db-header">
+        <span class="db-badge">db_soal</span>
+        <span style="font-size:13px;color:#64748B;">soal-service · port 4003</span>
+      </div>
+
+      <div class="table-card" style="margin-bottom:12px;">
+        <div class="table-card-header">
+          <span class="table-name">tryouts</span>
+          <span class="table-desc">Paket ujian yang dibuat guru</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>nama_tryout</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Nama tryout</td></tr>
+              <tr><td><code>mata_pelajaran</code></td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Mata pelajaran</td></tr>
+              <tr><td><code>durasi_menit</code></td><td>INTEGER</td><td>DEFAULT 90</td><td>Durasi ujian dalam menit</td></tr>
+              <tr><td><code>dibuat_oleh</code></td><td>UUID</td><td>NOT NULL</td><td>user_id guru pembuat</td></tr>
+              <tr><td><code>status</code></td><td>VARCHAR(20)</td><td>CHECK draft|published|closed</td><td>draft=tersembunyi, published=siswa bisa akses, closed=tutup</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+              <tr><td><code>updated_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:12px;">
+        <div class="table-card-header">
+          <span class="table-name">soal</span>
+          <span class="table-desc">Pertanyaan dalam tryout</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>tryout_id</code></td><td>UUID</td><td>FK tryouts ON DELETE CASCADE</td><td>Tryout pemilik soal ini</td></tr>
+              <tr><td><code>nomor_soal</code></td><td>INTEGER</td><td>NOT NULL</td><td>Urutan soal (auto-increment jika tidak disuplai)</td></tr>
+              <tr><td><code>tipe</code></td><td>VARCHAR(20)</td><td>CHECK pilihan_ganda|essay</td><td>Tipe soal</td></tr>
+              <tr><td><code>pertanyaan</code></td><td>TEXT</td><td>NOT NULL</td><td>Plain text pertanyaan</td></tr>
+              <tr><td><code>pertanyaan_html</code></td><td>TEXT</td><td>nullable</td><td>Rich text HTML dari editor</td></tr>
+              <tr><td><code>gambar_url</code></td><td>TEXT</td><td>nullable</td><td>URL eksternal gambar soal</td></tr>
+              <tr><td><code>gambar_base64</code></td><td>TEXT</td><td>nullable</td><td>Gambar soal sebagai base64</td></tr>
+              <tr><td><code>equation</code></td><td>TEXT</td><td>nullable</td><td>Persamaan teks biasa</td></tr>
+              <tr><td><code>equation_latex</code></td><td>TEXT</td><td>nullable</td><td>Persamaan LaTeX untuk render KaTeX</td></tr>
+              <tr><td><code>panduan_essay</code></td><td>TEXT</td><td>nullable</td><td>Panduan penilaian essay — HANYA terlihat guru/admin</td></tr>
+              <tr><td><code>bobot</code></td><td>INTEGER</td><td>NOT NULL DEFAULT 1</td><td>Bobot poin untuk nilai</td></tr>
+              <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-name">opsi_jawaban</span>
+          <span class="table-desc">Pilihan untuk soal pilihan ganda</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>soal_id</code></td><td>UUID</td><td>FK soal ON DELETE CASCADE</td><td></td></tr>
+              <tr><td><code>huruf</code></td><td>CHAR(1)</td><td>NOT NULL</td><td>A, B, C, D, atau E</td></tr>
+              <tr><td><code>teks</code></td><td>TEXT</td><td>NOT NULL</td><td>Teks pilihan (plain)</td></tr>
+              <tr><td><code>teks_html</code></td><td>TEXT</td><td>nullable</td><td>Teks pilihan (HTML)</td></tr>
+              <tr><td><code>is_benar</code></td><td>BOOLEAN</td><td>DEFAULT false</td><td>Hanya 1 opsi yang is_benar=true per soal PG. Disembunyikan dari siswa.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- db_jawaban -->
+    <div class="db-section">
+      <div class="db-header">
+        <span class="db-badge">db_jawaban</span>
+        <span style="font-size:13px;color:#64748B;">jawaban-service · port 4004</span>
+      </div>
+
+      <div class="table-card" style="margin-bottom:12px;">
+        <div class="table-card-header">
+          <span class="table-name">sesi_tryout</span>
+          <span class="table-desc">Satu sesi ujian per siswa per tryout</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>siswa_id</code></td><td>UUID</td><td>NOT NULL</td><td>Referensi ke db_auth.users.id</td></tr>
+              <tr><td><code>tryout_id</code></td><td>UUID</td><td>NOT NULL</td><td>Referensi ke db_soal.tryouts.id</td></tr>
+              <tr><td><code>mulai_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td>Waktu mulai ujian</td></tr>
+              <tr><td><code>selesai_at</code></td><td>TIMESTAMPTZ</td><td>nullable</td><td>Waktu selesai ujian</td></tr>
+              <tr><td><code>status</code></td><td>VARCHAR(20)</td><td>CHECK berlangsung|selesai|timeout</td><td>Status sesi saat ini</td></tr>
+              <tr><td colspan="4" style="background:#F8FAFC;font-size:12px;color:#64748B;font-style:italic;">UNIQUE(siswa_id, tryout_id) — satu siswa tidak bisa punya dua sesi aktif untuk tryout yang sama</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:12px;">
+        <div class="table-card-header">
+          <span class="table-name">jawaban</span>
+          <span class="table-desc">Jawaban siswa per soal</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>sesi_id</code></td><td>UUID</td><td>FK sesi_tryout</td><td></td></tr>
+              <tr><td><code>soal_id</code></td><td>UUID</td><td>NOT NULL</td><td>FK ke db_soal.soal.id (no constraint)</td></tr>
+              <tr><td><code>jawaban_teks</code></td><td>TEXT</td><td>nullable</td><td>Jawaban essay (teks bebas)</td></tr>
+              <tr><td><code>opsi_id</code></td><td>UUID</td><td>nullable</td><td>ID opsi yang dipilih (untuk soal PG)</td></tr>
+              <tr><td><code>created_at / updated_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td></td></tr>
+              <tr><td colspan="4" style="background:#F8FAFC;font-size:12px;color:#64748B;font-style:italic;">UNIQUE(sesi_id, soal_id) — memungkinkan upsert ON CONFLICT (auto-save jawaban)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-name">hasil</span>
+          <span class="table-desc">Nilai akhir per sesi ujian</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kolom</th><th>Tipe</th><th>Constraint</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>UUID</td><td>PK</td><td></td></tr>
+              <tr><td><code>sesi_id</code></td><td>UUID</td><td>UNIQUE FK sesi_tryout</td><td>Satu hasil per sesi</td></tr>
+              <tr><td><code>siswa_id</code></td><td>UUID</td><td>NOT NULL</td><td>Denormalized untuk query cepat</td></tr>
+              <tr><td><code>tryout_id</code></td><td>UUID</td><td>NOT NULL</td><td>Denormalized untuk query cepat</td></tr>
+              <tr><td><code>total_benar</code></td><td>INTEGER</td><td>DEFAULT 0</td><td>Jumlah soal PG yang dijawab benar</td></tr>
+              <tr><td><code>total_soal</code></td><td>INTEGER</td><td>NOT NULL</td><td>Total soal dalam tryout</td></tr>
+              <tr><td><code>nilai</code></td><td>NUMERIC(5,2)</td><td>nullable</td><td>Nilai 0–100. Formula: (bobot_benar / total_bobot) × 100</td></tr>
+              <tr><td><code>dihitung_at</code></td><td>TIMESTAMPTZ</td><td>DEFAULT NOW()</td><td>Waktu nilai dihitung otomatis</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text"><div class="title">🤖 Triton AI Assistant</div><div class="sub">Tanya apa saja tentang dokumentasi ini</div></div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages"><div class="bot-msg">Halo! Tanya saya tentang database, tabel, API, atau flow. 👋</div></div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Tabel apa saja di database?')">Semua tabel</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana nilai dihitung?')">Rumus nilai</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana session disimpan?')">Session storage</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Endpoints — Triton Docs</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body data-page="api">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo"><img src="../logo.png" alt="Triton Denpasar" /><div class="version">Documentation v1.0</div></div>
+    <div class="sidebar-progress"><div class="label">Progress membaca: <span id="progress-text">0%</span></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Memulai</div>
+        <a href="overview.html" class="nav-item" data-page="overview"><span class="nav-check" id="check-overview">○</span> Overview & Stack</a>
+        <a href="setup.html" class="nav-item" data-page="setup"><span class="nav-check" id="check-setup">○</span> Setup & Instalasi</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Arsitektur</div>
+        <a href="flow.html" class="nav-item" data-page="flow"><span class="nav-check" id="check-flow">○</span> User Flow</a>
+        <a href="auth.html" class="nav-item" data-page="auth"><span class="nav-check" id="check-auth">○</span> Autentikasi</a>
+        <a href="database.html" class="nav-item" data-page="database"><span class="nav-check" id="check-database">○</span> Database Schema</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Referensi</div>
+        <a href="api.html" class="nav-item" data-page="api"><span class="nav-check" id="check-api">○</span> API Endpoints</a>
+        <a href="frontend.html" class="nav-item" data-page="frontend"><span class="nav-check" id="check-frontend">○</span> Frontend Pages</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-chat" onclick="toggleChatbot()">💬 Tanya AI Assistant</button></div>
+  </aside>
+
+  <main id="content">
+    <div class="page-header">
+      <div class="breadcrumb">Triton Docs / Referensi</div>
+      <h1>API Endpoints</h1>
+      <p>Semua endpoint yang tersedia via API Gateway (port 4000). Klik endpoint untuk lihat detail body dan response.</p>
+    </div>
+
+    <div class="info-box blue" style="margin-bottom:20px;">
+      <span>ℹ️</span>
+      <span>Base URL: <code>http://localhost:4000</code>. Semua request yang memerlukan auth harus menyertakan cookie <code>triton.sid</code> secara otomatis (browser) atau via <code>withCredentials: true</code> (axios).</span>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all" onclick="filterEndpoints('all')">Semua</button>
+      <button class="filter-btn" data-filter="auth-service" onclick="filterEndpoints('auth-service')">Auth</button>
+      <button class="filter-btn" data-filter="user-service" onclick="filterEndpoints('user-service')">User</button>
+      <button class="filter-btn" data-filter="soal-service" onclick="filterEndpoints('soal-service')">Soal</button>
+      <button class="filter-btn" data-filter="jawaban-service" onclick="filterEndpoints('jawaban-service')">Jawaban</button>
+    </div>
+
+    <!-- ── AUTH SERVICE ─────────────────────────────────────── -->
+    <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">AUTH SERVICE — /auth/*</div>
+
+    <div class="endpoint-card" data-service="auth-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('auth-login')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/auth/login</div><div class="endpoint-desc">Login user, buat session</div></div>
+        <div class="endpoint-meta"><span class="badge badge-public">PUBLIC</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-auth-login">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "email": "admin@triton.id", "password": "admin123" }</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "userId": "uuid", "role": "admin", "email": "admin@triton.id" } }
+// Cookie Set-Cookie: triton.sid=... (HttpOnly)</pre>
+        <div class="endpoint-section">Response 401</div>
+        <pre class="code">{ "success": false, "error": "Email atau password salah" }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="auth-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('auth-logout')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/auth/logout</div><div class="endpoint-desc">Hapus session, clear cookie</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-auth-logout">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": null, "message": "Berhasil logout" }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="auth-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('auth-me')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/auth/me</div><div class="endpoint-desc">Cek session aktif pengguna</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-auth-me">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "userId": "uuid", "role": "guru", "email": "guru1@triton.id" } }</pre>
+        <div class="endpoint-section">Response 401</div>
+        <pre class="code">{ "success": false, "error": "Unauthorized" }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="auth-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('auth-changepw')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/auth/change-password</div><div class="endpoint-desc">Ganti password pengguna yang login</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-auth-changepw">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "oldPassword": "lama123", "newPassword": "baru456" }</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": null, "message": "Password berhasil diubah" }</pre>
+      </div>
+    </div>
+
+    <!-- ── USER SERVICE ────────────────────────────────────── -->
+    <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin:24px 0 10px;">USER SERVICE — /users/*</div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-list')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/users?role=guru|siswa</div><div class="endpoint-desc">Daftar semua user (dengan filter role opsional)</div></div>
+        <div class="endpoint-meta"><span class="badge" style="background:#EDE9FE;color:#5B21B6;">Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-list">
+        <div class="endpoint-section">Query Params</div>
+        <pre class="code">?role=guru   // filter hanya guru
+?role=siswa  // filter hanya siswa
+(tanpa role) // semua pengguna</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": [
+  { "id": "uuid", "email": "...", "role": "guru", "is_active": true, "profile": { "nama_lengkap": "..." } }
+]}</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-create')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/users</div><div class="endpoint-desc">Buat user baru (auth + profile)</div></div>
+        <div class="endpoint-meta"><span class="badge" style="background:#EDE9FE;color:#5B21B6;">Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-create">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "email": "siswa@triton.id", "password": "pass123", "role": "siswa",
+  "nama_lengkap": "Budi Santoso", "kelas": "XII IPA 1",
+  "no_telepon": "08123456789" }</pre>
+        <div class="endpoint-section">Response 201</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "email": "...", "role": "siswa", "profile": {...} } }</pre>
+        <div class="endpoint-section">Response 409 (email sudah ada)</div>
+        <pre class="code">{ "success": false, "error": "Email sudah terdaftar.", "code": "EMAIL_EXISTS" }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-toggle')">
+        <span class="badge badge-patch">PATCH</span>
+        <div><div class="endpoint-path">/users/:id/active</div><div class="endpoint-desc">Toggle aktif/nonaktif pengguna</div></div>
+        <div class="endpoint-meta"><span class="badge" style="background:#EDE9FE;color:#5B21B6;">Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-toggle">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "is_active": false }</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "is_active": false } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-profile-me-get')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/users/profile/me</div><div class="endpoint-desc">Ambil profil pengguna yang sedang login</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-profile-me-get">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "user_id": "uuid", "nama_lengkap": "Budi",
+  "kelas": "XII IPA 1", "mata_pelajaran": null, "avatar_url": "data:image/...", "bio": null } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-profile-me-put')">
+        <span class="badge badge-put">PUT</span>
+        <div><div class="endpoint-path">/users/profile/me</div><div class="endpoint-desc">Update profil pengguna yang sedang login</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-profile-me-put">
+        <div class="endpoint-section">Request Body (semua opsional)</div>
+        <pre class="code">{ "nama_lengkap": "Budi Santoso", "no_telepon": "08123456789",
+  "kelas": "XII IPA 1", "bio": "Senang belajar matematika" }</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { /* profil terbaru */ } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-avatar')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/users/profile/avatar</div><div class="endpoint-desc">Upload foto profil (base64)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-avatar">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "avatar_base64": "iVBORw0KGgo...", "mime_type": "image/jpeg" }
+// Max size: ~2MB (2,800,000 karakter base64)</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "avatar_url": "data:image/jpeg;base64,..." } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="user-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('users-delete')">
+        <span class="badge badge-delete">DELETE</span>
+        <div><div class="endpoint-path">/users/:id</div><div class="endpoint-desc">Hapus user (profile + auth, cascade-safe)</div></div>
+        <div class="endpoint-meta"><span class="badge" style="background:#EDE9FE;color:#5B21B6;">Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-users-delete">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": null, "message": "Pengguna dihapus." }</pre>
+      </div>
+    </div>
+
+    <!-- ── SOAL SERVICE ────────────────────────────────────── -->
+    <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin:24px 0 10px;">SOAL SERVICE — /tryouts/*, /soal/*</div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-list')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/tryouts</div><div class="endpoint-desc">Daftar tryout (guru: milik sendiri, admin: semua)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-list">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": [{ "id": "uuid", "nama_tryout": "UTBK Matematika",
+  "status": "published", "soal_count": 40, "total_bobot": 40, "durasi_menit": 90 }] }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-available')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/tryouts/available</div><div class="endpoint-desc">Tryout published — untuk halaman daftar siswa</div></div>
+        <div class="endpoint-meta"><span class="badge badge-get">Siswa</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-available">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": [{ "id": "uuid", "status": "published", ... }] }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-create')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/tryouts</div><div class="endpoint-desc">Buat tryout baru (status default: draft)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-create">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "nama_tryout": "UTBK Matematika 2024", "mata_pelajaran": "Matematika", "durasi_menit": 90 }</pre>
+        <div class="endpoint-section">Response 201</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "status": "draft", ... } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-detail')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/tryouts/:id</div><div class="endpoint-desc">Detail tryout + semua soal. Siswa: is_benar dan panduan_essay disembunyikan</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-detail">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "nama_tryout": "...",
+  "soal": [{ "id": "uuid", "nomor_soal": 1, "tipe": "pilihan_ganda",
+    "pertanyaan": "...", "pertanyaan_html": "...", "equation_latex": "x^2+y^2=r^2",
+    "bobot": 1, "opsi": [{ "id": "uuid", "huruf": "A", "teks": "...", "is_benar": true }]
+  }] } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-publish')">
+        <span class="badge badge-patch">PATCH</span>
+        <div><div class="endpoint-path">/tryouts/:id/publish</div><div class="endpoint-desc">Ubah status tryout (draft / published / closed)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-publish">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "status": "published" }  // atau "draft" atau "closed"</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "status": "published", ... } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('tryouts-add-soal')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/tryouts/:id/soal</div><div class="endpoint-desc">Tambah soal ke tryout (transaction: soal + semua opsi)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-tryouts-add-soal">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "tipe": "pilihan_ganda", "pertanyaan": "Berapa hasil dari 2² + 3²?",
+  "pertanyaan_html": "&lt;p&gt;Berapa hasil dari &lt;strong&gt;2² + 3²&lt;/strong&gt;?&lt;/p&gt;",
+  "equation_latex": "2^2 + 3^2 = ?", "bobot": 2,
+  "opsi": [
+    { "huruf": "A", "teks": "10", "is_benar": false },
+    { "huruf": "B", "teks": "13", "is_benar": true },
+    { "huruf": "C", "teks": "15", "is_benar": false }
+  ] }</pre>
+        <div class="endpoint-section">Response 201</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "nomor_soal": 5, "opsi": [...] } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('soal-update')">
+        <span class="badge badge-put">PUT</span>
+        <div><div class="endpoint-path">/soal/:soalId</div><div class="endpoint-desc">Update soal + replace semua opsi (transaction)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-soal-update">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "pertanyaan": "Pertanyaan baru", "bobot": 3,
+  "opsi": [{ "huruf": "A", "teks": "Jawaban A", "is_benar": true }] }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="soal-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('soal-delete')">
+        <span class="badge badge-delete">DELETE</span>
+        <div><div class="endpoint-path">/soal/:soalId</div><div class="endpoint-desc">Hapus soal (cascade hapus opsi_jawaban)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-soal-delete">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": null, "message": "Soal dihapus" }</pre>
+      </div>
+    </div>
+
+    <!-- ── JAWABAN SERVICE ─────────────────────────────────── -->
+    <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin:24px 0 10px;">JAWABAN SERVICE — /sesi/*, /hasil/*, /riwayat</div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('sesi-create')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/sesi</div><div class="endpoint-desc">Mulai atau lanjutkan sesi tryout</div></div>
+        <div class="endpoint-meta"><span class="badge badge-get">Siswa</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-sesi-create">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">{ "tryout_id": "uuid" }</pre>
+        <div class="endpoint-section">Response 201 (baru)</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "status": "berlangsung", "mulai_at": "2024-..." } }</pre>
+        <div class="endpoint-section">Response 409 (sudah selesai)</div>
+        <pre class="code">{ "success": false, "error": "Tryout sudah dikerjakan.", "code": "ALREADY_COMPLETED" }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('sesi-jawab')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/sesi/:sesiId/jawab</div><div class="endpoint-desc">Simpan/update satu jawaban (upsert auto-save)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-get">Siswa</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-sesi-jawab">
+        <div class="endpoint-section">Request Body</div>
+        <pre class="code">// Soal PG:
+{ "soal_id": "uuid", "opsi_id": "uuid" }
+
+// Soal Essay:
+{ "soal_id": "uuid", "jawaban_teks": "Jawabannya adalah..." }</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "sesi_id": "uuid", "soal_id": "uuid", ... } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('sesi-selesai')">
+        <span class="badge badge-post">POST</span>
+        <div><div class="endpoint-path">/sesi/:sesiId/selesai</div><div class="endpoint-desc">Kumpulkan ujian + hitung nilai otomatis</div></div>
+        <div class="endpoint-meta"><span class="badge badge-get">Siswa</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-sesi-selesai">
+        <div class="endpoint-section">Proses Internal</div>
+        <pre class="code">1. Fetch soal dari soal-service (role=admin agar is_benar tidak disembunyikan)
+2. Ambil jawaban siswa dari db
+3. Hitung: nilai = (Σ bobot soal benar / Σ total bobot) × 100
+4. Simpan ke tabel `hasil`</pre>
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": { "id": "uuid", "nilai": "87.50",
+  "total_benar": 35, "total_soal": 40 } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('hasil-rekap')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/hasil/rekap/:tryoutId</div><div class="endpoint-desc">Rekap semua siswa untuk satu tryout (guru/admin)</div></div>
+        <div class="endpoint-meta"><span class="badge badge-blue">Guru/Admin</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-hasil-rekap">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": {
+  "summary": { "total_peserta": 25, "rata_rata_nilai": 76.4, "nilai_tertinggi": 95.0, "nilai_terendah": 42.5 },
+  "hasil": [{ "siswa_id": "uuid", "nama_siswa": "Budi", "kelas": "XII IPA 1",
+    "nilai": 95.0, "total_benar": 38, "total_soal": 40,
+    "selesai_at": "2024-...", "durasi_menit": 67 }] } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('hasil-detail')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/hasil/:sesiId</div><div class="endpoint-desc">Hasil lengkap dengan breakdown per soal</div></div>
+        <div class="endpoint-meta"><span class="badge badge-auth">Auth</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-hasil-detail">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": {
+  "hasil": { "nilai": "87.50", "total_benar": 35, "total_soal": 40 },
+  "sesi": { "mulai_at": "...", "selesai_at": "..." },
+  "tryout": { "nama_tryout": "UTBK Matematika" },
+  "detail": [{ "soal": {...}, "student_answer": {...},
+    "correct_opsi": {...}, "is_correct": true, "is_skipped": false }] } }</pre>
+      </div>
+    </div>
+
+    <div class="endpoint-card" data-service="jawaban-service">
+      <div class="endpoint-header" onclick="toggleEndpoint('riwayat')">
+        <span class="badge badge-get">GET</span>
+        <div><div class="endpoint-path">/riwayat</div><div class="endpoint-desc">Semua sesi tryout milik siswa yang login</div></div>
+        <div class="endpoint-meta"><span class="badge badge-get">Siswa</span><span style="color:#94A3B8;font-size:16px;">›</span></div>
+      </div>
+      <div class="endpoint-body" id="ep-body-riwayat">
+        <div class="endpoint-section">Response 200</div>
+        <pre class="code">{ "success": true, "data": [{ "sesi_id": "uuid", "tryout_id": "uuid",
+  "status": "selesai", "nilai": "87.50", "total_benar": 35, "mulai_at": "..." }] }</pre>
+      </div>
+    </div>
+  </main>
+
+  <div id="chatbot">
+    <div class="chat-header">
+      <div class="chat-header-text"><div class="title">🤖 Triton AI Assistant</div><div class="sub">Tanya apa saja tentang dokumentasi ini</div></div>
+      <button class="chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div id="chat-messages"><div class="bot-msg">Halo! Tanya saya tentang endpoint, request body, response, atau auth. 👋</div></div>
+    <div class="chat-quick">
+      <button class="quick-btn" onclick="askQuestion('Apa saja API endpoint yang tersedia?')">Semua endpoint</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana siswa memulai tryout?')">Flow siswa</button>
+      <button class="quick-btn" onclick="askQuestion('Bagaimana nilai dihitung?')">Hitung nilai</button>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Tulis pertanyaan..." />
+      <button class="chat-send" onclick="sendMessage()">Kirim</button>
+    </div>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>
