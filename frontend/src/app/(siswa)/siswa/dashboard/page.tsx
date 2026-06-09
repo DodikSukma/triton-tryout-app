@@ -6,6 +6,7 @@ import { BookOpen, TrendingUp, CheckCircle2, Clock, ArrowRight, Trophy } from 'l
 import api from '@/lib/api'
 import { ApiResponse, Tryout } from '@/types'
 import { useProfile } from '@/hooks/useAuth'
+import { useLevelTheme } from '@/components/shared/LevelTheme'
 
 interface RiwayatRow {
   sesi_id: string
@@ -17,6 +18,7 @@ interface RiwayatRow {
 
 export default function SiswaDashboard() {
   const { profile } = useProfile()
+  const { theme } = useLevelTheme()
   const [available, setAvailable] = useState<Tryout[]>([])
   const [riwayat, setRiwayat] = useState<RiwayatRow[]>([])
 
@@ -44,13 +46,13 @@ export default function SiswaDashboard() {
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
 
       <header className="mb-8">
-        <p className="text-sm text-triton-blue-600 font-semibold">Selamat datang,</p>
+        <p className={`text-sm ${theme.accentText} font-semibold`}>Selamat datang,</p>
         <h1 className="text-3xl font-black text-slate-900 mt-1">{profile?.nama_lengkap || 'Siswa'} 👋</h1>
         <p className="text-slate-500 mt-1">Ayo lanjutkan persiapan ujianmu hari ini.</p>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Tryout Tersedia"   value={stats.available}  color="text-triton-blue-600 bg-triton-blue-50" Icon={BookOpen} />
+        <StatCard label="Tryout Tersedia"   value={stats.available}  color={theme.accentBg} Icon={BookOpen} />
         <StatCard label="Selesai"           value={stats.done}       color="text-green-600 bg-green-50"          Icon={CheckCircle2} />
         <StatCard label="Berlangsung"       value={stats.inProgress} color="text-amber-600 bg-amber-50"          Icon={Clock} />
         <StatCard label="Rata-rata Nilai"   value={stats.avg.toFixed(1)} suffix="/100" color="text-violet-600 bg-violet-50" Icon={TrendingUp} />
@@ -106,7 +108,7 @@ export default function SiswaDashboard() {
                 href={`/siswa/tryout/${t.id}`}
                 className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 p-6 flex flex-col group"
               >
-                <span className="inline-block bg-triton-blue-50 text-triton-blue-600 rounded-full px-3 py-1 text-xs font-semibold self-start">
+                <span className={`inline-block ${theme.accentBg} rounded-full px-3 py-1 text-xs font-semibold self-start`}>
                   {t.mata_pelajaran}
                 </span>
                 <h3 className="font-bold text-slate-900 mt-3">{t.nama_tryout}</h3>
@@ -115,8 +117,8 @@ export default function SiswaDashboard() {
                   <span className="inline-flex items-center gap-1.5"><BookOpen size={13} />{t.soal_count ?? 0} soal</span>
                 </div>
                 <div className="mt-auto pt-5 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-triton-blue-600 group-hover:text-triton-blue-700">Mulai Tryout</span>
-                  <ArrowRight size={16} className="text-triton-blue-500 group-hover:translate-x-1 transition-transform" />
+                  <span className={`text-sm font-semibold ${theme.accentText}`}>Mulai Tryout</span>
+                  <ArrowRight size={16} className={`${theme.accentText} group-hover:translate-x-1 transition-transform`} />
                 </div>
               </Link>
             ))}

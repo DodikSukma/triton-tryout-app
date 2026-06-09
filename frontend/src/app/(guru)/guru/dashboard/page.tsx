@@ -9,23 +9,23 @@ import {
   Pencil, Trash2, AlertTriangle, Loader2, X, ChevronDown, ChevronUp, BarChart2,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
-import { ApiResponse, HasilRekap, RekapStudent, Tryout } from '@/types'
+import {
+  ApiResponse, EducationLevel, HasilRekap, MasterKelas, MasterMataPelajaran,
+  MasterSubMataPelajaran, RekapStudent, Tryout,
+} from '@/types'
+import { getLevel, setLevel, type Level } from '@/lib/level'
 
-const MAPEL_OPTIONS = [
-  'Matematika', 'Fisika', 'Kimia', 'Biologi', 'Bahasa Indonesia',
-  'Bahasa Inggris', 'Sejarah', 'Ekonomi', 'Geografi', 'Sosiologi',
-  'Akuntansi', 'PKN', 'Seni Budaya', 'PJOK', 'TIK', 'Bahasa Bali',
-]
+const LEVELS: EducationLevel[] = ['SD', 'SMP', 'SMA']
 
 const SUBJECT_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
-  Matematika:       { bg: 'bg-blue-50',    text: 'text-blue-600',    bar: 'from-blue-400 to-blue-600' },
-  Fisika:           { bg: 'bg-violet-50',  text: 'text-violet-600',  bar: 'from-violet-400 to-violet-600' },
-  Kimia:            { bg: 'bg-green-50',   text: 'text-green-600',   bar: 'from-green-400 to-green-600' },
-  Biologi:          { bg: 'bg-emerald-50', text: 'text-emerald-600', bar: 'from-emerald-400 to-emerald-600' },
+  Matematika: { bg: 'bg-blue-50', text: 'text-blue-600', bar: 'from-blue-400 to-blue-600' },
+  Fisika: { bg: 'bg-violet-50', text: 'text-violet-600', bar: 'from-violet-400 to-violet-600' },
+  Kimia: { bg: 'bg-green-50', text: 'text-green-600', bar: 'from-green-400 to-green-600' },
+  Biologi: { bg: 'bg-emerald-50', text: 'text-emerald-600', bar: 'from-emerald-400 to-emerald-600' },
   'Bahasa Indonesia': { bg: 'bg-orange-50', text: 'text-orange-600', bar: 'from-orange-400 to-orange-600' },
-  'Bahasa Inggris': { bg: 'bg-sky-50',     text: 'text-sky-600',     bar: 'from-sky-400 to-sky-600' },
-  Sejarah:          { bg: 'bg-amber-50',   text: 'text-amber-600',   bar: 'from-amber-400 to-amber-600' },
-  Ekonomi:          { bg: 'bg-teal-50',    text: 'text-teal-600',    bar: 'from-teal-400 to-teal-600' },
+  'Bahasa Inggris': { bg: 'bg-sky-50', text: 'text-sky-600', bar: 'from-sky-400 to-sky-600' },
+  Sejarah: { bg: 'bg-amber-50', text: 'text-amber-600', bar: 'from-amber-400 to-amber-600' },
+  Ekonomi: { bg: 'bg-teal-50', text: 'text-teal-600', bar: 'from-teal-400 to-teal-600' },
 }
 
 function getSubjectColor(subject: string) {
@@ -34,11 +34,14 @@ function getSubjectColor(subject: string) {
 
 interface TryoutFormState {
   nama_tryout: string
-  mata_pelajaran: string
+  level: EducationLevel       // routes to sd/smp/sma service (not stored as a column)
+  kelas: string               // master_kelas.nama
+  mata_pelajaran: string      // master_mata_pelajaran.nama
+  sub_mata_pelajaran: string  // master_sub_mata_pelajaran.nama
   durasi_menit: number
+  randomize_questions: boolean
+  randomize_options: boolean
 }
-
-const EMPTY_FORM: TryoutFormState = { nama_tryout: '', mata_pelajaran: '', durasi_menit: 90 }
 
 export default function GuruDashboard() {
   const router = useRouter()
@@ -86,14 +89,29 @@ export default function GuruDashboard() {
     siswa: tryouts.reduce((s, t) => s + (t.jumlah_peserta ?? 0), 0),
   }
 
+  function payload(form: TryoutFormState) {
+    return {
+      nama_tryout: form.nama_tryout,
+      mata_pelajaran: form.mata_pelajaran,
+      sub_mata_pelajaran: form.sub_mata_pelajaran || null,
+      kelas: form.kelas || null,
+      durasi_menit: form.durasi_menit,
+      randomize_questions: form.randomize_questions,
+      randomize_options: form.randomize_options,
+    }
+  }
+
   async function handleCreate(form: TryoutFormState) {
-    const res = await api.post<ApiResponse<Tryout>>('/tryouts', form)
+    // Target the chosen level's service before creating, so this tryout (and the
+    // soal builder we navigate to next) live in sd/smp/sma consistently.
+    setLevel(form.level.toLowerCase() as Level)
+    const res = await api.post<ApiResponse<Tryout>>('/tryouts', payload(form))
     const t = res.data.data
     if (t) router.push(`/guru/tryout/${t.id}/soal`)
   }
 
   async function handleEdit(id: string, form: TryoutFormState) {
-    await api.put(`/tryouts/${id}`, form)
+    await api.put(`/tryouts/${id}`, payload(form))
     toast.success('Tryout berhasil diperbarui.')
     setEditTarget(null)
     fetchTryouts()
@@ -131,9 +149,9 @@ export default function GuruDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Tryout Dibuat"     value={stats.total} Icon={BookOpen} color="text-blue-500 bg-blue-50" />
-        <StatCard label="Total Soal"        value={stats.soal}  Icon={FileText}  color="text-violet-500 bg-violet-50" />
-        <StatCard label="Siswa Mengerjakan" value={stats.siswa} Icon={Users}     color="text-green-500 bg-green-50" />
+        <StatCard label="Tryout Dibuat" value={stats.total} Icon={BookOpen} color="text-blue-500 bg-blue-50" />
+        <StatCard label="Total Soal" value={stats.soal} Icon={FileText} color="text-violet-500 bg-violet-50" />
+        <StatCard label="Siswa Mengerjakan" value={stats.siswa} Icon={Users} color="text-green-500 bg-green-50" />
       </div>
 
       {/* Filter tabs */}
@@ -144,11 +162,10 @@ export default function GuruDashboard() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`text-sm px-4 py-1.5 rounded-xl font-medium transition-colors ${
-                filter === f
+              className={`text-sm px-4 py-1.5 rounded-xl font-medium transition-colors ${filter === f
                   ? 'bg-blue-50 text-blue-600 font-semibold'
                   : 'text-slate-500 hover:bg-slate-100'
-              }`}
+                }`}
             >
               {f === 'all' ? 'Semua' : f === 'published' ? 'Aktif' : f === 'draft' ? 'Draft' : 'Selesai'}
             </button>
@@ -216,12 +233,12 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
   onEdit: () => void
   onDelete: () => void
 }) {
-  const [menuOpen, setMenuOpen]       = useState(false)
-  const [expanded, setExpanded]       = useState(false)
-  const [students, setStudents]       = useState<RekapStudent[] | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [students, setStudents] = useState<RekapStudent[] | null>(null)
   const [loadingStudents, setLoading] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const colors  = getSubjectColor(t.mata_pelajaran)
+  const colors = getSubjectColor(t.mata_pelajaran)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -248,14 +265,17 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
     setExpanded((v) => !v)
   }
 
-  const statusMap = {
-    published: { label: 'Aktif',   cls: 'bg-green-50 text-green-600 border border-green-200' },
-    draft:     { label: 'Draft',   cls: 'bg-amber-50 text-amber-600 border border-amber-200' },
-    closed:    { label: 'Selesai', cls: 'bg-slate-100 text-slate-500 border border-slate-200' },
+  const statusMap: Record<string, { label: string; cls: string }> = {
+    published: { label: 'Aktif', cls: 'bg-green-50 text-green-600 border border-green-200' },
+    draft: { label: 'Draft', cls: 'bg-amber-50 text-amber-600 border border-amber-200' },
+    pending_approval: { label: 'Menunggu Persetujuan', cls: 'bg-blue-50 text-blue-600 border border-blue-200' },
+    approved: { label: 'Disetujui', cls: 'bg-teal-50 text-teal-600 border border-teal-200' },
+    rejected: { label: 'Butuh Revisi', cls: 'bg-red-50 text-red-600 border border-red-200' },
+    closed: { label: 'Selesai', cls: 'bg-slate-100 text-slate-500 border border-slate-200' },
   }
-  const status      = statusMap[t.status] ?? statusMap.draft
-  const peserta     = t.jumlah_peserta ?? 0
-  const SHOW_MAX    = 5
+  const status = statusMap[t.status] ?? statusMap.draft
+  const peserta = t.jumlah_peserta ?? 0
+  const SHOW_MAX = 5
   const visibleRows = students?.slice(0, SHOW_MAX) ?? []
   const hiddenCount = (students?.length ?? 0) - SHOW_MAX
 
@@ -333,6 +353,14 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
           </span>
         </div>
 
+        {/* Revision feedback from admin */}
+        {t.status === 'rejected' && t.revision_notes && (
+          <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+            <AlertTriangle size={13} className="text-red-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-red-600"><span className="font-semibold">Catatan revisi:</span> {t.revision_notes}</p>
+          </div>
+        )}
+
         {/* Primary action */}
         <div className="pt-4 mt-4 border-t border-slate-100">
           <Link
@@ -361,9 +389,8 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
 
         {/* ── Collapsible student list ── */}
         <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            expanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
-          }`}
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${expanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
+            }`}
         >
           {loadingStudents ? (
             <StudentSkeleton />
@@ -392,9 +419,9 @@ function StudentRow({ student: s }: { student: RekapStudent }) {
   const initial = s.nama_siswa.charAt(0).toUpperCase()
   const badge =
     s.nilai >= 90 ? 'bg-green-100 text-green-700' :
-    s.nilai >= 75 ? 'bg-blue-100 text-blue-700'   :
-    s.nilai >= 60 ? 'bg-amber-100 text-amber-700'  :
-                    'bg-red-100 text-red-700'
+      s.nilai >= 75 ? 'bg-blue-100 text-blue-700' :
+        s.nilai >= 60 ? 'bg-amber-100 text-amber-700' :
+          'bg-red-100 text-red-700'
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
@@ -424,24 +451,69 @@ function StudentSkeleton() {
   )
 }
 
-// ─── TryoutFormDialog ──────────────────────────────────────────
+// ─── TryoutFormDialog (cascade: level → kelas / mata pelajaran → sub) ─────────
 function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
   mode: 'create' | 'edit'
   initial?: Tryout
   onClose: () => void
   onSubmit: (form: TryoutFormState) => Promise<void>
 }) {
+  const defaultLevel = (getLevel().toUpperCase() as EducationLevel)
   const [form, setForm] = useState<TryoutFormState>({
-    nama_tryout:    initial?.nama_tryout    ?? '',
+    nama_tryout: initial?.nama_tryout ?? '',
+    level: defaultLevel,
+    kelas: initial?.kelas ?? '',
     mata_pelajaran: initial?.mata_pelajaran ?? '',
-    durasi_menit:   initial?.durasi_menit   ?? 90,
+    sub_mata_pelajaran: initial?.sub_mata_pelajaran ?? '',
+    durasi_menit: initial?.durasi_menit ?? 90,
+    randomize_questions: initial?.randomize_questions ?? true,
+    randomize_options: initial?.randomize_options ?? true,
   })
   const [saving, setSaving] = useState(false)
+
+  const [allKelas, setAllKelas] = useState<MasterKelas[]>([])
+  const [allMapel, setAllMapel] = useState<MasterMataPelajaran[]>([])
+  const [allSub, setAllSub] = useState<MasterSubMataPelajaran[]>([])
+  const [loadingMaster, setLoadingMaster] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      api.get<ApiResponse<MasterKelas[]>>('/master/kelas'),
+      api.get<ApiResponse<MasterMataPelajaran[]>>('/master/mata-pelajaran'),
+      api.get<ApiResponse<MasterSubMataPelajaran[]>>('/master/sub-mata-pelajaran'),
+    ]).then(([k, m, s]) => {
+      if (cancelled) return
+      setAllKelas(k.data.data ?? [])
+      setAllMapel(m.data.data ?? [])
+      setAllSub(s.data.data ?? [])
+    }).catch(() => {
+      if (!cancelled) toast.error('Gagal memuat master data.')
+    }).finally(() => { if (!cancelled) setLoadingMaster(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  // Cascade-filtered options.
+  const kelasOptions = allKelas.filter((k) => k.level === form.level)
+  const mapelOptions = allMapel.filter((m) => m.level === form.level)
+  const selectedMapel = allMapel.find((m) => m.nama === form.mata_pelajaran && m.level === form.level)
+  const subOptions = allSub.filter((s) => s.mata_pelajaran_id === selectedMapel?.id)
+
+  function changeLevel(level: EducationLevel) {
+    // Reset dependent selections when the level changes.
+    setForm((f) => ({ ...f, level, kelas: '', mata_pelajaran: '', sub_mata_pelajaran: '' }))
+    if (mode === 'create') setLevel(level.toLowerCase() as Level)
+  }
+
+  function changeMapel(nama: string) {
+    setForm((f) => ({ ...f, mata_pelajaran: nama, sub_mata_pelajaran: '' }))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.nama_tryout.trim()) { toast.error('Nama tryout wajib diisi.'); return }
-    if (!form.mata_pelajaran.trim()) { toast.error('Mata pelajaran wajib diisi.'); return }
+    if (!form.kelas) { toast.error('Pilih kelas.'); return }
+    if (!form.mata_pelajaran) { toast.error('Pilih mata pelajaran.'); return }
     setSaving(true)
     try {
       await onSubmit(form)
@@ -479,23 +551,53 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
             />
           </div>
 
+          {/* Level — locked on edit (a tryout can't move between level services) */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Mata Pelajaran <span className="text-red-500">*</span>
+              Jenjang <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <select
-                value={form.mata_pelajaran}
-                onChange={(e) => setForm({ ...form, mata_pelajaran: e.target.value })}
-                required
-                className={`${inputCls} appearance-none pr-10`}
-              >
-                <option value="">Pilih mata pelajaran...</option>
-                {MAPEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <div className="grid grid-cols-3 gap-2">
+              {LEVELS.map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  disabled={mode === 'edit'}
+                  onClick={() => changeLevel(lvl)}
+                  className={`py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    form.level === lvl ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {lvl}
+                </button>
+              ))}
             </div>
+            {mode === 'edit' && <p className="text-xs text-slate-400 mt-1.5">Jenjang tidak dapat diubah saat mengedit.</p>}
           </div>
+
+          <SelectField
+            label="Kelas" required
+            value={form.kelas}
+            onChange={(v) => setForm({ ...form, kelas: v })}
+            placeholder={loadingMaster ? 'Memuat...' : kelasOptions.length ? 'Pilih kelas...' : 'Belum ada kelas untuk jenjang ini'}
+            options={kelasOptions.map((k) => ({ value: k.nama, label: k.nama }))}
+          />
+
+          <SelectField
+            label="Mata Pelajaran" required
+            value={form.mata_pelajaran}
+            onChange={changeMapel}
+            placeholder={loadingMaster ? 'Memuat...' : mapelOptions.length ? 'Pilih mata pelajaran...' : 'Belum ada mata pelajaran untuk jenjang ini'}
+            options={mapelOptions.map((m) => ({ value: m.nama, label: m.nama }))}
+          />
+
+          <SelectField
+            label="Sub Mata Pelajaran"
+            value={form.sub_mata_pelajaran}
+            onChange={(v) => setForm({ ...form, sub_mata_pelajaran: v })}
+            disabled={!form.mata_pelajaran}
+            placeholder={!form.mata_pelajaran ? 'Pilih mata pelajaran dulu' : subOptions.length ? 'Pilih sub (opsional)...' : 'Tidak ada sub'}
+            options={subOptions.map((s) => ({ value: s.nama, label: s.nama }))}
+          />
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Durasi</label>
@@ -514,6 +616,21 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
             <p className="text-xs text-slate-400 mt-1.5">Waktu pengerjaan untuk siswa (15–300 menit)</p>
           </div>
 
+          <div className="space-y-2">
+            <ToggleRow
+              label="Acak Urutan Soal"
+              desc="Setiap siswa mendapat urutan soal berbeda."
+              checked={form.randomize_questions}
+              onChange={(v) => setForm({ ...form, randomize_questions: v })}
+            />
+            <ToggleRow
+              label="Acak Pilihan Ganda"
+              desc="Posisi opsi A–E diacak per siswa."
+              checked={form.randomize_options}
+              onChange={(v) => setForm({ ...form, randomize_options: v })}
+            />
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">
               Batal
@@ -524,6 +641,36 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+function SelectField({ label, value, onChange, options, placeholder, required, disabled }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+  placeholder: string
+  required?: boolean
+  disabled?: boolean
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-slate-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          className={`${inputCls} appearance-none pr-10 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
       </div>
     </div>
   )
@@ -572,6 +719,27 @@ function StatCard({ label, value, Icon, color }: {
         <p className="text-3xl font-black text-slate-900 tabular-nums">{value}</p>
         <p className="text-sm text-slate-500 mt-0.5">{label}</p>
       </div>
+    </div>
+  )
+}
+
+function ToggleRow({ label, desc, checked, onChange }: {
+  label: string; desc: string; checked: boolean; onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-slate-700">{label}</p>
+        <p className="text-xs text-slate-400">{desc}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        aria-pressed={checked}
+        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-blue-500' : 'bg-slate-300'}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+      </button>
     </div>
   )
 }

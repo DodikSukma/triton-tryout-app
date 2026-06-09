@@ -28,7 +28,7 @@ start_service() {
     REDIS_PORT="$REDIS_PORT" \
     SESSION_SECRET="$SESSION_SECRET" \
     SESSION_MAX_AGE_MS="$SESSION_MAX_AGE_MS" \
-    SOAL_SERVICE_URL="$SOAL_SERVICE_URL" \
+    USER_SERVICE_URL="$USER_SERVICE_URL" \
     AUTH_SERVICE_URL="$AUTH_SERVICE_URL" \
     PORT="$PORT" \
     node dist/index.js \
@@ -40,18 +40,20 @@ start_service() {
 
 echo "🚀 Starting all Triton services..."
 
-start_service "auth-service"    "$ROOT/services/auth-service"    "db_auth"    4001
-start_service "user-service"    "$ROOT/services/user-service"    "db_user"    4002
-start_service "soal-service"    "$ROOT/services/soal-service"    "db_soal"    4003
-start_service "jawaban-service" "$ROOT/services/jawaban-service" "db_jawaban" 4004
+start_service "auth-service" "$ROOT/services/auth-service" "db_auth" 4001
+start_service "user-service" "$ROOT/services/user-service" "db_user" 4002
+start_service "sd-service"   "$ROOT/services/sd-service"   "db_sd"   4005
+start_service "smp-service"  "$ROOT/services/smp-service"  "db_smp"  4006
+start_service "sma-service"  "$ROOT/services/sma-service"  "db_sma"  4007
 
 echo "  Starting api-gateway (port 4000)..."
 (
   cd "$ROOT/services/api-gateway"
   AUTH_SERVICE_URL="$AUTH_SERVICE_URL" \
   USER_SERVICE_URL="$USER_SERVICE_URL" \
-  SOAL_SERVICE_URL="$SOAL_SERVICE_URL" \
-  JAWABAN_SERVICE_URL="$JAWABAN_SERVICE_URL" \
+  SD_SERVICE_URL="$SD_SERVICE_URL" \
+  SMP_SERVICE_URL="$SMP_SERVICE_URL" \
+  SMA_SERVICE_URL="$SMA_SERVICE_URL" \
   FRONTEND_URL="$FRONTEND_URL" \
   PORT=4000 \
   node dist/index.js \

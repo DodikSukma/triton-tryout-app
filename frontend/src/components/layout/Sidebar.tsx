@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   LogOut, LayoutDashboard, Users, BookOpen, GraduationCap,
-  User, BarChart2, FileText, X,
+  User, BarChart2, FileText, X, Database, ClipboardCheck, ScrollText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
 import { Role } from '@/types'
 import { useProfile } from '@/hooks/useAuth'
+import { getEducationLevel, LEVEL_THEME } from '@/lib/level'
+import LevelSwitcher from './LevelSwitcher'
 
 type NavItem =
   | { type: 'link'; label: string; href: string; icon: React.ReactNode }
@@ -20,6 +22,9 @@ const adminNav: NavItem[] = [
   { type: 'link', label: 'Dashboard',    href: '/admin/dashboard',        icon: <LayoutDashboard size={18} /> },
   { type: 'link', label: 'Kelola Guru',  href: '/admin/users?role=guru',  icon: <GraduationCap size={18} /> },
   { type: 'link', label: 'Kelola Siswa', href: '/admin/users?role=siswa', icon: <Users size={18} /> },
+  { type: 'link', label: 'Master Data',  href: '/admin/master',           icon: <Database size={18} /> },
+  { type: 'link', label: 'Persetujuan',  href: '/admin/approvals',        icon: <ClipboardCheck size={18} /> },
+  { type: 'link', label: 'Log Aktivitas', href: '/admin/logs',            icon: <ScrollText size={18} /> },
   { type: 'divider' },
   { type: 'link', label: 'Profil Saya',  href: '/admin/profil',           icon: <User size={18} /> },
 ]
@@ -57,6 +62,10 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
 
   const displayName = profile?.nama_lengkap || fallbackName || 'User'
   const initial = displayName.charAt(0).toUpperCase()
+
+  // Students get a level-specific accent (SD red / SMP navy / SMA grey) derived
+  // from their class; teachers/admins keep the default blue accent.
+  const studentTheme = role === 'siswa' ? LEVEL_THEME[getEducationLevel(profile?.kelas)] : null
 
   async function handleLogout() {
     try {
@@ -97,6 +106,8 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
         )}
       </div>
 
+      {role !== 'siswa' && <LevelSwitcher />}
+
       <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
         {navItems.map((item, idx) => {
           if (item.type === 'divider') {
@@ -110,14 +121,14 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
               onClick={onMobileClose}
               className={`group relative flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
                 active
-                  ? 'bg-gradient-to-r from-blue-50 to-blue-50/50 text-blue-700 shadow-sm'
+                  ? studentTheme?.navActive ?? 'bg-gradient-to-r from-blue-50 to-blue-50/50 text-blue-700 shadow-sm'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
               }`}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full ${studentTheme?.navBar ?? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'}`} />
               )}
-              <span className={`transition-transform duration-300 ${active ? 'text-blue-600 scale-110' : 'text-slate-400 group-hover:scale-110'}`}>
+              <span className={`transition-transform duration-300 ${active ? `${studentTheme?.navIcon ?? 'text-blue-600'} scale-110` : 'text-slate-400 group-hover:scale-110'}`}>
                 {item.icon}
               </span>
               {item.label}

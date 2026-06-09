@@ -30,6 +30,7 @@ run_dev() {
     REDIS_PORT="$REDIS_PORT" \
     SESSION_SECRET="$SESSION_SECRET" \
     SESSION_MAX_AGE_MS="$SESSION_MAX_AGE_MS" \
+    USER_SERVICE_URL="$USER_SERVICE_URL" \
     PORT="$PORT" \
     npx ts-node-dev --respawn --transpile-only src/index.ts \
       >> "$LOGS/$NAME.log" \
@@ -40,18 +41,20 @@ run_dev() {
 
 echo "🔧 Starting all Triton services in DEV mode (hot reload)..."
 
-run_dev "auth-service"    "$ROOT/services/auth-service"    "db_auth"    4001
-run_dev "user-service"    "$ROOT/services/user-service"    "db_user"    4002
-run_dev "soal-service"    "$ROOT/services/soal-service"    "db_soal"    4003
-run_dev "jawaban-service" "$ROOT/services/jawaban-service" "db_jawaban" 4004
+run_dev "auth-service" "$ROOT/services/auth-service" "db_auth" 4001
+run_dev "user-service" "$ROOT/services/user-service" "db_user" 4002
+run_dev "sd-service"   "$ROOT/services/sd-service"   "db_sd"   4005
+run_dev "smp-service"  "$ROOT/services/smp-service"  "db_smp"  4006
+run_dev "sma-service"  "$ROOT/services/sma-service"  "db_sma"  4007
 
 echo "  Starting api-gateway in dev mode (port 4000)..."
 (
   cd "$ROOT/services/api-gateway"
   AUTH_SERVICE_URL="$AUTH_SERVICE_URL" \
   USER_SERVICE_URL="$USER_SERVICE_URL" \
-  SOAL_SERVICE_URL="$SOAL_SERVICE_URL" \
-  JAWABAN_SERVICE_URL="$JAWABAN_SERVICE_URL" \
+  SD_SERVICE_URL="$SD_SERVICE_URL" \
+  SMP_SERVICE_URL="$SMP_SERVICE_URL" \
+  SMA_SERVICE_URL="$SMA_SERVICE_URL" \
   FRONTEND_URL="$FRONTEND_URL" \
   PORT=4000 \
   npx ts-node-dev --respawn --transpile-only src/index.ts \

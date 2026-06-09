@@ -8,8 +8,10 @@ import {
   CheckCircle2, XCircle, Loader2, X, Mail, Lock, Eye, EyeOff, AlertTriangle,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
-import { ApiResponse, Role } from '@/types'
+import { ApiResponse, EducationLevel, Role } from '@/types'
 import { formatTanggal } from '@/lib/utils'
+
+const EDU_LEVELS: EducationLevel[] = ['SD', 'SMP', 'SMA']
 
 interface UserRow {
   id: string
@@ -23,6 +25,7 @@ interface UserRow {
     no_telepon: string | null
     kelas: string | null
     mata_pelajaran: string | null
+    education_level: EducationLevel | null
     avatar_url: string | null
     bio: string | null
   } | null
@@ -321,6 +324,7 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [kelas, setKelas] = useState(initialUser?.profile?.kelas ?? '')
+  const [eduLevel, setEduLevel] = useState<string>(initialUser?.profile?.education_level ?? '')
   const [mapel, setMapel] = useState<string[]>(
     initialUser?.profile?.mata_pelajaran
       ? initialUser.profile.mata_pelajaran.split(',').map((m) => m.trim()).filter(Boolean)
@@ -348,6 +352,7 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
           nama_lengkap: nama,
           kelas: !isGuru ? kelas || null : null,
           mata_pelajaran: isGuru ? mapel.join(', ') || null : null,
+          education_level: eduLevel || null,
         })
         toast.success(`${isGuru ? 'Guru' : 'Siswa'} berhasil ditambahkan.`)
       } else if (initialUser) {
@@ -355,6 +360,7 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
           nama_lengkap: nama,
           kelas: !isGuru ? kelas || null : null,
           mata_pelajaran: isGuru ? mapel.join(', ') || null : null,
+          education_level: eduLevel || null,
         })
         toast.success('Data berhasil diperbarui.')
       }
@@ -431,6 +437,13 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
               </select>
             </Field>
           )}
+
+          <Field label="Jenjang Pendidikan" hint={isGuru ? 'Opsional untuk guru.' : 'Menentukan tryout jenjang mana yang dapat diakses siswa.'}>
+            <select value={eduLevel} onChange={(e) => setEduLevel(e.target.value)} className={inputCls}>
+              <option value="">Pilih jenjang...</option>
+              {EDU_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
 
           {isGuru && (
             <Field label="Mata Pelajaran">

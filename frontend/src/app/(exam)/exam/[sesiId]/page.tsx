@@ -11,6 +11,7 @@ import {
 import api, { getErrorMessage } from '@/lib/api'
 import { ApiResponse, SesiTryout, Soal, TryoutDetail } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
+import { useLevelTheme } from '@/components/shared/LevelTheme'
 
 interface SesiWithAnswers {
   sesi: SesiTryout
@@ -20,6 +21,7 @@ interface SesiWithAnswers {
 export default function ExamPage() {
   const { sesiId } = useParams<{ sesiId: string }>()
   const router = useRouter()
+  const { theme } = useLevelTheme()
 
   const [sesi, setSesi] = useState<SesiTryout | null>(null)
   const [tryout, setTryout] = useState<TryoutDetail | null>(null)
@@ -102,7 +104,33 @@ export default function ExamPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sesi, tryout])
 
-  const soalList: Soal[] = tryout?.soal ?? []
+  // Apply this session's frozen randomized layout (TRN-04): question_order
+  // reorders the questions, option_order reorders each question's options.
+  const soalList: Soal[] = useMemo(() => {
+    const all = tryout?.soal ?? []
+    if (!sesi || all.length === 0) return all
+
+    const byId = new Map(all.map((s) => [s.id, s]))
+    let ordered = sesi.question_order?.length
+      ? (sesi.question_order.map((id) => byId.get(id)).filter(Boolean) as Soal[])
+      : all
+    if (ordered.length !== all.length) {
+      const seen = new Set(ordered.map((s) => s.id))
+      ordered = [...ordered, ...all.filter((s) => !seen.has(s.id))]
+    }
+
+    const optMap = sesi.option_order ?? {}
+    return ordered.map((s) => {
+      const order = optMap[s.id]
+      if (!order || !s.opsi) return s
+      const byHuruf = new Map(s.opsi.map((o) => [o.huruf, o]))
+      const reordered = order.map((h) => byHuruf.get(h)).filter(Boolean) as NonNullable<Soal['opsi']>
+      const seen = new Set(reordered.map((o) => o.huruf))
+      const extra = s.opsi.filter((o) => !seen.has(o.huruf))
+      return { ...s, opsi: [...reordered, ...extra] }
+    })
+  }, [tryout, sesi])
+
   const currentSoal: Soal | undefined = soalList[currentIdx]
   const total = soalList.length
   const answeredCount = useMemo(
@@ -221,7 +249,7 @@ export default function ExamPage() {
             </span>
             <button
               onClick={() => setShowSubmit(true)}
-              className="bg-triton-red-500 hover:bg-triton-red-600 text-white rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm"
+              className={`${theme.button} rounded-xl px-4 py-2 text-sm font-semibold transition-colors inline-flex items-center gap-1.5 shadow-sm`}
             >
               <Send size={14} />
               Kumpulkan
@@ -326,8 +354,10 @@ export default function ExamPage() {
               <div className="px-6 md:px-8 pb-8">
                 {currentSoal.tipe === 'pilihan_ganda' ? (
                   <div className="space-y-3">
-                    {(currentSoal.opsi ?? []).map((opsi) => {
+                    {(currentSoal.opsi ?? []).map((opsi, optIndex) => {
                       const selected = answers[currentSoal.id]?.opsi_id === opsi.id
+                      // Display position letter (A, B, …) so shuffled options read cleanly.
+                      const displayHuruf = String.fromCharCode(65 + optIndex)
                       return (
                         <button
                           key={opsi.id}
@@ -343,7 +373,7 @@ export default function ExamPage() {
                               ? 'bg-triton-blue-500 text-white'
                               : 'bg-slate-100 text-slate-500 group-hover:bg-triton-blue-100 group-hover:text-triton-blue-700'
                           }`}>
-                            {opsi.huruf}
+                            {displayHuruf}
                           </span>
                           <div className="flex-1">
                             <RenderHTML
@@ -416,7 +446,7 @@ export default function ExamPage() {
           ) : (
             <button
               onClick={() => setShowSubmit(true)}
-              className="inline-flex items-center gap-1.5 bg-triton-red-500 hover:bg-triton-red-600 text-white rounded-xl px-5 py-2.5 text-sm font-bold transition-colors shadow-sm"
+              className={`inline-flex items-center gap-1.5 ${theme.button} rounded-xl px-5 py-2.5 text-sm font-bold transition-colors shadow-sm`}
             >
               Selesai & Kumpulkan
               <Send size={14} />
@@ -435,6 +465,7 @@ export default function ExamPage() {
           onCancel={() => setShowSubmit(false)}
           onConfirm={doSubmit}
           submitting={submitting}
+          accentClass={theme.button}
         />
       )}
 
@@ -445,9 +476,9 @@ export default function ExamPage() {
 }
 
 // ─── Submit Dialog ──────────────────────────────────────────
-function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfirm, submitting }: {
+function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfirm, submitting, accentClass }: {
   total: number; answered: number; unanswered: number; flagged: number
-  onCancel: () => void; onConfirm: () => void; submitting: boolean
+  onCancel: () => void; onConfirm: () => void; submitting: boolean; accentClass: string
 }) {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={submitting ? undefined : onCancel}>
@@ -487,7 +518,7 @@ function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfir
           <button
             onClick={onConfirm}
             disabled={submitting}
-            className="flex-1 bg-triton-red-500 hover:bg-triton-red-600 text-white font-bold rounded-xl py-2.5 text-sm transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-70"
+            className={`flex-1 ${accentClass} font-bold rounded-xl py-2.5 text-sm transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-70`}
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             {submitting ? 'Mengumpulkan...' : 'Kumpulkan Sekarang'}

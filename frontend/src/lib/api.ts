@@ -1,9 +1,21 @@
 import axios, { AxiosError } from 'axios'
+import { getLevel, isLevelRoute } from './level'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
   withCredentials: true,
   timeout: 15000,
+})
+
+// Rewrite level-service routes (/tryouts, /soal, /sesi, /hasil, /riwayat) to the
+// active education level prefix so a call to `/tryouts` becomes `/sma/tryouts`.
+// Auth/user routes are left untouched.
+api.interceptors.request.use((config) => {
+  const url = config.url ?? ''
+  if (isLevelRoute(url)) {
+    config.url = `/${getLevel()}${url}`
+  }
+  return config
 })
 
 api.interceptors.response.use(

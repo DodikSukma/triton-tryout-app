@@ -8,9 +8,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       headers: { cookie: req.headers.cookie ?? '' },
     })
     if (!r.ok) return res.status(401).json({ success: false, error: 'Unauthorized' })
-    const { data } = (await r.json()) as { data: { userId: string; role: string } }
+    const { data } = (await r.json()) as { data: { userId: string; role: string; email?: string } }
     req.headers['x-user-id'] = data.userId
     req.headers['x-user-role'] = data.role
+    if (data.email) req.headers['x-user-email'] = data.email // actor email for audit logging
     next()
   } catch {
     res.status(503).json({ success: false, error: 'Auth service unavailable' })
