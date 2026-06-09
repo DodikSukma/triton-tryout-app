@@ -1,11 +1,12 @@
 'use client'
 
 import RoleGuard from '@/components/shared/RoleGuard'
+import { LevelThemeProvider } from '@/components/shared/LevelTheme'
 
 export default function ExamLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleGuard allowedRoles={['siswa']}>
-      {() => <div className="min-h-screen bg-slate-50">{children}</div>}
+      {() => <LevelThemeProvider>{children}</LevelThemeProvider>}
     </RoleGuard>
   )
 }

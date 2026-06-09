@@ -14,7 +14,7 @@ if [ -f "$PIDS" ]; then
   echo "✅ All services stopped."
 else
   echo "  No .pids file found — killing by port instead..."
-  for port in 4000 4001 4002 4003 4004; do
+  for port in 4000 4001 4002 4005 4006 4007; do
     pid=$(lsof -ti ":$port" 2>/dev/null)
     if [ -n "$pid" ]; then
       kill "$pid" 2>/dev/null && echo "  Killed process on port $port (PID $pid)"

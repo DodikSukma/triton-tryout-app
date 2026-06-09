@@ -7,6 +7,7 @@ import api, { getErrorMessage } from '@/lib/api'
 import { toast } from 'sonner'
 import { ApiResponse, Tryout, Hasil, SesiTryout } from '@/types'
 import { formatDurasi } from '@/lib/utils'
+import { useLevelTheme } from '@/components/shared/LevelTheme'
 
 type StatusFilter = 'all' | 'not_started' | 'in_progress' | 'done'
 
@@ -39,6 +40,7 @@ const STRIPE_COLORS: Record<string, string> = {
 }
 
 export default function SiswaTryoutListPage() {
+  const { theme } = useLevelTheme()
   const [tryouts, setTryouts] = useState<EnrichedTryout[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -159,7 +161,7 @@ export default function SiswaTryoutListPage() {
                 ? { href: `/siswa/hasil/${t.sesi_id}`, label: 'Lihat Hasil', cls: 'bg-green-500 hover:bg-green-600' }
                 : t.status_siswa === 'in_progress'
                   ? { href: `/siswa/tryout/${t.id}`, label: 'Lanjutkan →', cls: 'bg-amber-500 hover:bg-amber-600' }
-                  : { href: `/siswa/tryout/${t.id}`, label: 'Mulai Tryout →', cls: 'bg-triton-blue-500 hover:bg-triton-blue-600' }
+                  : { href: `/siswa/tryout/${t.id}`, label: 'Mulai Tryout →', cls: theme.button }
 
             return (
               <div

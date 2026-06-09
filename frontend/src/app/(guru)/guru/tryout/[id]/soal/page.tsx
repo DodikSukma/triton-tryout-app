@@ -2,16 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Plus, Trash2, CheckCircle2, AlertTriangle, Loader2, FileQuestion,
-  CheckSquare, AlignLeft, Send, Sparkles,
+  ArrowLeft, ChevronLeft, ChevronRight, Plus, Trash2, CheckCircle2,
+  AlertTriangle, Loader2, FileQuestion, Send, Sparkles, Upload, FileType2,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import RichTextEditor, { RichTextEditorHandle } from '@/components/editor/RichTextEditor'
 import AIGeneratorModal from '@/components/editor/AIGeneratorModal'
+import ImportSoalModal from '@/components/editor/ImportSoalModal'
+import WordImportModal from '@/components/editor/WordImportModal'
 import { ApiResponse, Soal, SoalTipe, TryoutDetail } from '@/types'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DraftOpsi {
   id?: string
@@ -43,6 +47,8 @@ const NEW_SOAL_DEFAULT: DraftSoal = {
   ],
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 function soalToDraft(s: Soal): DraftSoal {
   return {
     id: s.id,
@@ -62,28 +68,70 @@ function soalToDraft(s: Soal): DraftSoal {
 
 function statusBadge(status: string) {
   const map: Record<string, { bg: string; text: string; label: string }> = {
-    draft:     { bg: 'bg-slate-100',  text: 'text-slate-600', label: 'Draft' },
-    published: { bg: 'bg-green-100',  text: 'text-green-700', label: 'Published' },
-    closed:    { bg: 'bg-amber-100',  text: 'text-amber-700', label: 'Closed' },
+    draft:            { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Draft' },
+    pending_approval: { bg: 'bg-blue-100',  text: 'text-blue-700',  label: 'Menunggu Persetujuan' },
+    approved:         { bg: 'bg-teal-100',  text: 'text-teal-700',  label: 'Disetujui' },
+    rejected:         { bg: 'bg-red-100',   text: 'text-red-700',   label: 'Butuh Revisi' },
+    published:        { bg: 'bg-green-100', text: 'text-green-700', label: 'Aktif' },
+    closed:           { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Selesai' },
   }
   return map[status] ?? map.draft
 }
 
+function hasSoalIssue(s: Soal): boolean {
+  if (s.tipe !== 'pilihan_ganda') return false
+  const opsi = s.opsi ?? []
+  return opsi.length < 2 || !opsi.some((o) => Boolean(o.is_benar))
+}
+
+function htmlToText(html: string): string {
+  if (typeof window === 'undefined') return html
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  tmp.querySelectorAll('.katex-equation').forEach((el) => {
+    const latex = el.getAttribute('data-latex')
+    el.textContent = latex ? `[${latex}]` : '[equation]'
+  })
+  return tmp.innerText || tmp.textContent || ''
+}
+
+function stripHtmlForPreview(html: string | null | undefined): string {
+  if (!html) return ''
+  if (typeof window === 'undefined') return html.replace(/<[^>]*>/g, '')
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  tmp.querySelectorAll('.katex-equation').forEach((el) => {
+    const l = el.getAttribute('data-latex')
+    el.textContent = l ? ` [${l}] ` : ' [eq] '
+  })
+  tmp.querySelectorAll('figure').forEach((el) => el.replaceWith('[gambar]'))
+  return (tmp.innerText || '').trim().replace(/\s+/g, ' ')
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function KelolaSoalPage() {
   const { id: tryoutId } = useParams<{ id: string }>()
-  const router = useRouter()
 
-  const [tryout, setTryout] = useState<TryoutDetail | null>(null)
-  const [draft, setDraft] = useState<DraftSoal | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [publishing, setPublishing] = useState(false)
+  const [tryout,        setTryout]        = useState<TryoutDetail | null>(null)
+  const [draft,         setDraft]         = useState<DraftSoal | null>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [saving,        setSaving]        = useState(false)
+  const [publishing,    setPublishing]    = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [aiModalOpen, setAiModalOpen] = useState(false)
+  const [aiModalOpen,   setAiModalOpen]   = useState(false)
+  const [importOpen,    setImportOpen]    = useState(false)
+  const [wordOpen,      setWordOpen]      = useState(false)
+  // Increments on every soal switch — forces SoalEditor to remount so uncontrolled
+  // OpsiEditor contentEditable divs always reset to the correct soal's content.
+  const [editorKey,     setEditorKey]     = useState(0)
+  // Mobile navigation: 'list' = sidebar visible, 'editor' = editor visible.
+  const [mobileView,    setMobileView]    = useState<'list' | 'editor'>('list')
 
-  const editorRef = useRef<RichTextEditorHandle>(null)
-  // Holds latest opsi HTML from per-option editors (uncontrolled, only synced on input)
+  const editorRef   = useRef<RichTextEditorHandle>(null)
   const opsiHtmlRef = useRef<string[]>([])
+
+  // ─── Data fetching ───────────────────────────────────────────────
 
   const fetchTryout = useCallback(
     async function fetchTryout(opts?: { silent?: boolean }) {
@@ -104,10 +152,13 @@ export default function KelolaSoalPage() {
 
   useEffect(() => { fetchTryout() }, [fetchTryout])
 
-  // ─── Select / create soal ────────────────────────────────
+  // ─── Select / create soal ────────────────────────────────────────
+
   function startNew() {
     setDraft({ ...NEW_SOAL_DEFAULT, opsi: NEW_SOAL_DEFAULT.opsi.map((o) => ({ ...o })) })
     opsiHtmlRef.current = NEW_SOAL_DEFAULT.opsi.map((o) => o.teks_html)
+    setEditorKey((k) => k + 1)
+    setMobileView('editor')
     setTimeout(() => editorRef.current?.setHtml(''), 50)
   }
 
@@ -115,7 +166,14 @@ export default function KelolaSoalPage() {
     const d = soalToDraft(s)
     setDraft(d)
     opsiHtmlRef.current = d.opsi.map((o) => o.teks_html)
+    setEditorKey((k) => k + 1)
+    setMobileView('editor')
     setTimeout(() => editorRef.current?.setHtml(d.pertanyaan_html), 50)
+  }
+
+  function backToList() {
+    setDraft(null)
+    setMobileView('list')
   }
 
   function updateDraft<K extends keyof DraftSoal>(key: K, value: DraftSoal[K]) {
@@ -141,10 +199,7 @@ export default function KelolaSoalPage() {
   function addOpsi() {
     setDraft((d) => {
       if (!d) return d
-      if (d.opsi.length >= 5) {
-        toast.error('Maksimal 5 opsi jawaban.')
-        return d
-      }
+      if (d.opsi.length >= 5) { toast.error('Maksimal 5 opsi jawaban.'); return d }
       const huruf = String.fromCharCode(65 + d.opsi.length)
       opsiHtmlRef.current = [...opsiHtmlRef.current, '']
       return { ...d, opsi: [...d.opsi, { huruf, teks_html: '', is_benar: false }] }
@@ -154,50 +209,35 @@ export default function KelolaSoalPage() {
   function removeOpsi(idx: number) {
     setDraft((d) => {
       if (!d) return d
-      if (d.opsi.length <= 2) {
-        toast.error('Minimal 2 opsi jawaban.')
-        return d
-      }
-      const next = d.opsi.filter((_, i) => i !== idx).map((o, i) => ({ ...o, huruf: String.fromCharCode(65 + i) }))
+      if (d.opsi.length <= 2) { toast.error('Minimal 2 opsi jawaban.'); return d }
+      const next = d.opsi
+        .filter((_, i) => i !== idx)
+        .map((o, i) => ({ ...o, huruf: String.fromCharCode(65 + i) }))
       opsiHtmlRef.current = opsiHtmlRef.current.filter((_, i) => i !== idx)
       return { ...d, opsi: next }
     })
   }
 
-  // ─── Save / delete soal ──────────────────────────────────
+  // ─── Save / delete ───────────────────────────────────────────────
+
   async function handleSave() {
     if (!draft) return
     const html = editorRef.current?.getHtml() ?? draft.pertanyaan_html
     const text = editorRef.current?.getText() ?? ''
-    if (!text.trim()) {
-      toast.error('Pertanyaan tidak boleh kosong.')
-      return
-    }
+    if (!text.trim()) { toast.error('Pertanyaan tidak boleh kosong.'); return }
 
     let opsiPayload: { huruf: string; teks: string; teks_html: string; is_benar: boolean }[] | undefined
     if (draft.tipe === 'pilihan_ganda') {
-      if (draft.opsi.length < 2) {
-        toast.error('Pilihan ganda butuh minimal 2 opsi.')
-        return
-      }
-      const hasCorrect = draft.opsi.some((o) => o.is_benar)
-      if (!hasCorrect) {
+      if (draft.opsi.length < 2) { toast.error('Pilihan ganda butuh minimal 2 opsi.'); return }
+      if (!draft.opsi.some((o) => o.is_benar)) {
         toast.error('Pilih salah satu opsi sebagai jawaban yang benar.')
         return
       }
-      // Build opsi payload — strip HTML to get teks
       opsiPayload = draft.opsi.map((o, i) => {
         const opsiHtml = opsiHtmlRef.current[i] ?? o.teks_html
         const opsiText = htmlToText(opsiHtml).trim()
-        if (!opsiText) {
-          throw new Error(`Opsi ${o.huruf} kosong.`)
-        }
-        return {
-          huruf: o.huruf,
-          teks: opsiText,
-          teks_html: opsiHtml,
-          is_benar: o.is_benar,
-        }
+        if (!opsiText) throw new Error(`Opsi ${o.huruf} kosong.`)
+        return { huruf: o.huruf, teks: opsiText, teks_html: opsiHtml, is_benar: o.is_benar }
       })
     }
 
@@ -211,7 +251,6 @@ export default function KelolaSoalPage() {
         panduan_essay: draft.tipe === 'essay' ? draft.panduan_essay : '',
         opsi: opsiPayload,
       }
-
       let savedSoal: Soal | undefined
       if (draft.id) {
         const res = await api.put<ApiResponse<Soal>>(`/soal/${draft.id}`, body)
@@ -222,15 +261,15 @@ export default function KelolaSoalPage() {
         savedSoal = res.data.data
         toast.success('Soal berhasil disimpan.')
       }
-
       await fetchTryout({ silent: true })
       if (savedSoal) {
-        // Re-select to display freshly saved data
         const fresh = (await fetchTryout({ silent: true }))?.soal.find((s) => s.id === savedSoal!.id)
         if (fresh) selectSoal(fresh)
       }
     } catch (err) {
-      const msg = err instanceof Error && err.message.includes('kosong') ? err.message : getErrorMessage(err, 'Gagal menyimpan soal.')
+      const msg = err instanceof Error && err.message.includes('kosong')
+        ? err.message
+        : getErrorMessage(err, 'Gagal menyimpan soal.')
       toast.error(msg)
     } finally {
       setSaving(false)
@@ -242,32 +281,35 @@ export default function KelolaSoalPage() {
       await api.delete(`/soal/${soalId}`)
       toast.success('Soal berhasil dihapus.')
       setConfirmDelete(null)
-      if (draft?.id === soalId) setDraft(null)
+      if (draft?.id === soalId) backToList()
       await fetchTryout({ silent: true })
     } catch (err) {
       toast.error(getErrorMessage(err, 'Gagal menghapus soal.'))
     }
   }
 
-  async function handlePublish() {
+  async function changeStatus(status: 'draft' | 'pending_approval', opts?: { requireSoal?: boolean }) {
     if (!tryout) return
-    if ((tryout.soal?.length ?? 0) === 0) {
-      toast.error('Tambahkan minimal 1 soal sebelum publish.')
+    if (opts?.requireSoal && (tryout.soal?.length ?? 0) === 0) {
+      toast.error('Tambahkan minimal 1 soal sebelum mengajukan.')
       return
     }
     setPublishing(true)
     try {
-      await api.patch(`/tryouts/${tryoutId}/publish`, { status: 'published' })
-      toast.success('Tryout berhasil dipublish!')
+      await api.patch(`/tryouts/${tryoutId}/status`, { status })
+      toast.success(status === 'pending_approval'
+        ? 'Tryout diajukan untuk persetujuan admin.'
+        : 'Tryout dikembalikan ke draft.')
       await fetchTryout({ silent: true })
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Gagal mempublish tryout.'))
+      toast.error(getErrorMessage(err, 'Gagal memperbarui status.'))
     } finally {
       setPublishing(false)
     }
   }
 
-  // ─── Render ──────────────────────────────────────────────
+  // ─── Loading / error states ──────────────────────────────────────
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -284,54 +326,87 @@ export default function KelolaSoalPage() {
     )
   }
 
-  const soalList = tryout.soal ?? []
-  const totalBobot = soalList.reduce((sum, s) => sum + (s.bobot || 0), 0)
-  const sb = statusBadge(tryout.status)
+  const soalList       = tryout.soal ?? []
+  const totalBobot     = soalList.reduce((sum, s) => sum + (s.bobot || 0), 0)
+  const sb             = statusBadge(tryout.status)
+  const currentSoalIdx = draft?.id ? soalList.findIndex((s) => s.id === draft.id) : soalList.length
+
+  // ─── Render ──────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-[100dvh] overflow-hidden bg-slate-50">
 
-      {/* ─── LEFT SIDEBAR ─────────────────────────────────── */}
-      <aside className="w-72 shrink-0 border-r border-slate-100 bg-white flex flex-col">
-
-        <div className="px-5 pt-5 pb-4 border-b border-slate-100">
-          <Link href="/guru/tryout" className="inline-flex items-center gap-1.5 text-xs text-blue-500 hover:underline mb-2">
+      {/* ══════════════════════════════════════════════════════
+          LEFT SIDEBAR
+          • mobile: full-width, hidden when mobileView==='editor'
+          • lg+: fixed 288px, always visible
+         ══════════════════════════════════════════════════════ */}
+      <aside
+        className={`shrink-0 border-r border-slate-100 bg-white flex-col
+          ${mobileView === 'editor' ? 'hidden lg:flex lg:w-72' : 'flex w-full lg:w-72'}`}
+      >
+        {/* Sidebar header */}
+        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100">
+          <Link
+            href="/guru/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-500 hover:underline mb-2"
+          >
             <ArrowLeft size={14} />
-            Kembali ke Tryout
+            Kembali ke Dashboard
           </Link>
-          <h2 className="text-lg font-extrabold text-slate-900 leading-tight">{tryout.nama_tryout}</h2>
+          <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">{tryout.nama_tryout}</h2>
           <p className="text-xs text-slate-400 mt-1">{tryout.mata_pelajaran} · {tryout.durasi_menit} menit</p>
           <span className={`mt-2 inline-block ${sb.bg} ${sb.text} text-xs font-semibold px-2.5 py-0.5 rounded-full`}>
             {sb.label}
           </span>
         </div>
 
-        <div className="p-4 border-b border-slate-100 space-y-2">
+        {/* Action buttons */}
+        <div className="p-3 sm:p-4 border-b border-slate-100 space-y-2">
           <button
             onClick={startNew}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm active:scale-95"
           >
             <Plus size={16} />
             Tambah Soal Manual
           </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setAiModalOpen(true)}
+              className="border-2 border-violet-400 text-violet-600 bg-violet-50 hover:bg-violet-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
+            >
+              <Sparkles size={13} />
+              Generate AI
+            </button>
+            <button
+              onClick={() => setImportOpen(true)}
+              className="border border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
+            >
+              <Upload size={13} />
+              Import Soal
+            </button>
+          </div>
           <button
-            onClick={() => setAiModalOpen(true)}
-            className="w-full border-2 border-violet-400 text-violet-600 bg-violet-50 hover:bg-violet-100 font-semibold rounded-xl py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-colors"
+            onClick={() => setWordOpen(true)}
+            className="w-full border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
           >
-            <Sparkles size={15} />
-            Generate dengan AI
+            <FileType2 size={13} />
+            Import dari Word
           </button>
         </div>
 
+        {/* Soal list */}
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
           {soalList.length === 0 ? (
             <div className="text-center text-slate-400 text-sm py-12 px-4">
-              Belum ada soal. Klik <strong>"Tambah Soal Baru"</strong> untuk membuat.
+              Belum ada soal. Klik <strong>&quot;Tambah Soal Manual&quot;</strong> untuk membuat.
             </div>
           ) : (
             soalList.map((s, i) => {
               const isActive = draft?.id === s.id
-              const isPG = s.tipe === 'pilihan_ganda'
+              const isPG     = s.tipe === 'pilihan_ganda'
+              const hasIssue = hasSoalIssue(s)
+
               return (
                 <div
                   key={s.id}
@@ -339,26 +414,44 @@ export default function KelolaSoalPage() {
                   className={`group cursor-pointer rounded-xl p-3 border transition-all duration-150 ${
                     isActive
                       ? 'bg-blue-50 border-blue-500 border-l-4'
-                      : 'bg-white border-slate-100 hover:border-blue-200 hover:bg-blue-50/40'
+                      : hasIssue
+                        ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
+                        : 'bg-white border-slate-100 hover:border-blue-200 hover:bg-blue-50/40'
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${
-                      isActive ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
-                    }`}>{i + 1}</span>
+                      isActive
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
+                    }`}>
+                      {i + 1}
+                    </span>
+
                     <div className="flex-1 min-w-0">
-                      <span className={`inline-block text-[10px] font-semibold rounded px-1.5 py-0.5 mb-1 ${
-                        isPG ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'
-                      }`}>
-                        {isPG ? 'PG' : 'Essay'}
-                      </span>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`inline-block text-[10px] font-semibold rounded px-1.5 py-0.5 ${
+                          isPG ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'
+                        }`}>
+                          {isPG ? 'PG' : 'Essay'}
+                        </span>
+                        {hasIssue && (
+                          <span
+                            title="Kunci jawaban belum dipilih"
+                            className="w-2 h-2 rounded-full bg-amber-400 shrink-0"
+                          />
+                        )}
+                      </div>
                       <p className="text-xs text-slate-600 line-clamp-2 leading-snug">
-                        {stripHtmlForPreview(s.pertanyaan_html || s.pertanyaan) || <span className="italic text-slate-400">(kosong)</span>}
+                        {stripHtmlForPreview(s.pertanyaan_html || s.pertanyaan) || (
+                          <span className="italic text-slate-400">(kosong)</span>
+                        )}
                       </p>
                     </div>
+
                     <button
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete(s.id) }}
-                      className="text-slate-300 hover:text-red-500 transition-colors p-0.5 shrink-0"
+                      className="text-slate-300 hover:text-red-500 transition-colors p-0.5 shrink-0 mt-0.5"
                       title="Hapus soal"
                     >
                       <Trash2 size={14} />
@@ -370,76 +463,133 @@ export default function KelolaSoalPage() {
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50">
+        {/* Footer stats + publish */}
+        <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50">
           <p className="text-xs text-slate-500 mb-3">
-            <strong className="text-slate-900">{soalList.length}</strong> soal · Total bobot: <strong className="text-slate-900">{totalBobot}</strong>
+            <strong className="text-slate-900">{soalList.length}</strong> soal · Total bobot:{' '}
+            <strong className="text-slate-900">{totalBobot}</strong>
           </p>
-          {tryout.status === 'draft' && (
-            <button
-              onClick={handlePublish}
-              disabled={publishing || soalList.length === 0}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-2.5 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
-            >
-              {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-              {publishing ? 'Mempublish...' : 'Publish Tryout'}
-            </button>
+          {(tryout.status === 'draft' || tryout.status === 'rejected') && (
+            <>
+              {tryout.status === 'rejected' && tryout.revision_notes && (
+                <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5">
+                  <span className="font-semibold">Catatan revisi admin:</span> {tryout.revision_notes}
+                </div>
+              )}
+              <button
+                onClick={() => changeStatus('pending_approval', { requireSoal: true })}
+                disabled={publishing || soalList.length === 0}
+                className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-2.5 text-sm flex items-center justify-center gap-2 transition-colors shadow-sm active:scale-95"
+              >
+                {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                {publishing ? 'Mengajukan...' : 'Ajukan Persetujuan'}
+              </button>
+            </>
+          )}
+          {tryout.status === 'pending_approval' && (
+            <div className="space-y-2">
+              <p className="text-xs text-center text-blue-600 bg-blue-50 border border-blue-200 rounded-lg py-2 font-medium">
+                Menunggu persetujuan admin
+              </p>
+              <button
+                onClick={() => changeStatus('draft')}
+                disabled={publishing}
+                className="w-full border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl py-2 text-sm transition-colors"
+              >
+                {publishing ? 'Memproses...' : 'Tarik ke Draft'}
+              </button>
+            </div>
+          )}
+          {tryout.status === 'approved' && (
+            <p className="text-xs text-center text-teal-600 bg-teal-50 border border-teal-200 rounded-lg py-2 font-medium">
+              Disetujui — menunggu publikasi admin
+            </p>
           )}
           {tryout.status === 'published' && (
-            <button
-              onClick={async () => {
-                setPublishing(true)
-                try {
-                  await api.patch(`/tryouts/${tryoutId}/publish`, { status: 'draft' })
-                  toast.success('Tryout dikembalikan ke draft.')
-                  await fetchTryout({ silent: true })
-                } catch (err) { toast.error(getErrorMessage(err)) }
-                finally { setPublishing(false) }
-              }}
-              disabled={publishing}
-              className="w-full border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl py-2.5 text-sm transition-colors"
-            >
-              {publishing ? 'Memproses...' : 'Tarik dari Publikasi'}
-            </button>
+            <p className="text-xs text-center text-green-600 bg-green-50 border border-green-200 rounded-lg py-2 font-medium">
+              Tryout aktif (dikelola admin)
+            </p>
+          )}
+          {tryout.status === 'closed' && (
+            <p className="text-xs text-center text-slate-500 bg-slate-100 border border-slate-200 rounded-lg py-2 font-medium">
+              Tryout selesai
+            </p>
           )}
         </div>
       </aside>
 
-      {/* ─── MAIN EDITOR AREA ─────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
+      {/* ══════════════════════════════════════════════════════
+          MAIN EDITOR AREA
+          • mobile: full-width, hidden when mobileView==='list'
+          • lg+: flex-1, always visible
+         ══════════════════════════════════════════════════════ */}
+      <main
+        className={`flex-col overflow-hidden
+          ${mobileView === 'list' ? 'hidden lg:flex lg:flex-1' : 'flex flex-1'}`}
+      >
+        {/* ── Mobile top bar (back navigation) ─────────────── */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-100 shrink-0">
+          <button
+            onClick={backToList}
+            className="flex items-center gap-1.5 text-sm font-semibold text-blue-500 hover:text-blue-600 transition-colors active:scale-95"
+          >
+            <ArrowLeft size={16} />
+            Daftar Soal
+          </button>
+          {draft && (
+            <div className="ml-auto flex items-center gap-2">
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                draft.tipe === 'pilihan_ganda' ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'
+              }`}>
+                {draft.tipe === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Essay'}
+              </span>
+              <span className="text-xs text-slate-400">Bobot {draft.bobot}</span>
+            </div>
+          )}
+        </div>
 
-        {!draft ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-6">
-            <FileQuestion size={56} className="text-slate-300 mb-4" />
-            <p className="text-slate-500 text-lg font-medium">Pilih soal di kiri atau tambah soal baru</p>
-            <p className="text-slate-400 text-sm mt-1">Editor akan muncul di sini setelah memilih atau membuat soal.</p>
-            <button
-              onClick={startNew}
-              className="mt-6 inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors"
-            >
-              <Plus size={16} /> Tambah Soal Baru
-            </button>
-          </div>
-        ) : (
-          <SoalEditor
-            draft={draft}
-            editorRef={editorRef}
-            opsiHtmlRef={opsiHtmlRef}
-            saving={saving}
-            soalCount={soalList.length}
-            soalIndex={draft.id ? soalList.findIndex((s) => s.id === draft.id) : soalList.length}
-            updateDraft={updateDraft}
-            updateOpsi={updateOpsi}
-            markCorrect={markCorrect}
-            addOpsi={addOpsi}
-            removeOpsi={removeOpsi}
-            onSave={handleSave}
-            onCancel={() => setDraft(null)}
-            onRequestDelete={(id) => setConfirmDelete(id)}
-          />
-        )}
+        {/* ── Scrollable content ────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto">
+          {!draft ? (
+            // Desktop empty state only — on mobile we never reach this (mobileView guards it)
+            <div className="hidden lg:flex h-full flex-col items-center justify-center text-center px-6">
+              <FileQuestion size={56} className="text-slate-300 mb-4" />
+              <p className="text-slate-500 text-lg font-medium">Pilih soal di kiri atau tambah soal baru</p>
+              <p className="text-slate-400 text-sm mt-1">
+                Editor akan muncul di sini setelah memilih atau membuat soal.
+              </p>
+              <button
+                onClick={startNew}
+                className="mt-6 inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors"
+              >
+                <Plus size={16} /> Tambah Soal Baru
+              </button>
+            </div>
+          ) : (
+            <SoalEditor
+              key={editorKey}
+              draft={draft}
+              editorRef={editorRef}
+              opsiHtmlRef={opsiHtmlRef}
+              saving={saving}
+              soalCount={soalList.length}
+              soalIndex={currentSoalIdx}
+              updateDraft={updateDraft}
+              updateOpsi={updateOpsi}
+              markCorrect={markCorrect}
+              addOpsi={addOpsi}
+              removeOpsi={removeOpsi}
+              onSave={handleSave}
+              onCancel={backToList}
+              onRequestDelete={(id) => setConfirmDelete(id)}
+              onPrev={currentSoalIdx > 0 ? () => selectSoal(soalList[currentSoalIdx - 1]) : undefined}
+              onNext={currentSoalIdx < soalList.length - 1 ? () => selectSoal(soalList[currentSoalIdx + 1]) : undefined}
+            />
+          )}
+        </div>
       </main>
 
-      {/* ─── AI GENERATOR MODAL ──────────────────────────── */}
+      {/* ── AI Generator Modal ────────────────────────────── */}
       {aiModalOpen && (
         <AIGeneratorModal
           tryoutId={tryoutId}
@@ -448,15 +598,41 @@ export default function KelolaSoalPage() {
         />
       )}
 
-      {/* ─── DELETE CONFIRMATION ──────────────────────────── */}
+      {/* ── Import Soal Modal ─────────────────────────────── */}
+      {importOpen && (
+        <ImportSoalModal
+          tryoutId={tryoutId}
+          onClose={() => setImportOpen(false)}
+          onSaved={() => fetchTryout({ silent: true })}
+        />
+      )}
+
+      {/* ── Import dari Word Modal ─────────────────────────── */}
+      {wordOpen && (
+        <WordImportModal
+          tryoutId={tryoutId}
+          onClose={() => setWordOpen(false)}
+          onSaved={() => fetchTryout({ silent: true })}
+        />
+      )}
+
+      {/* ── Delete confirmation ───────────────────────────── */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setConfirmDelete(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mx-auto mb-3">
               <AlertTriangle size={22} />
             </div>
             <h3 className="text-lg font-bold text-slate-900 text-center">Hapus soal ini?</h3>
-            <p className="text-sm text-slate-500 text-center mt-1.5">Soal yang dihapus tidak dapat dikembalikan.</p>
+            <p className="text-sm text-slate-500 text-center mt-1.5">
+              Soal yang dihapus tidak dapat dikembalikan.
+            </p>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setConfirmDelete(null)}
@@ -478,7 +654,8 @@ export default function KelolaSoalPage() {
   )
 }
 
-// ─── Sub-component: SoalEditor ─────────────────────────────────
+// ─── Sub-component: SoalEditor ────────────────────────────────────────────────
+
 interface SoalEditorProps {
   draft: DraftSoal
   editorRef: React.RefObject<RichTextEditorHandle>
@@ -494,27 +671,50 @@ interface SoalEditorProps {
   onSave: () => void
   onCancel: () => void
   onRequestDelete: (id: string) => void
+  onPrev?: () => void
+  onNext?: () => void
 }
 
 function SoalEditor({
   draft, editorRef, opsiHtmlRef, saving, soalCount, soalIndex,
-  updateDraft, updateOpsi, markCorrect, addOpsi, removeOpsi, onSave, onCancel, onRequestDelete,
+  updateDraft, updateOpsi, markCorrect, addOpsi, removeOpsi,
+  onSave, onCancel, onRequestDelete, onPrev, onNext,
 }: SoalEditorProps) {
   const correctIdx = draft.opsi.findIndex((o) => o.is_benar)
   const isExisting = !!draft.id
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 md:p-8 pb-32">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+  const pgMissingKey  = draft.tipe === 'pilihan_ganda' && correctIdx < 0
+  const pgMissingOpsi = draft.tipe === 'pilihan_ganda' && draft.opsi.length < 2
+  const hasWarning    = pgMissingKey || pgMissingOpsi
 
-        {/* Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex items-end gap-6 flex-wrap">
+  return (
+    <div className="max-w-3xl mx-auto p-3 sm:p-5 md:p-8 pb-28 sm:pb-32">
+      <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors ${
+        hasWarning ? 'border-amber-200' : 'border-slate-100'
+      }`}>
+
+        {/* Validation warning banner */}
+        {hasWarning && (
+          <div className="px-4 sm:px-6 md:px-8 py-2.5 bg-amber-50/30 border-b border-amber-200 flex items-center gap-2">
+            <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+            <p className="text-xs font-semibold text-amber-700">
+              {pgMissingOpsi
+                ? 'Tambahkan minimal 2 opsi jawaban.'
+                : 'Tandai satu opsi sebagai jawaban yang benar.'}
+            </p>
+          </div>
+        )}
+
+        {/* ── Card header: tipe + bobot + meta ─────────── */}
+        <div className="px-4 sm:px-6 md:px-8 py-4 border-b border-slate-100 flex items-center gap-3 flex-wrap">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tipe Soal</label>
+            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Tipe Soal
+            </label>
             <select
               value={draft.tipe}
               onChange={(e) => updateDraft('tipe', e.target.value as SoalTipe)}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-800 min-w-[180px] outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
             >
               <option value="pilihan_ganda">Pilihan Ganda</option>
               <option value="essay">Essay</option>
@@ -522,64 +722,68 @@ function SoalEditor({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Bobot Nilai</label>
+            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Bobot
+            </label>
             <input
               type="number"
               min={1}
               max={100}
               value={draft.bobot}
               onChange={(e) => updateDraft('bobot', Math.max(1, Number(e.target.value) || 1))}
-              className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold w-20 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-16 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
-          <div className="flex-1 text-right">
-            <p className="text-sm text-slate-400">Soal ke-{soalIndex + 1} {isExisting && `dari ${soalCount}`}</p>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-slate-400 hidden sm:block">
+              Soal ke-{soalIndex + 1}{isExisting ? ` / ${soalCount}` : ''}
+            </span>
+            {isExisting && (
+              <button
+                onClick={() => draft.id && onRequestDelete(draft.id)}
+                className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-red-50"
+              >
+                <Trash2 size={13} /> Hapus
+              </button>
+            )}
           </div>
-
-          {isExisting && (
-            <button
-              onClick={() => draft.id && onRequestDelete(draft.id)}
-              className="inline-flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 transition-colors px-3 py-2 rounded-lg hover:bg-red-50"
-            >
-              <Trash2 size={14} /> Hapus
-            </button>
-          )}
         </div>
 
-        {/* Question */}
-        <div className="px-8 py-6 border-b border-slate-100">
+        {/* ── Question ─────────────────────────────────── */}
+        <div className="px-4 sm:px-6 md:px-8 py-5 border-b border-slate-100">
           <label className="block text-sm font-semibold text-slate-700 mb-3">Pertanyaan</label>
           <RichTextEditor
             ref={editorRef}
             initialHtml={draft.pertanyaan_html}
-            placeholder="Tulis pertanyaan di sini. Klik Σ untuk persamaan matematika, ikon gambar untuk menyisipkan gambar."
-            minHeight="160px"
+            placeholder="Tulis pertanyaan di sini. Klik Σ untuk persamaan matematika."
+            minHeight="140px"
           />
         </div>
 
-        {/* Answer Options (PG) */}
+        {/* ── Pilihan Ganda options ─────────────────────── */}
         {draft.tipe === 'pilihan_ganda' && (
-          <div className="px-8 py-6 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-4">
+          <div className={`px-4 sm:px-6 md:px-8 py-5 border-b transition-colors ${
+            hasWarning ? 'border-amber-100 bg-amber-50/10' : 'border-slate-100'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-semibold text-slate-700">Pilihan Jawaban</label>
-              <span className="text-xs text-slate-400">Pilih satu jawaban yang benar</span>
+              <span className="text-xs text-slate-400 hidden sm:block">Pilih satu jawaban benar</span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {draft.opsi.map((o, idx) => (
-                <div key={idx} className="flex items-start gap-3 group">
+                <div key={idx} className="flex items-start gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => markCorrect(idx)}
-                    className={`w-9 h-9 mt-1 rounded-full flex items-center justify-center shrink-0 transition-all font-bold text-sm ${
+                    className={`w-8 h-8 sm:w-9 sm:h-9 mt-1 rounded-full flex items-center justify-center shrink-0 transition-all font-bold text-sm ${
                       o.is_benar
                         ? 'bg-green-500 text-white shadow-md'
                         : 'bg-slate-100 text-slate-500 hover:bg-green-50 hover:text-green-500'
                     }`}
-                    title={o.is_benar ? 'Jawaban benar' : 'Tandai sebagai jawaban benar'}
                   >
-                    {o.is_benar ? <CheckCircle2 size={16} /> : o.huruf}
+                    {o.is_benar ? <CheckCircle2 size={15} /> : o.huruf}
                   </button>
 
                   <div className="flex-1">
@@ -587,7 +791,10 @@ function SoalEditor({
                       initialHtml={o.teks_html}
                       placeholder={`Opsi ${o.huruf}`}
                       correct={o.is_benar}
-                      onChange={(html) => { opsiHtmlRef.current[idx] = html; updateOpsi(idx, { teks_html: html }) }}
+                      onChange={(html) => {
+                        opsiHtmlRef.current[idx] = html
+                        updateOpsi(idx, { teks_html: html })
+                      }}
                     />
                   </div>
 
@@ -595,10 +802,9 @@ function SoalEditor({
                     type="button"
                     onClick={() => removeOpsi(idx)}
                     disabled={draft.opsi.length <= 2}
-                    className="text-slate-300 hover:text-red-500 transition-colors mt-3 shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Hapus opsi"
+                    className="text-slate-300 hover:text-red-500 transition-colors mt-2.5 shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}
@@ -608,49 +814,82 @@ function SoalEditor({
               <button
                 type="button"
                 onClick={addOpsi}
-                className="mt-4 inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
+                className="mt-3 inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
               >
                 <Plus size={14} /> Tambah Opsi
               </button>
             )}
 
-            <div className="mt-4 text-sm flex items-center gap-2">
+            <div className="mt-3 text-sm flex items-center gap-2">
               {correctIdx >= 0 ? (
                 <>
-                  <CheckCircle2 size={16} className="text-green-500" />
-                  <span className="text-green-600 font-medium">Kunci jawaban: Opsi {draft.opsi[correctIdx].huruf}</span>
+                  <CheckCircle2 size={15} className="text-green-500" />
+                  <span className="text-green-600 font-medium text-xs sm:text-sm">
+                    Kunci jawaban: Opsi {draft.opsi[correctIdx].huruf}
+                  </span>
                 </>
               ) : (
                 <>
-                  <AlertTriangle size={16} className="text-amber-500" />
-                  <span className="text-amber-600">Belum ada kunci jawaban yang dipilih.</span>
+                  <AlertTriangle size={15} className="text-amber-500" />
+                  <span className="text-amber-600 text-xs sm:text-sm">Belum ada kunci jawaban dipilih.</span>
                 </>
               )}
             </div>
           </div>
         )}
 
-        {/* Essay guide */}
+        {/* ── Essay guide ───────────────────────────────── */}
         {draft.tipe === 'essay' && (
-          <div className="px-8 py-6 border-b border-slate-100">
+          <div className="px-4 sm:px-6 md:px-8 py-5 border-b border-slate-100">
             <label className="block text-sm font-semibold text-slate-700">Panduan Jawaban</label>
-            <p className="text-xs text-slate-400 mt-0.5 mb-3">Hanya terlihat oleh guru — sebagai panduan penilaian manual.</p>
+            <p className="text-xs text-slate-400 mt-0.5 mb-3">
+              Hanya terlihat guru — panduan penilaian manual.
+            </p>
             <textarea
               value={draft.panduan_essay}
               onChange={(e) => updateDraft('panduan_essay', e.target.value)}
               rows={4}
               placeholder="Tuliskan kunci jawaban atau rubrik penilaian essay ini..."
-              className="w-full rounded-xl border border-amber-200 bg-amber-50/40 p-4 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all resize-none"
+              className="w-full rounded-xl border border-amber-200 bg-amber-50/40 p-3 sm:p-4 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 transition-all resize-none"
             />
           </div>
         )}
 
-        {/* Save bar */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-8 py-4 flex items-center justify-end gap-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">
+        {/* ── Sticky save bar ───────────────────────────── */}
+        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">
+
+          {/* Prev / Next navigation */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={!onPrev}
+              title="Soal sebelumnya"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 hover:border-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!onNext}
+              title="Soal berikutnya"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 hover:border-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+            >
+              <ChevronRight size={16} />
+            </button>
+            <span className="text-xs text-slate-400 tabular-nums ml-0.5 hidden sm:block">
+              {isExisting ? `${soalIndex + 1} / ${soalCount}` : 'Baru'}
+            </span>
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Cancel + Save */}
           <button
             type="button"
             onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors"
+            className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors"
           >
             Batal
           </button>
@@ -658,24 +897,19 @@ function SoalEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="px-6 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2 shadow-sm"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2 shadow-sm active:scale-95"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
-            {saving ? 'Menyimpan...' : (isExisting ? 'Update Soal' : 'Simpan Soal')}
+            {saving ? 'Menyimpan...' : (isExisting ? 'Update' : 'Simpan')}
           </button>
         </div>
-      </div>
-
-      {/* Visual type indicator */}
-      <div className="mt-4 text-center text-xs text-slate-400 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-slate-100">
-        {draft.tipe === 'pilihan_ganda' ? <CheckSquare size={12} /> : <AlignLeft size={12} />}
-        Tipe: <strong className="text-slate-600">{draft.tipe === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Essay'}</strong>
       </div>
     </div>
   )
 }
 
-// ─── Sub-component: OpsiEditor (compact contentEditable per option) ──
+// ─── Sub-component: OpsiEditor ────────────────────────────────────────────────
+
 function OpsiEditor({ initialHtml, placeholder, correct, onChange }: {
   initialHtml: string
   placeholder: string
@@ -697,37 +931,11 @@ function OpsiEditor({ initialHtml, placeholder, correct, onChange }: {
       suppressContentEditableWarning
       data-placeholder={placeholder}
       onInput={(e) => onChange((e.target as HTMLDivElement).innerHTML)}
-      className={`question-content min-h-[44px] border rounded-xl px-4 py-2.5 text-sm outline-none transition-all leading-relaxed ${
+      className={`question-content min-h-[40px] border rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm outline-none transition-all leading-relaxed ${
         correct
           ? 'border-green-300 bg-green-50/40 focus:ring-2 focus:ring-green-500/20 focus:border-green-500'
           : 'border-slate-200 bg-white hover:border-blue-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'
       }`}
     />
   )
-}
-
-// ─── Helpers ───────────────────────────────────────────────────
-function htmlToText(html: string): string {
-  if (typeof window === 'undefined') return html
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  // Replace katex equations with their LaTeX for plain-text fallback
-  tmp.querySelectorAll('.katex-equation').forEach((el) => {
-    const latex = el.getAttribute('data-latex')
-    el.textContent = latex ? `[${latex}]` : '[equation]'
-  })
-  return tmp.innerText || tmp.textContent || ''
-}
-
-function stripHtmlForPreview(html: string | null | undefined): string {
-  if (!html) return ''
-  if (typeof window === 'undefined') return html.replace(/<[^>]*>/g, '')
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  tmp.querySelectorAll('.katex-equation').forEach((el) => {
-    const l = el.getAttribute('data-latex')
-    el.textContent = l ? ` [${l}] ` : ' [eq] '
-  })
-  tmp.querySelectorAll('figure').forEach((el) => el.replaceWith('[gambar]'))
-  return (tmp.innerText || '').trim().replace(/\s+/g, ' ')
 }

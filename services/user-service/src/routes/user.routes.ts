@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import pool from '../db/pool'
 import logger from '../lib/logger'
+import { auditLog } from '../lib/audit'
 
 const router = Router()
 
@@ -20,6 +21,7 @@ const UpdateProfileSchema = z.object({
   no_telepon: z.string().optional().nullable(),
   kelas: z.string().optional().nullable(),
   mata_pelajaran: z.string().optional().nullable(),
+  education_level: z.enum(['SD', 'SMP', 'SMA']).optional().nullable(),
   bio: z.string().optional().nullable(),
   avatar_url: z.string().optional().nullable(),
 })
@@ -46,7 +48,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     const profiles = await pool.query(
-      'SELECT user_id, nama_lengkap, no_telepon, kelas, mata_pelajaran, avatar_url, bio FROM profiles'
+      'SELECT user_id, nama_lengkap, no_telepon, kelas, mata_pelajaran, education_level, avatar_url, bio FROM profiles'
     )
     const profMap = new Map(profiles.rows.map((p) => [p.user_id, p]))
 
@@ -71,6 +73,7 @@ const CreateUserSchema = z.object({
   no_telepon: z.string().optional().nullable(),
   kelas: z.string().optional().nullable(),
   mata_pelajaran: z.string().optional().nullable(),
+  education_level: z.enum(['SD', 'SMP', 'SMA']).optional().nullable(),
 })
 
 router.post('/', async (req: Request, res: Response) => {
@@ -95,11 +98,17 @@ router.post('/', async (req: Request, res: Response) => {
 
     // 2. Create profile
     const prof = await pool.query(
-      `INSERT INTO profiles (user_id, nama_lengkap, no_telepon, kelas, mata_pelajaran)
-       VALUES ($1,$2,$3,$4,$5)
+      `INSERT INTO profiles (user_id, nama_lengkap, no_telepon, kelas, mata_pelajaran, education_level)
+       VALUES ($1,$2,$3,$4,$5,$6)
        RETURNING *`,
-      [newUser.id, body.nama_lengkap, body.no_telepon ?? null, body.kelas ?? null, body.mata_pelajaran ?? null]
+      [newUser.id, body.nama_lengkap, body.no_telepon ?? null, body.kelas ?? null, body.mata_pelajaran ?? null, body.education_level ?? null]
     )
+
+    auditLog(req, {
+      action: 'USER_CREATE',
+      target_id: newUser.id,
+      description: `Admin created user ${body.email} with role ${body.role}`,
+    })
 
     res.status(201).json({
       success: true,
@@ -129,6 +138,11 @@ router.patch('/:id/active', async (req: Request, res: Response) => {
     if (!authRes.ok || !authJson.success) {
       return res.status(authRes.status).json({ success: false, error: authJson.error ?? 'Gagal' })
     }
+    auditLog(req, {
+      action: 'USER_TOGGLE_ACTIVE',
+      target_id: req.params.id,
+      description: `Admin updated status of user ${authJson.data?.email ?? req.params.id} to active=${body.is_active}`,
+    })
     res.json({ success: true, data: authJson.data })
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -253,16 +267,22 @@ router.put('/:id', async (req: Request, res: Response) => {
     const body = UpdateProfileSchema.parse(req.body)
     const result = await pool.query(
       `UPDATE profiles SET
-        nama_lengkap   = COALESCE($1, nama_lengkap),
-        no_telepon     = COALESCE($2, no_telepon),
-        kelas          = COALESCE($3, kelas),
-        mata_pelajaran = COALESCE($4, mata_pelajaran),
-        bio            = COALESCE($5, bio),
-        updated_at     = NOW()
-       WHERE user_id = $6 RETURNING *`,
-      [body.nama_lengkap, body.no_telepon, body.kelas, body.mata_pelajaran, body.bio, req.params.id]
+        nama_lengkap    = COALESCE($1, nama_lengkap),
+        no_telepon      = COALESCE($2, no_telepon),
+        kelas           = COALESCE($3, kelas),
+        mata_pelajaran  = COALESCE($4, mata_pelajaran),
+        education_level = COALESCE($5, education_level),
+        bio             = COALESCE($6, bio),
+        updated_at      = NOW()
+       WHERE user_id = $7 RETURNING *`,
+      [body.nama_lengkap, body.no_telepon, body.kelas, body.mata_pelajaran, body.education_level, body.bio, req.params.id]
     )
     if (!result.rows[0]) return res.status(404).json({ success: false, error: 'User tidak ditemukan' })
+    auditLog(req, {
+      action: 'USER_UPDATE',
+      target_id: req.params.id,
+      description: `Admin updated profile for user ${result.rows[0].nama_lengkap ?? req.params.id}`,
+    })
     res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -276,10 +296,17 @@ router.put('/:id', async (req: Request, res: Response) => {
 // DELETE /users/:id — admin (deletes from BOTH auth + profile)
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
+    // Capture name before deletion for the audit trail.
+    const before = await pool.query('SELECT nama_lengkap FROM profiles WHERE user_id = $1', [req.params.id])
     // Profile first (cascade-safe)
     await pool.query('DELETE FROM profiles WHERE user_id = $1', [req.params.id])
     // Then auth
     await fetch(`${AUTH_SERVICE_URL}/auth/internal/users/${req.params.id}`, { method: 'DELETE' })
+    auditLog(req, {
+      action: 'USER_DELETE',
+      target_id: req.params.id,
+      description: `Admin deleted user account ${before.rows[0]?.nama_lengkap ?? req.params.id}`,
+    })
     res.json({ success: true, data: null, message: 'Pengguna dihapus.' })
   } catch (err) {
     logger.error('[users/:id DELETE]', { error: err })

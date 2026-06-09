@@ -14,11 +14,12 @@ check() {
   fi
 }
 
-check "auth-service    (4001)" "http://localhost:4001/health"
-check "user-service    (4002)" "http://localhost:4002/health"
-check "soal-service    (4003)" "http://localhost:4003/health"
-check "jawaban-service (4004)" "http://localhost:4004/health"
-check "api-gateway     (4000)" "http://localhost:4000/health"
+check "auth-service (4001)" "http://localhost:4001/health"
+check "user-service (4002)" "http://localhost:4002/health"
+check "sd-service   (4005)" "http://localhost:4005/health"
+check "smp-service  (4006)" "http://localhost:4006/health"
+check "sma-service  (4007)" "http://localhost:4007/health"
+check "api-gateway  (4000)" "http://localhost:4000/health"
 
 echo "────────────────────────────────────"
 

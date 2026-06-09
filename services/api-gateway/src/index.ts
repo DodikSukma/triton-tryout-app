@@ -7,10 +7,13 @@ import { requireAuth, requireRole } from './middleware/auth.middleware'
 const app = express()
 const PORT = process.env.PORT ?? 4000
 
-const AUTH_SERVICE_URL    = process.env.AUTH_SERVICE_URL    ?? 'http://localhost:4001'
-const USER_SERVICE_URL    = process.env.USER_SERVICE_URL    ?? 'http://localhost:4002'
-const SOAL_SERVICE_URL    = process.env.SOAL_SERVICE_URL    ?? 'http://localhost:4003'
-const JAWABAN_SERVICE_URL = process.env.JAWABAN_SERVICE_URL ?? 'http://localhost:4004'
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL ?? 'http://localhost:4001'
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL ?? 'http://localhost:4002'
+
+// ─── Education-level services (replace soal-service + jawaban-service) ───────
+const SD_SERVICE_URL  = process.env.SD_SERVICE_URL  ?? 'http://localhost:4005'
+const SMP_SERVICE_URL = process.env.SMP_SERVICE_URL ?? 'http://localhost:4006'
+const SMA_SERVICE_URL = process.env.SMA_SERVICE_URL ?? 'http://localhost:4007'
 
 app.use(cors({
   origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
@@ -23,38 +26,125 @@ app.use((req, _res, next) => {
 })
 
 // ─── Auth (public) ──────────────────────────────────────────
-app.use('/auth', createProxyMiddleware({ target: AUTH_SERVICE_URL, changeOrigin: true }))
+// xfwd forwards the client IP (X-Forwarded-For) for audit logging.
+app.use('/auth', createProxyMiddleware({ target: AUTH_SERVICE_URL, changeOrigin: true, xfwd: true }))
 
 // ─── User service ───────────────────────────────────────────
 // Profile endpoints — all authenticated roles
-app.use('/users/profile', requireAuth, createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true }))
+app.use('/users/profile', requireAuth, createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true, xfwd: true }))
 // User management — admin only
-app.use('/users', requireAuth, requireRole('admin'), createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true }))
+app.use('/users', requireAuth, requireRole('admin'), createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true, xfwd: true }))
+// Audit logs viewer — admin only (read)
+app.use('/audit-logs', requireAuth, requireRole('admin'), createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true, xfwd: true }))
 
-// ─── Soal service ───────────────────────────────────────────
-// Siswa: list of published tryouts
-app.use('/tryouts/available', requireAuth, requireRole('siswa'), createProxyMiddleware({ target: SOAL_SERVICE_URL, changeOrigin: true }))
+// ─── Level services (SD / SMP / SMA) ────────────────────────
+// Each level service merges the old soal + jawaban responsibilities for one
+// education level. The role guard below mirrors the per-resource RBAC that the
+// old soal/jawaban gateway routes enforced, applied to the level-stripped path.
+//
+// Path note: `app.use('/sd', ...)` makes Express strip `/sd` from req.path for
+// the guard, while http-proxy-middleware forwards the original URL — so
+// pathRewrite removes the `/sd` prefix before reaching the service.
 
-// /tryouts/:id GET → all roles (siswa needs for exam)
-// /tryouts (POST), /tryouts/:id (PUT/PATCH/DELETE), /tryouts/:id/soal (POST) → guru/admin
-app.use('/tryouts', requireAuth, (req, res, next) => {
+const forbidden = (res: express.Response) =>
+  res.status(403).json({ success: false, error: 'Forbidden' })
+
+// ─── Master data (user-service) ─────────────────────────────────────────────
+// Reads: guru + admin (gurus need the dropdowns). Writes: admin only.
+app.use('/master', requireAuth, (req, res, next) => {
   const role = req.headers['x-user-role'] as string
   if (req.method === 'GET') {
-    // Only GET /tryouts/:id allowed for siswa (single tryout detail for exam)
-    if (role === 'siswa' && /^\/[a-f0-9-]+$/.test(req.path)) return next()
-    if (role === 'guru' || role === 'admin') return next()
-    return res.status(403).json({ success: false, error: 'Forbidden' })
+    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
   }
-  if (role === 'guru' || role === 'admin') return next()
-  return res.status(403).json({ success: false, error: 'Forbidden' })
-}, createProxyMiddleware({ target: SOAL_SERVICE_URL, changeOrigin: true }))
+  return role === 'admin' ? next() : forbidden(res)
+}, createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true, xfwd: true }))
 
-app.use('/soal', requireAuth, requireRole('guru', 'admin'), createProxyMiddleware({ target: SOAL_SERVICE_URL, changeOrigin: true }))
+// RBAC for level routes. `req.path` here is relative to the /sd|/smp|/sma mount.
+function levelAccessGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const role = req.headers['x-user-role'] as string
+  const p = req.path
+  const method = req.method
 
-// ─── Jawaban service ────────────────────────────────────────
-app.use('/sesi',    requireAuth, requireRole('siswa'),         createProxyMiddleware({ target: JAWABAN_SERVICE_URL, changeOrigin: true }))
-app.use('/hasil',   requireAuth,                                createProxyMiddleware({ target: JAWABAN_SERVICE_URL, changeOrigin: true }))
-app.use('/riwayat', requireAuth, requireRole('siswa'),         createProxyMiddleware({ target: JAWABAN_SERVICE_URL, changeOrigin: true }))
+  // Siswa: list of published tryouts
+  if (p === '/tryouts/available') {
+    return role === 'siswa' ? next() : forbidden(res)
+  }
+
+  // Tryout / question-bank management
+  if (p === '/tryouts' || p.startsWith('/tryouts/')) {
+    if (method === 'GET') {
+      // Single tryout detail (uuid) — siswa needs it to take the exam
+      if (role === 'siswa' && /^\/tryouts\/[a-f0-9-]+$/.test(p)) return next()
+      if (role === 'guru' || role === 'admin') return next()
+      return forbidden(res)
+    }
+    // Create / update / delete / publish / add-soal — guru or admin
+    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
+  }
+
+  // Soal edits — guru or admin
+  if (p === '/soal' || p.startsWith('/soal/')) {
+    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
+  }
+
+  // Exam session runner + history — siswa
+  if (p === '/sesi' || p.startsWith('/sesi/') || p === '/riwayat') {
+    return role === 'siswa' ? next() : forbidden(res)
+  }
+
+  // Results — any authenticated role (rekap is further restricted inside the service)
+  if (p === '/hasil' || p.startsWith('/hasil/')) {
+    return next()
+  }
+
+  // Anything else (e.g. /health) — allow authenticated through
+  return next()
+}
+
+// ─── Student level firewall (TRN-04) ────────────────────────────────────────
+// A student may only reach their own education level's service. Admin + guru
+// bypass. The student's level is fetched from user-service and cached briefly.
+const levelCache = new Map<string, { level: string | null; exp: number }>()
+
+async function getStudentLevel(userId: string): Promise<string | null> {
+  const cached = levelCache.get(userId)
+  if (cached && cached.exp > Date.now()) return cached.level
+  try {
+    const r = await fetch(`${USER_SERVICE_URL}/users/${userId}`)
+    const j = (await r.json()) as { success: boolean; data?: { education_level?: string | null } }
+    const level = j.success && j.data ? (j.data.education_level ?? null) : null
+    levelCache.set(userId, { level, exp: Date.now() + 60_000 })
+    return level
+  } catch {
+    return null
+  }
+}
+
+function makeLevelFirewall(prefix: 'sd' | 'smp' | 'sma') {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if ((req.headers['x-user-role'] as string) !== 'siswa') return next() // admin + guru bypass
+    const level = await getStudentLevel(req.headers['x-user-id'] as string)
+    // Enforce only when the student's level is set; mismatch → blocked.
+    if (level && level.toLowerCase() !== prefix) {
+      return res.status(403).json({
+        success: false,
+        error: `Akses ditolak: tryout jenjang ${prefix.toUpperCase()} tidak sesuai dengan jenjang Anda (${level}).`,
+        code: 'LEVEL_FORBIDDEN',
+      })
+    }
+    return next()
+  }
+}
+
+app.use('/sd', requireAuth, makeLevelFirewall('sd'), levelAccessGuard, createProxyMiddleware({
+  target: SD_SERVICE_URL, changeOrigin: true, xfwd: true, pathRewrite: { '^/sd': '' },
+}))
+app.use('/smp', requireAuth, makeLevelFirewall('smp'), levelAccessGuard, createProxyMiddleware({
+  target: SMP_SERVICE_URL, changeOrigin: true, xfwd: true, pathRewrite: { '^/smp': '' },
+}))
+app.use('/sma', requireAuth, makeLevelFirewall('sma'), levelAccessGuard, createProxyMiddleware({
+  target: SMA_SERVICE_URL, changeOrigin: true, xfwd: true, pathRewrite: { '^/sma': '' },
+}))
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'api-gateway' }))
 

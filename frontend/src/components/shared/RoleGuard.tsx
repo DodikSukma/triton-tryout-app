@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import api from '@/lib/api'
 import { Role, SessionUser } from '@/types'
 
@@ -12,6 +12,7 @@ interface RoleGuardProps {
 
 export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -27,10 +28,12 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
         setUser(data)
       })
       .catch(() => {
-        router.replace('/login')
+        // Preserve the target so the user returns here after logging in.
+        const target = pathname && pathname !== '/' ? `?redirect=${encodeURIComponent(pathname)}` : ''
+        router.replace(`/login${target}`)
       })
       .finally(() => setLoading(false))
-  }, [allowedRoles, router])
+  }, [allowedRoles, router, pathname])
 
   if (loading) {
     return (

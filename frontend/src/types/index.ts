@@ -13,21 +13,50 @@ export interface Profile {
   no_telepon?: string | null
   kelas?: string | null
   mata_pelajaran?: string | null
+  education_level?: EducationLevel | null
   avatar_url?: string | null
   bio?: string | null
   created_at: string
   updated_at: string
 }
 
-export type TryoutStatus = 'draft' | 'published' | 'closed'
+export type EducationLevel = 'SD' | 'SMP' | 'SMA'
+
+export interface MasterKelas {
+  id: string
+  nama: string
+  level: EducationLevel
+}
+
+export interface MasterMataPelajaran {
+  id: string
+  nama: string
+  level: EducationLevel
+}
+
+export interface MasterSubMataPelajaran {
+  id: string
+  mata_pelajaran_id: string
+  nama: string
+  mata_pelajaran_nama?: string
+  level?: EducationLevel
+}
+
+export type TryoutStatus =
+  | 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'published' | 'closed'
 
 export interface Tryout {
   id: string
   nama_tryout: string
   mata_pelajaran: string
+  sub_mata_pelajaran?: string | null
+  kelas?: string | null
   durasi_menit: number
   dibuat_oleh: string
   status: TryoutStatus
+  revision_notes?: string | null
+  randomize_questions?: boolean
+  randomize_options?: boolean
   soal_count?: number
   total_bobot?: number
   jumlah_peserta?: number
@@ -81,6 +110,8 @@ export interface SesiTryout {
   mulai_at: string
   selesai_at?: string | null
   status: 'berlangsung' | 'selesai' | 'timeout'
+  question_order?: string[] | null
+  option_order?: Record<string, string[]> | null
 }
 
 export interface Jawaban {
@@ -136,4 +167,23 @@ export interface ApiResponse<T> {
   error?: string
   message?: string
   code?: string
+}
+
+export interface AuditLog {
+  id: string
+  user_id: string | null
+  email: string
+  role: string
+  action: string
+  target_id: string | null
+  description: string
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
+export interface Paginated<T> {
+  success: boolean
+  data: T[]
+  pagination: { page: number; limit: number; total: number; totalPages: number }
 }

@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import logger from './lib/logger'
 import userRoutes from './routes/user.routes'
+import masterRoutes from './routes/master.routes'
+import auditRoutes from './routes/audit.routes'
 
 const app = express()
 const PORT = process.env.PORT ?? 4002
@@ -15,6 +17,8 @@ app.use((req, _res, next) => {
 })
 
 app.use('/users', userRoutes)
+app.use('/master', masterRoutes)
+app.use(auditRoutes) // /internal/audit-logs (write) + /audit-logs (admin read)
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'user-service' }))
 

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Menu } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import RoleGuard from '@/components/shared/RoleGuard'
+import { LevelThemeProvider } from '@/components/shared/LevelTheme'
 
 export default function SiswaLayout({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -41,7 +42,7 @@ export default function SiswaLayout({ children }: { children: React.ReactNode })
           </header>
 
           <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0">
-            {children}
+            <LevelThemeProvider>{children}</LevelThemeProvider>
           </main>
         </div>
       )}

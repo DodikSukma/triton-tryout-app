@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import pool from '../db/pool'
 import logger from '../lib/logger'
+import { auditLog } from '../lib/audit'
 
 const router = Router()
 
@@ -25,15 +26,27 @@ router.post('/login', async (req: Request, res: Response) => {
     )
     const user = result.rows[0]
     if (!user || !user.is_active) {
+      auditLog(req, {
+        email: body.email, role: 'system', action: 'AUTH_LOGIN_FAILED',
+        description: `Failed login attempt for email ${body.email}`,
+      })
       return res.status(401).json({ success: false, error: 'Email atau password salah' })
     }
     const valid = await bcrypt.compare(body.password, user.password_hash)
     if (!valid) {
+      auditLog(req, {
+        email: body.email, role: 'system', action: 'AUTH_LOGIN_FAILED',
+        description: `Failed login attempt for email ${body.email}`,
+      })
       return res.status(401).json({ success: false, error: 'Email atau password salah' })
     }
     req.session.userId = user.id
     req.session.role = user.role
     req.session.email = user.email
+    auditLog(req, {
+      user_id: user.id, email: user.email, role: user.role, action: 'AUTH_LOGIN_SUCCESS',
+      target_id: user.id, description: `User ${user.email} logged in successfully`,
+    })
     res.json({ success: true, data: { userId: user.id, role: user.role, email: user.email } })
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -45,11 +58,18 @@ router.post('/login', async (req: Request, res: Response) => {
 })
 
 router.post('/logout', (req: Request, res: Response) => {
+  const { userId, role, email } = req.session
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ success: false, error: 'Gagal logout' })
     }
     res.clearCookie('triton.sid')
+    if (email) {
+      auditLog(req, {
+        user_id: userId, email, role, action: 'AUTH_LOGOUT',
+        target_id: userId, description: `User ${email} logged out`,
+      })
+    }
     res.json({ success: true, data: null, message: 'Berhasil logout' })
   })
 })

@@ -8,10 +8,12 @@ import { ArrowLeft, Clock, FileText, Scale, Calendar, AlertCircle, Loader2 } fro
 import api, { getErrorMessage } from '@/lib/api'
 import { ApiResponse, SesiTryout, TryoutDetail } from '@/types'
 import { formatDurasi, formatTanggal } from '@/lib/utils'
+import { useLevelTheme } from '@/components/shared/LevelTheme'
 
 export default function TryoutConfirmationPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { theme } = useLevelTheme()
   const [tryout, setTryout] = useState<TryoutDetail | null>(null)
   const [existingSesi, setExistingSesi] = useState<SesiTryout | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,7 +93,7 @@ export default function TryoutConfirmationPage() {
       </Link>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 md:p-10">
-        <span className="inline-block bg-triton-blue-50 text-triton-blue-600 rounded-full px-3 py-1 text-xs font-semibold">
+        <span className={`inline-block ${theme.accentBg} rounded-full px-3 py-1 text-xs font-semibold`}>
           {tryout.mata_pelajaran}
         </span>
         <h1 className="text-2xl md:text-3xl font-black text-slate-900 mt-3">{tryout.nama_tryout}</h1>
@@ -139,7 +141,7 @@ export default function TryoutConfirmationPage() {
         <button
           onClick={handleStart}
           disabled={!agreed || starting}
-          className="mt-5 w-full bg-triton-red-500 hover:bg-triton-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-base hover:shadow-lg hover:shadow-red-200/60 transition-all inline-flex items-center justify-center gap-2"
+          className={`mt-5 w-full ${theme.button} disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl text-base hover:shadow-lg transition-all inline-flex items-center justify-center gap-2`}
         >
           {starting && <Loader2 size={16} className="animate-spin" />}
           {starting ? 'Memulai...' : isResume ? 'Lanjutkan Tryout →' : 'Mulai Tryout Sekarang →'}

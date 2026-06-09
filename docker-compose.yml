@@ -36,6 +36,7 @@ services:
       REDIS_PORT: 6379
       SESSION_SECRET: triton_session_super_secret_2024_change_this
       SESSION_MAX_AGE_MS: 28800000
+      USER_SERVICE_URL: http://user-service:4002
       PORT: 4001
     ports:
       - "4001:4001"
@@ -62,37 +63,55 @@ services:
     networks:
       - triton-net
 
-  soal-service:
-    build: ./services/soal-service
-    container_name: triton-soal
+  sd-service:
+    build: ./services/sd-service
+    container_name: triton-sd
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: triton_user
       POSTGRES_PASSWORD: triton_secret_2024
-      POSTGRES_DB: db_soal
-      PORT: 4003
+      POSTGRES_DB: db_sd
+      USER_SERVICE_URL: http://user-service:4002
+      PORT: 4005
     ports:
-      - "4003:4003"
+      - "4005:4005"
     depends_on:
       - postgres
     networks:
       - triton-net
 
-  jawaban-service:
-    build: ./services/jawaban-service
-    container_name: triton-jawaban
+  smp-service:
+    build: ./services/smp-service
+    container_name: triton-smp
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: triton_user
       POSTGRES_PASSWORD: triton_secret_2024
-      POSTGRES_DB: db_jawaban
-      SOAL_SERVICE_URL: http://soal-service:4003
+      POSTGRES_DB: db_smp
       USER_SERVICE_URL: http://user-service:4002
-      PORT: 4004
+      PORT: 4006
     ports:
-      - "4004:4004"
+      - "4006:4006"
+    depends_on:
+      - postgres
+    networks:
+      - triton-net
+
+  sma-service:
+    build: ./services/sma-service
+    container_name: triton-sma
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: triton_user
+      POSTGRES_PASSWORD: triton_secret_2024
+      POSTGRES_DB: db_sma
+      USER_SERVICE_URL: http://user-service:4002
+      PORT: 4007
+    ports:
+      - "4007:4007"
     depends_on:
       - postgres
     networks:
@@ -104,16 +123,18 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:4001
       USER_SERVICE_URL: http://user-service:4002
-      SOAL_SERVICE_URL: http://soal-service:4003
-      JAWABAN_SERVICE_URL: http://jawaban-service:4004
+      SD_SERVICE_URL: http://sd-service:4005
+      SMP_SERVICE_URL: http://smp-service:4006
+      SMA_SERVICE_URL: http://sma-service:4007
       PORT: 4000
     ports:
       - "4000:4000"
     depends_on:
       - auth-service
       - user-service
-      - soal-service
-      - jawaban-service
+      - sd-service
+      - smp-service
+      - sma-service
     networks:
       - triton-net
 

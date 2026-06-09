@@ -1,14 +1,14 @@
 SHELL := /bin/bash
 .PHONY: install build start run dev stop restart health logs logs-error logs-clean \
-        seed db-init clean frontend
+        seed db-create db-init clean frontend
 
 # ─────────────────────────────────────────────────────────────
 #  INSTALL
 # ─────────────────────────────────────────────────────────────
 install:
 	@echo "📦 Installing all dependencies..."
-	@for dir in services/auth-service services/user-service services/soal-service \
-	            services/jawaban-service services/api-gateway; do \
+	@for dir in services/auth-service services/user-service services/sd-service \
+	            services/smp-service services/sma-service services/api-gateway; do \
 		echo "   → $$dir"; \
 		(cd $$dir && npm install --silent); \
 	done
@@ -23,8 +23,8 @@ install:
 # ─────────────────────────────────────────────────────────────
 build:
 	@echo "🔨 Building all services..."
-	@for dir in services/auth-service services/user-service services/soal-service \
-	            services/jawaban-service services/api-gateway; do \
+	@for dir in services/auth-service services/user-service services/sd-service \
+	            services/smp-service services/sma-service services/api-gateway; do \
 		echo "   → $$dir"; \
 		(cd $$dir && npm run build --silent); \
 	done
@@ -84,12 +84,22 @@ logs-clean:
 # ─────────────────────────────────────────────────────────────
 #  DATABASE
 # ─────────────────────────────────────────────────────────────
+db-create:
+	@echo "🗄️  Creating databases (idempotent)..."
+	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_auth'"  | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_auth;"
+	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_user'"  | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_user;"
+	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_sd'"    | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_sd;"
+	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_smp'"   | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_smp;"
+	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_sma'"   | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_sma;"
+	@echo "✅ Databases ready (db_auth, db_user, db_sd, db_smp, db_sma)"
+
 db-init:
 	@echo "⚡ Initializing all databases..."
-	@psql -U triton_user -d db_auth    -f services/auth-service/src/db/schema.sql    && echo "  ✅ db_auth"
-	@psql -U triton_user -d db_user    -f services/user-service/src/db/schema.sql    && echo "  ✅ db_user"
-	@psql -U triton_user -d db_soal    -f services/soal-service/src/db/schema.sql    && echo "  ✅ db_soal"
-	@psql -U triton_user -d db_jawaban -f services/jawaban-service/src/db/schema.sql && echo "  ✅ db_jawaban"
+	@psql -U triton_user -d db_auth -f services/auth-service/src/db/schema.sql && echo "  ✅ db_auth"
+	@psql -U triton_user -d db_user -f services/user-service/src/db/schema.sql && echo "  ✅ db_user"
+	@psql -U triton_user -d db_sd   -f services/sd-service/src/db/schema.sql   && echo "  ✅ db_sd"
+	@psql -U triton_user -d db_smp  -f services/smp-service/src/db/schema.sql  && echo "  ✅ db_smp"
+	@psql -U triton_user -d db_sma  -f services/sma-service/src/db/schema.sql  && echo "  ✅ db_sma"
 	@echo "✅ All databases initialized"
 
 seed:
@@ -108,8 +118,8 @@ frontend:
 # ─────────────────────────────────────────────────────────────
 clean:
 	@echo "🧹 Removing dist/ folders..."
-	@for dir in services/auth-service services/user-service services/soal-service \
-	            services/jawaban-service services/api-gateway; do \
+	@for dir in services/auth-service services/user-service services/sd-service \
+	            services/smp-service services/sma-service services/api-gateway; do \
 		rm -rf $$dir/dist; \
 	done
 	@echo "✅ Clean done"
@@ -133,8 +143,9 @@ help:
 	@echo "  make logs-auth     Tail auth-service logs only"
 	@echo "  make logs-gateway  Tail api-gateway logs only"
 	@echo "  make logs-clean    Delete all log files"
+	@echo "  make db-create     Create databases (db_auth/user/sd/smp/sma) in Docker"
 	@echo "  make db-init       Apply SQL schemas to all databases"
-	@echo "  make seed          Seed initial users (1 admin, 2 guru, 5 siswa)"
+	@echo "  make seed          Seed users + per-level tryouts (SD/SMP/SMA)"
 	@echo "  make frontend      Start Next.js dev server"
 	@echo "  make clean         Remove all dist/ build artifacts"
 	@echo "  ─────────────────────────────────────────────────────────────"
