@@ -9,6 +9,8 @@ interface EquationDialogProps {
   onClose: () => void
   onInsert: (latex: string, displayMode: boolean) => void
   initialLatex?: string
+  /** Pre-set the block/inline toggle (used when editing an existing equation). */
+  initialDisplayMode?: boolean
 }
 
 const SYMBOLS = [
@@ -65,7 +67,7 @@ const QUICK_REF: { label: string; code: string }[] = [
   { label: '≈',           code: '\\approx' },
 ]
 
-export default function EquationDialog({ open, onClose, onInsert, initialLatex }: EquationDialogProps) {
+export default function EquationDialog({ open, onClose, onInsert, initialLatex, initialDisplayMode }: EquationDialogProps) {
   const [latex, setLatex] = useState(initialLatex ?? '')
   const [displayMode, setDisplayMode] = useState(false)
   const [tab, setTab] = useState<'latex' | 'ref'>('latex')
@@ -73,10 +75,10 @@ export default function EquationDialog({ open, onClose, onInsert, initialLatex }
   useEffect(() => {
     if (open) {
       setLatex(initialLatex ?? '')
-      setDisplayMode(false)
+      setDisplayMode(initialDisplayMode ?? false)
       setTab('latex')
     }
-  }, [open, initialLatex])
+  }, [open, initialLatex, initialDisplayMode])
 
   const preview = useMemo(() => {
     if (!latex.trim()) return { html: '', error: false }

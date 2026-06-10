@@ -78,9 +78,18 @@ router.get('/', async (req: Request, res: Response) => {
   }
 })
 
-// GET /tryouts/available — siswa: published only
-router.get('/available', async (_req: Request, res: Response) => {
+// GET /tryouts/available — siswa: published only, scoped to the student's class.
+// The gateway forwards the assigned class as x-user-class; tryouts with NULL
+// kelas are universal (visible to every class in this level).
+router.get('/available', async (req: Request, res: Response) => {
   try {
+    const kelas = req.headers['x-user-class'] as string | undefined
+    const params: unknown[] = []
+    let classFilter = ''
+    if (kelas) {
+      classFilter = 'AND (t.kelas = $1 OR t.kelas IS NULL)'
+      params.push(kelas)
+    }
     const result = await pool.query(
       `SELECT t.*,
               COALESCE(s.soal_count, 0)::int  AS soal_count,
@@ -90,8 +99,9 @@ router.get('/available', async (_req: Request, res: Response) => {
            SELECT tryout_id, COUNT(*)::int AS soal_count, SUM(bobot)::int AS total_bobot
              FROM soal GROUP BY tryout_id
          ) s ON s.tryout_id = t.id
-        WHERE t.status = 'published'
-        ORDER BY t.created_at DESC`
+        WHERE t.status = 'published' ${classFilter}
+        ORDER BY t.created_at DESC`,
+      params
     )
     res.json({ success: true, data: result.rows })
   } catch (err) {

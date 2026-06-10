@@ -101,29 +101,32 @@ function levelAccessGuard(req: express.Request, res: express.Response, next: exp
   return next()
 }
 
-// ─── Student level firewall (TRN-04) ────────────────────────────────────────
-// A student may only reach their own education level's service. Admin + guru
-// bypass. The student's level is fetched from user-service and cached briefly.
-const levelCache = new Map<string, { level: string | null; exp: number }>()
+// ─── Student level firewall + class scoping (TRN-04 / TRN-07) ───────────────
+// A student may only reach their own education level's service (firewall), and
+// their assigned class is forwarded as x-user-class so level services can scope
+// the available-tryout list. Admin + guru bypass. Cached briefly.
+const profileCache = new Map<string, { level: string | null; kelas: string | null; exp: number }>()
 
-async function getStudentLevel(userId: string): Promise<string | null> {
-  const cached = levelCache.get(userId)
-  if (cached && cached.exp > Date.now()) return cached.level
+async function getStudentProfile(userId: string): Promise<{ level: string | null; kelas: string | null }> {
+  const cached = profileCache.get(userId)
+  if (cached && cached.exp > Date.now()) return cached
   try {
     const r = await fetch(`${USER_SERVICE_URL}/users/${userId}`)
-    const j = (await r.json()) as { success: boolean; data?: { education_level?: string | null } }
+    const j = (await r.json()) as { success: boolean; data?: { education_level?: string | null; kelas?: string | null } }
     const level = j.success && j.data ? (j.data.education_level ?? null) : null
-    levelCache.set(userId, { level, exp: Date.now() + 60_000 })
-    return level
+    const kelas = j.success && j.data ? (j.data.kelas ?? null) : null
+    const entry = { level, kelas, exp: Date.now() + 60_000 }
+    profileCache.set(userId, entry)
+    return entry
   } catch {
-    return null
+    return { level: null, kelas: null }
   }
 }
 
 function makeLevelFirewall(prefix: 'sd' | 'smp' | 'sma') {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if ((req.headers['x-user-role'] as string) !== 'siswa') return next() // admin + guru bypass
-    const level = await getStudentLevel(req.headers['x-user-id'] as string)
+    const { level, kelas } = await getStudentProfile(req.headers['x-user-id'] as string)
     // Enforce only when the student's level is set; mismatch → blocked.
     if (level && level.toLowerCase() !== prefix) {
       return res.status(403).json({
@@ -132,6 +135,8 @@ function makeLevelFirewall(prefix: 'sd' | 'smp' | 'sma') {
         code: 'LEVEL_FORBIDDEN',
       })
     }
+    // Forward the assigned class so the level service can scope by class.
+    if (kelas) req.headers['x-user-class'] = kelas
     return next()
   }
 }
