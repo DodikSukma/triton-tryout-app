@@ -7,7 +7,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Flag, AlertTriangle, Loader2, Send, ChevronLeft, ChevronRight, Save,
+  Maximize2, ShieldAlert, Ban, Sigma, Eye, EyeOff,
 } from 'lucide-react'
+import katex from 'katex'
 import api, { getErrorMessage } from '@/lib/api'
 import { ApiResponse, SesiTryout, Soal, TryoutDetail } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
@@ -16,6 +18,25 @@ import { useLevelTheme } from '@/components/shared/LevelTheme'
 interface SesiWithAnswers {
   sesi: SesiTryout
   answers: Record<string, { opsi_id: string | null; jawaban_teks: string | null }>
+}
+
+// Common equation templates offered in the student essay helper (TRN-09 Feature 3).
+const FORMULA_TEMPLATES: { label: string; latex: string }[] = [
+  { label: 'Pecahan',  latex: '\\frac{a}{b}' },
+  { label: 'Pangkat',  latex: 'x^{2}' },
+  { label: 'Akar',     latex: '\\sqrt{x}' },
+  { label: 'Integral', latex: '\\int_{a}^{b}' },
+  { label: 'Sigma',    latex: '\\sum_{i=1}^{n}' },
+]
+
+// Escape user text so it can be handed to RenderHTML safely; newlines → <br>
+// so the live preview preserves the student's line breaks while KaTeX renders $…$.
+function escapeForPreview(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>')
 }
 
 export default function ExamPage() {
@@ -34,6 +55,24 @@ export default function ExamPage() {
   const [showSubmit, setShowSubmit] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const submittedRef = useRef(false)
+
+  // ─── Anti-cheating proctoring (TRN-07) ───────────────────
+  const MAX_WARNINGS = 3
+  const [examStarted, setExamStarted] = useState(false)
+  const [warnings, setWarnings] = useState(0)
+  const [fsExited, setFsExited] = useState(false)
+  const [disqualified, setDisqualified] = useState(false)
+  const examStartedRef = useRef(false)
+  const disqualifiedRef = useRef(false)
+  const warningsRef = useRef(0)
+  const lastViolationRef = useRef(0)
+  const doSubmitRef = useRef<(opts?: { disqualified?: boolean }) => void>(() => {})
+
+  // ─── Essay equation helper (TRN-09 Feature 3) ────────────
+  const essayRef = useRef<HTMLTextAreaElement>(null)
+  const [formulaOpen, setFormulaOpen] = useState(false)
+  const [customLatex, setCustomLatex] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
 
   // ─── Load sesi + tryout ──────────────────────────────────
   useEffect(() => {
@@ -171,6 +210,41 @@ export default function ExamPage() {
     }
   }
 
+  // Live KaTeX preview for the custom-LaTeX box in the essay helper.
+  const customPreview = useMemo(() => {
+    if (!customLatex.trim()) return { html: '', error: false }
+    try {
+      return { html: katex.renderToString(customLatex, { throwOnError: true, displayMode: false, strict: 'ignore' }), error: false }
+    } catch {
+      return { html: '', error: true }
+    }
+  }, [customLatex])
+
+  // Insert a formula at the textarea cursor, wrapped in single $…$ delimiters.
+  function insertFormula(latex: string) {
+    if (!currentSoal || !latex.trim()) return
+    const wrapped = `$${latex.trim()}$`
+    const ta = essayRef.current
+    const current = answers[currentSoal.id]?.jawaban_teks ?? ''
+    let next: string
+    let caret: number
+    if (ta && typeof ta.selectionStart === 'number') {
+      const start = ta.selectionStart
+      const end = ta.selectionEnd
+      next = current.slice(0, start) + wrapped + current.slice(end)
+      caret = start + wrapped.length
+    } else {
+      next = current + wrapped
+      caret = next.length
+    }
+    setEssay(next)
+    saveAnswer(currentSoal.id, { jawaban_teks: next })
+    requestAnimationFrame(() => {
+      const el = essayRef.current
+      if (el) { el.focus(); el.setSelectionRange(caret, caret) }
+    })
+  }
+
   function toggleFlag(soalId: string) {
     setFlagged((prev) => {
       const next = new Set(prev)
@@ -186,18 +260,95 @@ export default function ExamPage() {
     await doSubmit()
   }
 
-  async function doSubmit() {
+  async function doSubmit(opts?: { disqualified?: boolean }) {
+    submittedRef.current = true
     setSubmitting(true)
     try {
-      await api.post<ApiResponse<unknown>>(`/sesi/${sesiId}/selesai`)
+      await api.post<ApiResponse<unknown>>(
+        `/sesi/${sesiId}/selesai`,
+        opts?.disqualified ? { disqualified: true } : undefined
+      )
       if (typeof window !== 'undefined') window.sessionStorage.removeItem(`triton-flagged-${sesiId}`)
-      toast.success('Jawaban berhasil dikumpulkan!')
-      router.replace(`/siswa/hasil/${sesiId}`)
+      if (typeof document !== 'undefined' && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {})
+      }
+      if (opts?.disqualified) {
+        setDisqualified(true)
+        disqualifiedRef.current = true
+      } else {
+        toast.success('Jawaban berhasil dikumpulkan!')
+        router.replace(`/siswa/hasil/${sesiId}`)
+      }
     } catch (err) {
+      submittedRef.current = false
       toast.error(getErrorMessage(err, 'Gagal mengumpulkan jawaban. Silakan coba lagi.'))
       setSubmitting(false)
     }
   }
+
+  // ─── Anti-cheating proctoring ────────────────────────────
+  // Keep a live ref to doSubmit so the once-attached listeners call the latest.
+  useEffect(() => { doSubmitRef.current = doSubmit })
+
+  async function enterFullscreen() {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen()
+      }
+    } catch { /* fullscreen may be blocked — degrade gracefully */ }
+    examStartedRef.current = true
+    setExamStarted(true)
+    setFsExited(false)
+  }
+
+  useEffect(() => {
+    function registerViolation(msg: string) {
+      if (!examStartedRef.current || submittedRef.current || disqualifiedRef.current) return
+      const now = Date.now()
+      if (now - lastViolationRef.current < 1000) return // de-dupe blur+visibility for one switch
+      lastViolationRef.current = now
+      warningsRef.current += 1
+      const n = warningsRef.current
+      setWarnings(n)
+      if (n > MAX_WARNINGS) {
+        disqualifiedRef.current = true
+        toast.error('Terlalu banyak pelanggaran. Ujian dihentikan & dikumpulkan otomatis.')
+        doSubmitRef.current({ disqualified: true })
+      } else {
+        toast.warning(`${msg} (Peringatan ${n}/${MAX_WARNINGS})`)
+      }
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'hidden') registerViolation('Anda dilarang berpindah tab selama ujian!')
+    }
+    function onBlur() { registerViolation('Layar ujian kehilangan fokus!') }
+    function onFsChange() {
+      if (!document.fullscreenElement) {
+        if (examStartedRef.current && !submittedRef.current && !disqualifiedRef.current) setFsExited(true)
+      } else {
+        setFsExited(false)
+      }
+    }
+    const prevent = (e: Event) => e.preventDefault()
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('fullscreenchange', onFsChange)
+    document.addEventListener('contextmenu', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('paste', prevent)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('blur', onBlur)
+      document.removeEventListener('fullscreenchange', onFsChange)
+      document.removeEventListener('contextmenu', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('paste', prevent)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ─── Render ──────────────────────────────────────────────
   if (loading) {
@@ -222,7 +373,7 @@ export default function ExamPage() {
   const isCritical = timeLeft <= 60 && timeLeft > 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 select-none">
 
       {/* ─── HEADER (fixed) ─── */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
@@ -388,7 +539,74 @@ export default function ExamPage() {
                 ) : (
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">Jawaban Anda:</label>
+
+                    {/* ─── Equation helper toolbar ─── */}
+                    <div className="relative mb-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormulaOpen((o) => !o)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 px-3 py-1.5 text-xs font-semibold transition-colors"
+                      >
+                        <Sigma size={13} /> Sisipkan Formula
+                      </button>
+                      <span className="text-[11px] text-slate-400">
+                        Tulis matematika dalam format <code className="bg-slate-100 px-1 rounded">$rumus$</code>
+                      </span>
+
+                      {formulaOpen && (
+                        <>
+                          {/* click-away backdrop */}
+                          <div className="fixed inset-0 z-[60]" onClick={() => setFormulaOpen(false)} />
+                          <div className="absolute top-full left-0 mt-1 z-[70] w-72 rounded-xl border border-slate-200 bg-white shadow-xl p-3">
+                            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Template Umum</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {FORMULA_TEMPLATES.map((t) => (
+                                <button
+                                  key={t.label}
+                                  type="button"
+                                  onClick={() => { insertFormula(t.latex); setFormulaOpen(false) }}
+                                  className="rounded-lg bg-slate-100 hover:bg-violet-100 hover:text-violet-700 text-slate-600 px-2.5 py-1.5 text-xs font-medium transition-colors"
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="mt-3 border-t border-slate-100 pt-3">
+                              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">LaTeX Custom</p>
+                              <input
+                                value={customLatex}
+                                onChange={(e) => setCustomLatex(e.target.value)}
+                                placeholder="Contoh: \frac{a}{b}"
+                                className="w-full font-mono text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                              />
+                              <div className={`mt-2 min-h-[40px] rounded-lg border p-2 flex items-center justify-center text-center ${
+                                customPreview.error ? 'border-red-200 bg-red-50' : 'border-slate-100 bg-slate-50'
+                              }`}>
+                                {!customLatex.trim() ? (
+                                  <span className="text-[11px] italic text-slate-400">Preview muncul di sini</span>
+                                ) : customPreview.error ? (
+                                  <span className="text-[11px] text-red-500">Sintaks tidak valid</span>
+                                ) : (
+                                  <span dangerouslySetInnerHTML={{ __html: customPreview.html }} />
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                disabled={!customLatex.trim() || customPreview.error}
+                                onClick={() => { insertFormula(customLatex); setCustomLatex(''); setFormulaOpen(false) }}
+                                className="mt-2 w-full rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold py-2 transition-colors"
+                              >
+                                Sisipkan
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
                     <textarea
+                      ref={essayRef}
                       value={answers[currentSoal.id]?.jawaban_teks ?? ''}
                       onChange={(e) => setEssay(e.target.value)}
                       onBlur={blurEssay}
@@ -409,6 +627,31 @@ export default function ExamPage() {
                           <><Save size={11} className="text-green-500" /> Tersimpan</>
                         )}
                       </span>
+                    </div>
+
+                    {/* ─── Answer preview (renders $…$ via KaTeX) ─── */}
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowPreview((p) => !p)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-triton-blue-600 hover:text-triton-blue-700 transition-colors"
+                      >
+                        {showPreview ? <EyeOff size={13} /> : <Eye size={13} />}
+                        {showPreview ? 'Sembunyikan Pratinjau' : 'Pratinjau Jawaban'}
+                      </button>
+                      {showPreview && (
+                        <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Pratinjau Jawaban</p>
+                          {(answers[currentSoal.id]?.jawaban_teks ?? '').trim() ? (
+                            <RenderHTML
+                              html={escapeForPreview(answers[currentSoal.id]?.jawaban_teks ?? '')}
+                              className="text-sm text-slate-800 leading-relaxed"
+                            />
+                          ) : (
+                            <span className="text-sm italic text-slate-400">Belum ada jawaban untuk ditampilkan.</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -471,6 +714,68 @@ export default function ExamPage() {
 
       {/* Small hidden link for routing back to dashboard */}
       <Link href="/siswa/dashboard" className="sr-only">dashboard</Link>
+
+      {/* ─── Anti-cheat: fullscreen start gate ─── */}
+      {!examStarted && !disqualified && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+              <Maximize2 size={26} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Mode Ujian Aman</h2>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              Untuk memulai ujian, Anda harus masuk ke mode layar penuh. Berpindah tab,
+              keluar dari layar penuh, atau menyalin teks akan tercatat sebagai pelanggaran.
+            </p>
+            <button
+              onClick={enterFullscreen}
+              className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-3 transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <Maximize2 size={16} /> Masuk Layar Penuh &amp; Mulai
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Anti-cheat: fullscreen-exit blocking overlay ─── */}
+      {examStarted && fsExited && !disqualified && (
+        <div className="fixed inset-0 z-[300] bg-red-900/95 backdrop-blur-sm flex items-center justify-center p-6 text-center">
+          <div className="max-w-md">
+            <ShieldAlert size={56} className="mx-auto text-red-300 mb-4" />
+            <h2 className="text-2xl font-black text-white">Anda Keluar dari Layar Penuh</h2>
+            <p className="text-red-100 mt-2 text-sm leading-relaxed">
+              Ujian terkunci. Kembali ke mode layar penuh untuk melanjutkan. Pelanggaran berulang akan menghentikan ujian.
+            </p>
+            <p className="text-red-200 text-xs mt-3 font-semibold">Peringatan fokus: {warnings}/{MAX_WARNINGS}</p>
+            <button
+              onClick={() => document.documentElement.requestFullscreen().catch(() => {})}
+              className="mt-6 bg-white text-red-700 font-bold rounded-xl px-6 py-3 inline-flex items-center gap-2 hover:bg-red-50 transition-colors"
+            >
+              <Maximize2 size={16} /> Kembali ke Layar Penuh
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Anti-cheat: disqualified notice ─── */}
+      {disqualified && (
+        <div className="fixed inset-0 z-[300] bg-slate-900/[0.97] flex items-center justify-center p-6 text-center">
+          <div className="max-w-md">
+            <Ban size={56} className="mx-auto text-red-400 mb-4" />
+            <h2 className="text-2xl font-black text-white">Ujian Dihentikan</h2>
+            <p className="text-slate-300 mt-2 text-sm leading-relaxed">
+              Anda melebihi batas pelanggaran proktor ({MAX_WARNINGS} peringatan). Jawaban Anda telah
+              dikumpulkan otomatis dan sesi ini dikunci.
+            </p>
+            <button
+              onClick={() => router.replace(`/siswa/hasil/${sesiId}`)}
+              className="mt-6 bg-white text-slate-900 font-bold rounded-xl px-6 py-3 hover:bg-slate-100 transition-colors"
+            >
+              Lihat Hasil
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,11 +1,1841 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=pages/overview.html" />
-  <title>Triton Docs — Redirect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Dokumentasi Pengembang — Triton Denpasar</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            triton: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .endpoint-btn:hover {
+      background-color: #f8fafc;
+    }
+  </style>
 </head>
-<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F8FAFC;">
-  <p style="color:#64748B;">Memuat dokumentasi... <a href="pages/overview.html" style="color:#3B82F6;font-weight:600;">Klik di sini jika tidak redirect.</a></p>
+
+<body class="bg-[#f8fafc] text-slate-700 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header
+    class="h-[72px] sticky top-0 z-40 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-4">
+      <img src="./logo.png" alt="Triton Denpasar" class="h-9 object-contain bg-white rounded p-1" />
+      <div class="h-6 w-px bg-slate-700"></div>
+      <div>
+        <h1 class="text-white font-extrabold text-sm md:text-base tracking-tight">Portal Dokumentasi Pengembang</h1>
+        <p class="text-[10px] text-slate-400 font-medium">Panduan Sistem &amp; Referensi API Triton</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-sm">
+        Production V2 (Bahasa Indonesia)
+      </span>
+      <span class="text-xs font-mono text-slate-400 hidden sm:inline">Build v2.3.0</span>
+    </div>
+  </header>
+
+  <div class="flex-1 flex flex-col lg:flex-row">
+    <!-- Left Navigation Sidebar -->
+    <aside
+      class="w-full lg:w-80 bg-slate-950 border-r border-slate-900 flex flex-col shrink-0 lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:overflow-y-auto lg:self-start">
+      <!-- Reading Progress Tracker -->
+      <div class="p-5 border-b border-slate-900 bg-slate-900/30">
+        <div class="flex items-center justify-between text-xs text-slate-400 font-medium mb-1.5">
+          <span>Progress Membaca Dokumentasi:</span>
+          <span id="progress-text" class="font-bold text-blue-400">0%</span>
+        </div>
+        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-blue-500 rounded-full transition-all duration-300 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-5 space-y-4 overflow-y-auto max-h-[calc(100vh-12rem)]" id="sidebar-nav">
+        <div class="space-y-4">
+          <!-- Group 1: Memulai & Konfigurasi -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">1. MEMULAI &amp; SETUP
+            </div>
+
+            <!-- Item 1.1: Ikhtisar -->
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-overview')" id="btn-tab-overview"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-blue-400 bg-slate-900/80 border border-slate-800">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Ikhtisar &amp; Arsitektur
+                </span>
+                <span class="nav-check text-[10px] text-blue-500">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-overview', 'stack-teknologi')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Stack Teknologi</button>
+                <button onclick="navigateToAnchor('tab-overview', 'pemetaan-port')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Pemetaan Port</button>
+                <button onclick="navigateToAnchor('tab-overview', 'arsitektur-data')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Aliran Data</button>
+              </div>
+            </div>
+
+            <!-- Item 1.2: Setup -->
+            <div class="space-y-1 mt-1">
+              <button onclick="switchTab('tab-setup')" id="btn-tab-setup"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  Setup Lokal
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-setup', 'prerequisites')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Syarat Instalasi</button>
+                <button onclick="navigateToAnchor('tab-setup', 'env-config')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Variabel Env</button>
+                <button onclick="navigateToAnchor('tab-setup', 'cli-commands')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Perintah Makefile</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 2: Alur & Desain Sistem -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">2. LOGIKA BISNIS &amp;
+              ALUR</div>
+
+            <!-- Item 2.1: Alur Kerja Peran -->
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-flow')" id="btn-tab-flow"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 20l-5.447-2.724A2 2 0 013 15.485V6.875a2 2 0 011.132-1.795l5-2.5a2 2 0 011.736 0l5 2.5a2 2 0 011.132 1.795v8.61a2 2 0 01-1.132 1.795l-5 2.5a2 2 0 01-1.736 0z" />
+                  </svg>
+                  Alur Kerja Peran
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-flow', 'alur-admin')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Alur Admin &amp; Filter</button>
+                <button onclick="navigateToAnchor('tab-flow', 'alur-guru')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Alur Guru &amp; Approval</button>
+                <button onclick="navigateToAnchor('tab-flow', 'alur-siswa')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Alur Siswa &amp; Anti-Cheat</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 3: Struktur Data & API -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">3. DATA &amp; API
+              ENDPOINTS</div>
+
+            <!-- Item 3.1: Database Schema -->
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-database')" id="btn-tab-database"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  Skema Database
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-database', 'db-auth')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  db_auth (Kredensial)</button>
+                <button onclick="navigateToAnchor('tab-database', 'db-user')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  db_user (Profil &amp; Logs)</button>
+                <button onclick="navigateToAnchor('tab-database', 'db-level')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  db_{sd|smp|sma} (Ujian)</button>
+              </div>
+            </div>
+
+            <!-- Item 3.2: API Endpoints -->
+            <div class="space-y-1 mt-1">
+              <button onclick="switchTab('tab-api')" id="btn-tab-api"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  API Gateway Proxy
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-api', 'api-login-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  POST /auth/login</button>
+                <button onclick="navigateToAnchor('tab-api', 'api-get-me-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  GET /auth/me</button>
+                <button onclick="navigateToAnchor('tab-api', 'api-create-user-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  POST /users</button>
+                <button onclick="navigateToAnchor('tab-api', 'api-create-sesi-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  POST /sesi (CBT)</button>
+                <button onclick="navigateToAnchor('tab-api', 'api-save-jawab-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  POST /sesi/jawab</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 4: DevOps & Cloud -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">4. OPERASIONAL &amp;
+              DEPLOY</div>
+
+            <!-- Item 4.1: Pemeliharaan -->
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-maintenance')" id="btn-tab-maintenance"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Pemeliharaan &amp; Debug
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-maintenance', 'logs-mgmt')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Logs Management</button>
+                <button onclick="navigateToAnchor('tab-maintenance', 'port-conflict')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Konflik Port Lokal</button>
+                <button onclick="navigateToAnchor('tab-maintenance', 'docx-syntax')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Syntax Template Word</button>
+              </div>
+            </div>
+
+            <!-- Item 4.2: Deployment -->
+            <div class="space-y-1 mt-1">
+              <button onclick="switchTab('tab-cloud')" id="btn-tab-cloud"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                  Cloud Deployment
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <!-- Sub-children -->
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-cloud', 'deploy-db')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Supabase Provision</button>
+                <button onclick="navigateToAnchor('tab-cloud', 'deploy-frontend')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Vercel Deploy Client</button>
+                <button onclick="navigateToAnchor('tab-cloud', 'deploy-backend')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Railway Hosting</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="p-5 mt-auto border-t border-slate-900 bg-slate-950/80 text-[10px] text-slate-500 space-y-1">
+        <p class="font-semibold text-slate-400">Triton Bimbel Platform</p>
+        <p>Dokumentasi Teknis Resmi</p>
+        <p>&copy; 2026 Triton Denpasar</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="flex-1 bg-white p-6 lg:p-10 overflow-y-auto max-w-full">
+
+      <!-- ==================== TAB: OVERVIEW ==================== -->
+      <section id="tab-overview" class="tab-content space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Memulai</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Ikhtisar &amp; Stack Teknologi</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Selamat datang di portal spesifikasi teknis platform tryout komputer basis web (CBT) Triton Denpasar.
+            Dokumentasi ini disusun sebagai manual lengkap untuk maintainer, arsitek sistem, dan pengembang baru.
+          </p>
+        </div>
+
+        <div
+          class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
+          <span class="text-2xl mt-0.5">💡</span>
+          <div class="text-sm text-slate-800 leading-relaxed">
+            <strong>Tentang Platform Triton Denpasar</strong><br />
+            Platform Triton Denpasar adalah sistem Computer Based Test (CBT) modern yang dioptimalkan untuk meminimalkan
+            kecurangan ujian. Platform ini membagi data operasional tryout berdasarkan tiga jenjang sekolah (**SD, SMP,
+            SMA**) menggunakan arsitektur microservices terisolasi (database per-jenjang terpisah) dengan satu
+            entry-point gateway yang aman.
+          </div>
+        </div>
+
+        <!-- Tech Stack Details -->
+        <div>
+          <h3 id="stack-teknologi" class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Core Technology Stack
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700">Frontend Client</span>
+              <h4 class="font-bold text-slate-800 text-sm mt-3">Next.js 14 App Router</h4>
+              <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Ditulis menggunakan TypeScript dan Tailwind CSS. Menggunakan KaTeX / React-KaTeX untuk render formula
+                matematika kompleks secara instan pada browser client.
+              </p>
+            </div>
+            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">Backend API
+                Services</span>
+              <h4 class="font-bold text-slate-800 text-sm mt-3">Express.js Microservices</h4>
+              <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Terdiri atas 6 layanan node terpisah yang berkomunikasi menggunakan API RESTful, terikat dengan validasi
+                skema runtime masukan ketat menggunakan pustaka Zod.
+              </p>
+            </div>
+            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Database &amp;
+                Caching</span>
+              <h4 class="font-bold text-slate-800 text-sm mt-3">PostgreSQL &amp; Redis</h4>
+              <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Pemisahan data multi-database PostgreSQL untuk isolasi level sekolah. Redis digunakan oleh
+                `auth-service` untuk manajemen penyimpanan session cookie (`express-session`).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Microservices Port Mapping -->
+        <div>
+          <h3 id="pemetaan-port" class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Pemetaan Port Layanan Lokal
+          </h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
+                  <th class="p-4">Port</th>
+                  <th class="p-4">Nama Layanan</th>
+                  <th class="p-4">Database PostgreSQL</th>
+                  <th class="p-4">Tanggung Jawab Utama</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4000</td>
+                  <td class="p-4 font-semibold text-slate-900">api-gateway</td>
+                  <td class="p-4 text-slate-400">-</td>
+                  <td class="p-4">Single Entry Point, routing proxy (menggunakan http-proxy-middleware), verifikasi
+                    cookie session.</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4001</td>
+                  <td class="p-4 font-semibold text-slate-900">auth-service</td>
+                  <td class="p-4 font-mono">db_auth</td>
+                  <td class="p-4">Autentikasi kredensial (bcrypt hash), registrasi pengguna, manajemen session-state
+                    cookie dan integrasi Redis.</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4002</td>
+                  <td class="p-4 font-semibold text-slate-900">user-service</td>
+                  <td class="p-4 font-mono">db_user</td>
+                  <td class="p-4">Manajemen data profil pengguna lengkap (Guru/Siswa), master data registrasi kelas
+                    &amp; mapel, serta pencatatan audit log platform.</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4005</td>
+                  <td class="p-4 font-semibold text-slate-900">sd-service</td>
+                  <td class="p-4 font-mono">db_sd</td>
+                  <td class="p-4">Bank Soal &amp; Tryout, runner ujian CBT, serta kalkulasi nilai ujian otomatis khusus
+                    jenjang SD (Sekolah Dasar).</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4006</td>
+                  <td class="p-4 font-semibold text-slate-900">smp-service</td>
+                  <td class="p-4 font-mono">db_smp</td>
+                  <td class="p-4">Bank Soal &amp; Tryout, runner ujian CBT, serta kalkulasi nilai ujian otomatis khusus
+                    jenjang SMP (Sekolah Menengah Pertama).</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">4007</td>
+                  <td class="p-4 font-semibold text-slate-900">sma-service</td>
+                  <td class="p-4 font-mono">db_sma</td>
+                  <td class="p-4">Bank Soal &amp; Tryout, runner ujian CBT, serta kalkulasi nilai ujian otomatis khusus
+                    jenjang SMA (Sekolah Menengah Atas).</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-mono font-bold text-blue-600">3000</td>
+                  <td class="p-4 font-semibold text-slate-900">frontend</td>
+                  <td class="p-4 text-slate-400">-</td>
+                  <td class="p-4">User interface client Next.js (Dashboard Admin, Guru, Siswa, dan Exam Room).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Architecture Diagram -->
+        <div>
+          <h3 id="arsitektur-data" class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Visualisasi Arsitektur Aliran Data
+          </h3>
+          <div class="bg-slate-900 rounded-2xl p-6 relative overflow-hidden group shadow-md border border-slate-800">
+            <div class="absolute right-4 top-4 text-slate-600 font-mono text-[10px] select-none">ARCHITECTURE DIAGRAM
+            </div>
+            <pre class="text-emerald-400 font-mono text-xs overflow-x-auto leading-relaxed">
+[ Next.js Frontend Client (Port 3000) ]
+                  │
+                  ▼ (Request HTTP API)
+      [ API Gateway (Port 4000) ]
+        ── Auth Verifikasi cookie triton.sid via Port 4001
+        ── Injeksi HTTP headers: x-user-id, x-user-role, x-user-class
+                  │
+        ┌─────────┼─────────┬──────────────────────┐
+        ▼         ▼         ▼                      ▼
+  [auth-serv] [user-serv] [sd-serv]            [sma-serv]
+   Port 4001   Port 4002   Port 4005   ...      Port 4007
+        │         │         │                      │
+     (Redis)      │         │                      │
+  Session cache   ▼         ▼                      ▼
+               db_user    db_sd                  db_sma
+             (Postgres) (Postgres)             (Postgres)</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: SETUP ==================== -->
+      <section id="tab-setup" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Memulai</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Setup &amp; Instalasi Lokal</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Ikuti instruksi di bawah ini untuk menginstal seluruh repositori dan menjalankan platform tryout Triton di
+            komputer lokal Anda dari awal.
+          </p>
+        </div>
+
+        <!-- Prerequisites -->
+        <div id="prerequisites" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Syarat Instalasi (Prerequisites)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Pastikan komputer pengembang Anda telah terinstal perkakas berikut:
+          </p>
+          <ul class="list-disc pl-5 text-sm text-slate-500 space-y-1.5">
+            <li><strong>Node.js</strong> v18.0 atau lebih tinggi</li>
+            <li><strong>Docker &amp; Docker Compose</strong> (untuk PostgreSQL dan Redis lokal)</li>
+            <li><strong>GNU Make</strong> (untuk mempermudah command pipeline)</li>
+          </ul>
+        </div>
+
+        <!-- Env Variables Configuration -->
+        <div id="env-config" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 1. Salin File Environment Variables
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Salin file template `.env` pada folder root proyek. File `.env` ini mendefinisikan koneksi database lokal
+            dan pemetaan URL mikro.
+          </p>
+          <div class="relative group">
+            <button onclick="copyCode('env-code')"
+              class="absolute right-3 top-3 px-2.5 py-1 text-[10px] bg-slate-800 text-slate-300 rounded hover:bg-slate-700 transition-colors">Copy</button>
+            <pre class="bg-slate-900 p-4 rounded-xl shadow-inner"><code id="env-code" class="language-bash">POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=triton_user
+POSTGRES_PASSWORD=triton_secret_2024
+REDIS_HOST=localhost
+REDIS_PORT=6379
+SESSION_SECRET=triton_session_super_secret_change_me_in_prod
+SESSION_MAX_AGE_MS=28800000
+
+AUTH_SERVICE_URL=http://localhost:4001
+USER_SERVICE_URL=http://localhost:4002
+SD_SERVICE_URL=http://localhost:4005
+SMP_SERVICE_URL=http://localhost:4006
+SMA_SERVICE_URL=http://localhost:4007
+NEXT_PUBLIC_API_URL=http://localhost:4000
+FRONTEND_URL=http://localhost:3000</code></pre>
+          </div>
+        </div>
+
+        <!-- Dev Execution Commands -->
+        <div id="cli-commands" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 2. Pipeline Perintah CLI (Makefile)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Gunakan file `Makefile` di root proyek untuk mengautomasi seluruh fase instalasi:
+          </p>
+          <div class="space-y-3">
+            <div
+              class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="font-mono text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold">make
+                  install</span>
+                <p class="text-xs text-slate-500 mt-1.5">Menginstal dependencies untuk semua layanan backend &amp;
+                  frontend Next.js.</p>
+              </div>
+              <button onclick="copyText('make install')"
+                class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 self-start md:self-auto transition-colors">Salin</button>
+            </div>
+            <div
+              class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="font-mono text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold">make
+                  db-start</span>
+                <p class="text-xs text-slate-500 mt-1.5">Menjalankan container PostgreSQL &amp; Redis di latar belakang
+                  menggunakan Docker Compose.</p>
+              </div>
+              <button onclick="copyText('make db-start')"
+                class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 self-start md:self-auto transition-colors">Salin</button>
+            </div>
+            <div
+              class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="font-mono text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold">make
+                  db-seed</span>
+                <p class="text-xs text-slate-500 mt-1.5">Melakukan inisialisasi skema tabel database dan mengisi data
+                  master awal (Seed data).</p>
+              </div>
+              <button onclick="copyText('make db-seed')"
+                class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 self-start md:self-auto transition-colors">Salin</button>
+            </div>
+            <div
+              class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="font-mono text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold">make
+                  dev</span>
+                <p class="text-xs text-slate-500 mt-1.5">Menjalankan 6 Express microservices &amp; Next.js frontend
+                  secara bersamaan dalam mode live reload.</p>
+              </div>
+              <button onclick="copyText('make dev')"
+                class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 self-start md:self-auto transition-colors">Salin</button>
+            </div>
+            <div
+              class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="font-mono text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold">make
+                  stop</span>
+                <p class="text-xs text-slate-500 mt-1.5">Menghentikan seluruh microservices lokal dan mematikan
+                  container Docker.</p>
+              </div>
+              <button onclick="copyText('make stop')"
+                class="px-3 py-1 text-xs bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 self-start md:self-auto transition-colors">Salin</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: FLOW ==================== -->
+      <section id="tab-flow" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Alur</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Alur Kerja Logika Peran &amp; Sistem</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Spesifikasi detail mengenai hak akses, dashboard routing, workflow persetujuan soal, engine pengacakan CBT,
+            serta sistem proteksi kecurangan.
+          </p>
+        </div>
+
+        <!-- 1. Alur Role Admin -->
+        <div id="alur-admin" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 border-l-4 border-red-500 pl-3">
+            1. Alur Kerja Peran Admin
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Admin bertugas memantau seluruh ekosistem tryout, melakukan manajemen akun, serta melakukan verifikasi akhir
+            kelayakan tryout:
+          </p>
+          <ul class="list-disc pl-5 text-sm text-slate-500 space-y-2">
+            <li><strong>Login System:</strong> Mengakses `/login` ➔ dialihkan otomatis ke `/admin/dashboard`.</li>
+            <li><strong>Dashboard &amp; Filtering:</strong> Menampilkan statistik jumlah guru, siswa, tryout aktif, dan
+              session. Admin dibekali tab filter sekolah **(SD, SMP, SMA)** di mana ketika diklik, data tabel Siswa dan
+              Tryout di dashboard terfilter secara real-time, <em>namun data Guru tidak terfilter</em> (Guru tetap
+              tampil menyeluruh).</li>
+            <li><strong>Alur Persetujuan (Approval):</strong> Pada card Tryout di dashboard Admin, terdapat link
+              <strong>"Lihat semua"</strong> yang akan membawa Admin langsung ke halaman **Approval / Persetujuan**. Di
+              halaman ini, Admin dapat meninjau detail draf soal satu-persatu (bukan sekadar tolak/setuju buta) untuk
+              memberikan keputusan:
+              <ul class="list-circle pl-5 mt-1 space-y-1">
+                <li><strong>Setujui (Approve):</strong> Mengubah status tryout menjadi `approved`.</li>
+                <li><strong>Tolak dengan Catatan (Reject):</strong> Memberikan feedback perbaikan tertulis di field
+                  `revision_notes` dan status tryout menjadi `rejected`.</li>
+              </ul>
+            </li>
+            <li><strong>Manajemen Pengguna:</strong> Admin dapat membuat, mengedit, menghapus, atau menonaktifkan akun
+              Guru (`/admin/users?role=guru`) dan Siswa (`/admin/users?role=siswa`) secara dinamis.</li>
+            <li><strong>Superuser Logs Monitor:</strong> Mengakses panel `/admin/logs` untuk memantau audit trail audit
+              logging yang tersimpan di sistem.</li>
+          </ul>
+        </div>
+
+        <!-- 2. Alur Role Guru -->
+        <div id="alur-guru" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
+            2. Alur Kerja Peran Guru (Pembuatan &amp; Pengelolaan Ujian)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Guru memiliki tanggung jawab mengelola pustaka materi dan membuat soal ujian tryout:
+          </p>
+          <ul class="list-disc pl-5 text-sm text-slate-500 space-y-2">
+            <li><strong>Login System:</strong> Login di `/login` ➔ diarahkan ke `/guru/dashboard`.</li>
+            <li><strong>Workflow Tryout Builder:</strong> Klik **"Buat Tryout Baru"** dialog ➔ input Nama Tryout, Mapel,
+              Kelas, Durasi, serta opsi pengacakan ➔ dikirim lewat `POST /tryouts`.
+              <br />
+              <span
+                class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200 mt-1 inline-block font-semibold">TRN-05:
+                Tombol Batal / Kembali pada form pembuatan tryout akan langsung mengembalikan Guru ke Dashboard Utama
+                tanpa jeda.</span>
+            </li>
+            <li><strong>Manajemen Pembuatan Soal:</strong>
+              <ul class="list-circle pl-5 mt-1 space-y-1">
+                <li><strong>Metode Manual:</strong> Menulis teks pertanyaan, opsi jawaban A-E, kunci jawaban yang benar,
+                  serta bobot soal. Mendukung sintaks formula LaTeX yang diapit tanda `$$` (contoh: `$$f(x) = x^2$$`).
+                </li>
+                <li><strong>Import MS Word (.docx):</strong> Mengunggah template berkas dokumen Word dengan aturan
+                  parser parser yang ketat (format ada di tab selanjutnya).</li>
+                <li><strong>Generator Soal AI:</strong> Memilih kuantitas soal untuk secara instan men-generate
+                  soal-soal tryout siap pakai berbasis AI.</li>
+              </ul>
+            </li>
+            <li><strong>Pengajuan &amp; Siklus Approval:</strong> Setelah soal dirasa lengkap, Guru menekan tombol
+              **"Ajukan Persetujuan (Submit for Approval)"** yang mengubah status tryout menjadi `pending_approval` ➔
+              Menunggu ACC Admin. Jika status menjadi `rejected` (ditolak), Guru dapat membaca field `revision_notes`,
+              memperbaikinya, dan mengajukan ulang. Setelah mendapat status `approved`, Guru (atau Admin) dapat menekan
+              tombol **"Publish"** untuk merilis ujian.</li>
+          </ul>
+        </div>
+
+        <!-- 3. Alur Role Siswa -->
+        <div id="alur-siswa" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 border-l-4 border-green-500 pl-3">
+            3. Alur Kerja Peran Siswa (Computer Based Test)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Siswa bertindak sebagai peserta tes tryout dengan mekanisme proteksi ujian yang ketat:
+          </p>
+          <ul class="list-disc pl-5 text-sm text-slate-500 space-y-2">
+            <li><strong>Akses Tryout Terkunci Jenjang:</strong> Siswa login di `/login` ➔ diarahkan ke
+              `/siswa/dashboard`. Siswa hanya diizinkan melihat daftar tryout yang relevan berdasarkan level edukasi
+              mereka (`profiles.education_level` = SD/SMP/SMA) dan tingkat kelasnya.</li>
+            <li><strong>Akses Cepat Tautan Sesi (Share Link):</strong> Admin/Guru dapat membagikan tautan sesi tryout.
+              Ketika Siswa membuka tautan tersebut, sistem secara otomatis mengecek autentikasi; jika belum masuk, Siswa
+              diminta login dan secara instan langsung diarahkan ke halaman mulai ujian tryout tersebut (auto redirect).
+            </li>
+            <li><strong>Mulai Ujian &amp; Engine Pengacakan:</strong> Saat ujian dimulai (`POST /sesi`), sistem akan
+              mengecek parameter tryout. Jika pengacakan aktif:
+              <ul class="list-circle pl-5 mt-1 space-y-1">
+                <li><strong>Randomize Questions:</strong> Urutan soal diacak secara dinamis menggunakan algoritme
+                  Fisher-Yates shuffle dan disimpan di kolom array `sesi_tryout.question_order` agar konsisten jika
+                  browser di-refresh.</li>
+                <li><strong>Randomize Options:</strong> Urutan pilihan jawaban (A, B, C, D, E) diacak secara
+                  deterministik per siswa dan disimpan di field JSONB `sesi_tryout.option_order`.</li>
+              </ul>
+            </li>
+            <li><strong>Sistem Proteksi Kecurangan (Anti-Cheating):</strong>
+              <div
+                class="mt-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono space-y-2 text-slate-300">
+                <p class="text-red-400 font-bold">// Implementasi Proctoring Engine pada Client-Side:</p>
+                <p>1. <strong>Fullscreen Lock:</strong> Memaksa halaman ujian berjalan dalam Fullscreen API. Jika siswa
+                  keluar dari fullscreen, dialog peringatan pengunci muncul menutupi seluruh layar ujian.</p>
+                <p>2. <strong>Tab Switch Detection (Visibility Change):</strong> Mendeteksi perpindahan tab browser.
+                  Setiap kejadian tab tidak aktif akan memicu log peringatan kecurangan.</p>
+                <p>3. <strong>Window Blur Focus Check:</strong> Mendeteksi saat kursor keluar dari jendela browser
+                  (kehilangan fokus window).</p>
+                <p>4. <strong>Copy-Paste Restrictions:</strong> Menonaktifkan total fungsi keyboard: Copy (Ctrl+C), Cut
+                  (Ctrl+X), Paste (Ctrl+V), klik kanan mouse (contextmenu), serta blok seleksi teks bebas.</p>
+                <p>5. <strong>Auto-Submit Warning:</strong> Jika jumlah pelanggaran kecurangan terdeteksi melampaui
+                  ambang batas maksimum, sistem akan memicu auto-submit paksa sesi tryout siswa saat itu juga.</p>
+              </div>
+            </li>
+            <li><strong>Penyimpanan Otomatis (Auto-Save):</strong> Setiap opsi atau jawaban essay yang dipilih/ditik
+              oleh siswa dikirim langsung melalui `POST /sesi/:id/jawab` ke database secara asinkron untuk
+              mengantisipasi mati listrik atau kegagalan perangkat komputer.</li>
+            <li><strong>Hasil Ujian:</strong> Setelah tryout dikumpulkan atau waktu habis, skor dihitung otomatis. Hasil
+              ditampilkan di `/siswa/hasil/:sesiId` dengan styling kontras tinggi (skor dan grade A/B/C/D jelas dibaca).
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: DATABASE ==================== -->
+      <section id="tab-database" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Arsitektur</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Skema Database Lengkap &amp; Spesifik</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Struktur fisik relasional lengkap dari database yang terbagi pada microservices Triton. Database menggunakan
+            PostgreSQL.
+          </p>
+        </div>
+
+        <!-- DB 1: db_auth -->
+        <div id="db-auth" class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 text-xs font-bold bg-slate-900 text-white font-mono rounded">DATABASE</span>
+            <h3 class="text-xl font-bold text-slate-900 font-mono">db_auth</h3>
+          </div>
+          <p class="text-sm text-slate-600">
+            Database ini dikelola oleh `auth-service`. Digunakan untuk mencatat data user kredensial dasar dan hak akses
+            platform.
+          </p>
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: users</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2.5">Field</th>
+                    <th class="p-2.5">Tipe Data</th>
+                    <th class="p-2.5">Constraints</th>
+                    <th class="p-2.5">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">PRIMARY KEY, DEFAULT gen_random_uuid()</td>
+                    <td class="p-2.5">ID unik internal user.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">email</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">UNIQUE, NOT NULL</td>
+                    <td class="p-2.5">Alamat email login platform.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">password_hash</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Hasil hash password bcrypt (cost factor: 12).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">role</td>
+                    <td class="p-2.5 font-mono">VARCHAR(20)</td>
+                    <td class="p-2.5">NOT NULL, CHECK (role IN ('admin','guru','siswa'))</td>
+                    <td class="p-2.5">Hak akses peran user di platform.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">is_active</td>
+                    <td class="p-2.5 font-mono">BOOLEAN</td>
+                    <td class="p-2.5">DEFAULT true</td>
+                    <td class="p-2.5">Status aktif akun (aktif/suspend).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">created_at</td>
+                    <td class="p-2.5 font-mono">TIMESTAMPTZ</td>
+                    <td class="p-2.5">DEFAULT NOW()</td>
+                    <td class="p-2.5">Tanggal akun pertama kali terdaftar.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">updated_at</td>
+                    <td class="p-2.5 font-mono">TIMESTAMPTZ</td>
+                    <td class="p-2.5">DEFAULT NOW()</td>
+                    <td class="p-2.5">Tanggal pembaharuan status akun.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- DB 2: db_user -->
+        <div id="db-user" class="space-y-4 pt-6">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 text-xs font-bold bg-slate-900 text-white font-mono rounded">DATABASE</span>
+            <h3 class="text-xl font-bold text-slate-900 font-mono">db_user</h3>
+          </div>
+          <p class="text-sm text-slate-600">
+            Database yang dikelola oleh `user-service`. Menyimpan data profil lengkap, data master referensi sekolah,
+            serta log aktivitas audit trail.
+          </p>
+
+          <!-- profiles -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: profiles</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2.5">Field</th>
+                    <th class="p-2.5">Tipe Data</th>
+                    <th class="p-2.5">Constraints</th>
+                    <th class="p-2.5">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">PRIMARY KEY, DEFAULT gen_random_uuid()</td>
+                    <td class="p-2.5">ID profile unik.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">user_id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">UNIQUE, NOT NULL</td>
+                    <td class="p-2.5">Referensi user key ke `db_auth.users.id`.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">nama_lengkap</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Nama lengkap pengguna.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">no_telepon</td>
+                    <td class="p-2.5 font-mono">VARCHAR(20)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Nomor kontak telepon / WhatsApp.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">kelas</td>
+                    <td class="p-2.5 font-mono">VARCHAR(50)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Kelas (contoh: 'XII-IPA-1', 'VI-A'). Khusus Siswa.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">mata_pelajaran</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Mata pelajaran yang diajarkan (koma terpisah). Khusus Guru.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">education_level</td>
+                    <td class="p-2.5 font-mono">VARCHAR(10)</td>
+                    <td class="p-2.5">CHECK (education_level IN ('SD','SMP','SMA'))</td>
+                    <td class="p-2.5">Level filter utama validasi kecocokan tryout jenjang siswa.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">avatar_url</td>
+                    <td class="p-2.5 font-mono">TEXT</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Tautan gambar avatar profil.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono font-semibold text-blue-600">bio</td>
+                    <td class="p-2.5 font-mono">TEXT</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Deskripsi biografi singkat user.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- master_kelas, master_mata_pelajaran -->
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: master_kelas</h4>
+              <table class="w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2">Field</th>
+                    <th class="p-2">Tipe</th>
+                    <th class="p-2">Constraints</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2 font-mono">id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">PK</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">nama</td>
+                    <td class="p-2 font-mono">VARCHAR(50)</td>
+                    <td class="p-2">UNIQUE, NOT NULL</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">level</td>
+                    <td class="p-2 font-mono">VARCHAR(10)</td>
+                    <td class="p-2">CHECK (level IN ('SD','SMP','SMA'))</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: master_mata_pelajaran</h4>
+              <table class="w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2">Field</th>
+                    <th class="p-2">Tipe</th>
+                    <th class="p-2">Constraints</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2 font-mono">id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">PK</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">nama</td>
+                    <td class="p-2 font-mono">VARCHAR(100)</td>
+                    <td class="p-2">UNIQUE, NOT NULL</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">level</td>
+                    <td class="p-2 font-mono">VARCHAR(10)</td>
+                    <td class="p-2">CHECK (level IN ('SD','SMP','SMA'))</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- audit_logs -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: audit_logs</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2.5">Field</th>
+                    <th class="p-2.5">Tipe Data</th>
+                    <th class="p-2.5">Constraint / Index</th>
+                    <th class="p-2.5">Deskripsi Audit</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2.5 font-mono">id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">PRIMARY KEY</td>
+                    <td class="p-2.5">ID log unik.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">user_id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Pihak pembuat aksi (dapat NULL jika gagal login).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">email</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">NOT NULL, INDEX (email)</td>
+                    <td class="p-2.5">Email aktor pelaku.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">role</td>
+                    <td class="p-2.5 font-mono">VARCHAR(20)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Role aktor ('admin' | 'guru' | 'siswa' | 'system').</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">action</td>
+                    <td class="p-2.5 font-mono">VARCHAR(100)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Nama aksi (contoh: `AUTH_LOGIN_SUCCESS`, `TRYOUT_PUBLISH`).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">target_id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Entity ID yang terkena dampak CRUD (siswa/tryout/session).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">description</td>
+                    <td class="p-2.5 font-mono">TEXT</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Rincian deskripsi teks log aktivitas audit.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">ip_address</td>
+                    <td class="p-2.5 font-mono">VARCHAR(50)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">IP Address client yang memicu aksi.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">user_agent</td>
+                    <td class="p-2.5 font-mono">TEXT</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">User-agent browser client pengakses.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">created_at</td>
+                    <td class="p-2.5 font-mono">TIMESTAMPTZ</td>
+                    <td class="p-2.5">INDEX (created_at DESC)</td>
+                    <td class="p-2.5">Waktu kejadian log dicatat.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- DB 3: db_sd, db_smp, db_sma -->
+        <div id="db-level" class="space-y-4 pt-6">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 text-xs font-bold bg-slate-900 text-white font-mono rounded">DATABASE</span>
+            <h3 class="text-xl font-bold text-slate-900 font-mono">db_sd / db_smp / db_sma</h3>
+          </div>
+          <p class="text-sm text-slate-600">
+            Database level-spesifik terisolasi yang menampung bank soal, draf persetujuan tryout, sesi ujian CBT
+            peserta, auto-save jawaban, dan nilai akhir tryout.
+          </p>
+
+          <!-- tryouts -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: tryouts</h4>
+              <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border font-mono">Core tryout
+                entity</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2.5">Field</th>
+                    <th class="p-2.5">Tipe Data</th>
+                    <th class="p-2.5">Constraints</th>
+                    <th class="p-2.5">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2.5 font-mono">id</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">PRIMARY KEY, DEFAULT gen_random_uuid()</td>
+                    <td class="p-2.5">ID unik tryout.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">nama_tryout</td>
+                    <td class="p-2.5 font-mono">VARCHAR(255)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Nama/judul paket tryout.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">mata_pelajaran</td>
+                    <td class="p-2.5 font-mono">VARCHAR(100)</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">Nama kategori mapel.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">sub_mata_pelajaran</td>
+                    <td class="p-2.5 font-mono">VARCHAR(100)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Sub-kategori bab mapel.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">kelas</td>
+                    <td class="p-2.5 font-mono">VARCHAR(50)</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Tingkatan kelas spesifik.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">durasi_menit</td>
+                    <td class="p-2.5 font-mono">INTEGER</td>
+                    <td class="p-2.5">DEFAULT 90</td>
+                    <td class="p-2.5">Durasi pengerjaan dalam satuan menit.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">dibuat_oleh</td>
+                    <td class="p-2.5 font-mono">UUID</td>
+                    <td class="p-2.5">NOT NULL</td>
+                    <td class="p-2.5">ID Guru pembuat paket (referensi ke `db_user.profiles.id`).</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">status</td>
+                    <td class="p-2.5 font-mono">VARCHAR(20)</td>
+                    <td class="p-2.5">DEFAULT 'draft', CHECK status IN ('draft', 'pending_approval', 'approved',
+                      'rejected', 'published', 'closed')</td>
+                    <td class="p-2.5">Status alur kerja verifikasi tryout.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">revision_notes</td>
+                    <td class="p-2.5 font-mono">TEXT</td>
+                    <td class="p-2.5">-</td>
+                    <td class="p-2.5">Catatan perbaikan revisi dari Admin.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">randomize_questions</td>
+                    <td class="p-2.5 font-mono">BOOLEAN</td>
+                    <td class="p-2.5">DEFAULT true</td>
+                    <td class="p-2.5">Status acak soal untuk pengerjaan siswa.</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-mono">randomize_options</td>
+                    <td class="p-2.5 font-mono">BOOLEAN</td>
+                    <td class="p-2.5">DEFAULT true</td>
+                    <td class="p-2.5">Status acak opsi pilihan jawaban A-E per siswa.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- soal & opsi_jawaban -->
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: soal</h4>
+              <table class="w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2">Field</th>
+                    <th class="p-2">Tipe</th>
+                    <th class="p-2">Constraints</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2 font-mono">id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">PRIMARY KEY</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">tryout_id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">REFERENCES tryouts(id) ON DELETE CASCADE</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">nomor_soal</td>
+                    <td class="p-2 font-mono">INTEGER</td>
+                    <td class="p-2">NOT NULL</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">tipe</td>
+                    <td class="p-2 font-mono">VARCHAR(20)</td>
+                    <td class="p-2">CHECK tipe IN ('pilihan_ganda','essay')</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">pertanyaan</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">NOT NULL</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">pertanyaan_html</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">-</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">gambar_url</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">-</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">gambar_base64</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">-</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">equation_latex</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">Formula matematika LaTeX</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">panduan_essay</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">Rubrik panduan penilaian essay</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">bobot</td>
+                    <td class="p-2 font-mono">INTEGER</td>
+                    <td class="p-2">DEFAULT 1</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
+              <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel: opsi_jawaban</h4>
+              <table class="w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
+                    <th class="p-2">Field</th>
+                    <th class="p-2">Tipe</th>
+                    <th class="p-2">Constraints</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="p-2 font-mono">id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">PRIMARY KEY</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">soal_id</td>
+                    <td class="p-2 font-mono">UUID</td>
+                    <td class="p-2">REFERENCES soal(id) ON DELETE CASCADE</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">huruf</td>
+                    <td class="p-2 font-mono">CHAR(1)</td>
+                    <td class="p-2">NOT NULL (A, B, C, D, E)</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">teks</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">NOT NULL</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">teks_html</td>
+                    <td class="p-2 font-mono">TEXT</td>
+                    <td class="p-2">-</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 font-mono">is_benar</td>
+                    <td class="p-2 font-mono">BOOLEAN</td>
+                    <td class="p-2">DEFAULT false</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- sesi_tryout, jawaban, hasil -->
+          <div class="space-y-4">
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">Tabel Ujian CBT &amp; Penilaian:
+              sesi_tryout, jawaban, hasil</h4>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 text-[11px]">
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+                <h5 class="font-bold text-slate-900 font-mono">Tabel: sesi_tryout</h5>
+                <p class="text-[10px] text-slate-500">Mencatat session pengerjaan tryout siswa.</p>
+                <ul class="space-y-1 font-mono text-slate-600">
+                  <li><strong>id</strong>: UUID (PK)</li>
+                  <li><strong>siswa_id</strong>: UUID (NOT NULL)</li>
+                  <li><strong>tryout_id</strong>: UUID (NOT NULL)</li>
+                  <li><strong>mulai_at</strong>: TIMESTAMPTZ (NOW())</li>
+                  <li><strong>selesai_at</strong>: TIMESTAMPTZ (NULL)</li>
+                  <li><strong>status</strong>: VARCHAR(20) ('berlangsung', 'selesai', 'timeout')</li>
+                  <li><strong>question_order</strong>: UUID[] (Urutan soal yang diacak)</li>
+                  <li><strong>option_order</strong>: JSONB (Pola acak opsi jawaban)</li>
+                  <li><em>Constraint</em>: UNIQUE(siswa_id, tryout_id)</li>
+                </ul>
+              </div>
+
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+                <h5 class="font-bold text-slate-900 font-mono">Tabel: jawaban</h5>
+                <p class="text-[10px] text-slate-500">Auto-save jawaban per butir soal.</p>
+                <ul class="space-y-1 font-mono text-slate-600">
+                  <li><strong>id</strong>: UUID (PK)</li>
+                  <li><strong>sesi_id</strong>: UUID (REFERENCES sesi_tryout)</li>
+                  <li><strong>soal_id</strong>: UUID (NOT NULL)</li>
+                  <li><strong>jawaban_teks</strong>: TEXT (Jawaban essay)</li>
+                  <li><strong>opsi_id</strong>: UUID (Opsi terpilih PG)</li>
+                  <li><strong>created_at</strong>: TIMESTAMPTZ</li>
+                  <li><strong>updated_at</strong>: TIMESTAMPTZ</li>
+                  <li><em>Constraint</em>: UNIQUE(sesi_id, soal_id)</li>
+                </ul>
+              </div>
+
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+                <h5 class="font-bold text-slate-900 font-mono">Tabel: hasil</h5>
+                <p class="text-[10px] text-slate-500">Skor rekapitulasi nilai akhir ujian.</p>
+                <ul class="space-y-1 font-mono text-slate-600">
+                  <li><strong>id</strong>: UUID (PK)</li>
+                  <li><strong>sesi_id</strong>: UUID (UNIQUE, REFERENCES)</li>
+                  <li><strong>siswa_id</strong>: UUID (NOT NULL)</li>
+                  <li><strong>tryout_id</strong>: UUID (NOT NULL)</li>
+                  <li><strong>total_benar</strong>: INTEGER</li>
+                  <li><strong>total_soal</strong>: INTEGER</li>
+                  <li><strong>nilai</strong>: NUMERIC(5,2)</li>
+                  <li><strong>dihitung_at</strong>: TIMESTAMPTZ</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: API ==================== -->
+      <section id="tab-api" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Referensi</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">API Gateway Endpoints</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Semua permintaan luar client harus dikirim melalui port **API Gateway (4000)**. Gateway melakukan routing
+            proxy internal dan verifikasi session cookie `triton.sid`.
+          </p>
+        </div>
+
+        <div id="api-list" class="space-y-4">
+          <!-- API Endpoint 1 -->
+          <div id="api-login-card" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button onclick="toggleEndpoint('api-login')"
+              class="w-full flex items-center justify-between p-4 text-left endpoint-btn transition-colors">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-[10px] font-bold px-2.5 py-1 rounded bg-blue-600 text-white font-mono uppercase">POST</span>
+                <span class="text-xs font-mono font-bold text-slate-900">/auth/login</span>
+                <span class="text-xs text-slate-500 border-l border-slate-200 pl-3">Autentikasi akun pengguna &amp;
+                  pembuatan session cookie</span>
+              </div>
+              <span class="text-xs text-blue-500 hover:text-blue-700 shrink-0 font-semibold">Lihat Spek ➔</span>
+            </button>
+            <div id="api-login" class="hidden border-t border-slate-100 bg-slate-50/50 p-6 space-y-4 text-xs">
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Request Body (JSON)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "email": "siswa@triton.id",
+  "password": "password123"
+}</code></pre>
+              </div>
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Response 200 (Success - Cookie Ditetapkan)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "success": true,
+  "message": "Login berhasil",
+  "user": {
+    "id": "180bdfb5-12cf-4b77-83eb-69c5e3157e10",
+    "email": "siswa@triton.id",
+    "role": "siswa"
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Endpoint 2 -->
+          <div id="api-get-me-card" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button onclick="toggleEndpoint('api-get-me')"
+              class="w-full flex items-center justify-between p-4 text-left endpoint-btn transition-colors">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-[10px] font-bold px-2.5 py-1 rounded bg-green-600 text-white font-mono uppercase">GET</span>
+                <span class="text-xs font-mono font-bold text-slate-900">/auth/me</span>
+                <span class="text-xs text-slate-500 border-l border-slate-200 pl-3">Mengambil profil akun yang sedang
+                  login</span>
+              </div>
+              <span class="text-xs text-blue-500 hover:text-blue-700 shrink-0 font-semibold">Lihat Spek ➔</span>
+            </button>
+            <div id="api-get-me" class="hidden border-t border-slate-100 bg-slate-50/50 p-6 space-y-4 text-xs">
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Response 200 (Success)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "success": true,
+  "user": {
+    "id": "180bdfb5-12cf-4b77-83eb-69c5e3157e10",
+    "email": "siswa@triton.id",
+    "role": "siswa",
+    "profile": {
+      "nama_lengkap": "Siswa Budi Utomo",
+      "kelas": "VI-A",
+      "education_level": "SD"
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Endpoint 3 -->
+          <div id="api-create-user-card" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button onclick="toggleEndpoint('api-create-user')"
+              class="w-full flex items-center justify-between p-4 text-left endpoint-btn transition-colors">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-[10px] font-bold px-2.5 py-1 rounded bg-blue-600 text-white font-mono uppercase">POST</span>
+                <span class="text-xs font-mono font-bold text-slate-900">/users</span>
+                <span class="text-xs text-slate-500 border-l border-slate-200 pl-3">Registrasi user &amp; profil baru
+                  (Admin only)</span>
+              </div>
+              <span class="text-xs text-blue-500 hover:text-blue-700 shrink-0 font-semibold">Lihat Spek ➔</span>
+            </button>
+            <div id="api-create-user" class="hidden border-t border-slate-100 bg-slate-50/50 p-6 space-y-4 text-xs">
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Request Body (JSON)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "email": "guru.baru@triton.id",
+  "password": "securedpassword1",
+  "role": "guru",
+  "nama_lengkap": "Guru Matematika Baru",
+  "no_telepon": "081234567890",
+  "mata_pelajaran": "Matematika",
+  "education_level": "SMA"
+}</code></pre>
+              </div>
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Response 201 (Created)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "success": true,
+  "data": {
+    "user_id": "22ffef9c-ea0e-436f-8a03-75b25ad362c9",
+    "email": "guru.baru@triton.id",
+    "role": "guru"
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Endpoint 4 -->
+          <div id="api-create-sesi-card" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button onclick="toggleEndpoint('api-create-sesi')"
+              class="w-full flex items-center justify-between p-4 text-left endpoint-btn transition-colors">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-[10px] font-bold px-2.5 py-1 rounded bg-blue-600 text-white font-mono uppercase">POST</span>
+                <span class="text-xs font-mono font-bold text-slate-900">/{sd|smp|sma}/sesi</span>
+                <span class="text-xs text-slate-500 border-l border-slate-200 pl-3">Inisialisasi / Lanjutkan sesi ujian
+                  tryout (Siswa only)</span>
+              </div>
+              <span class="text-xs text-blue-500 hover:text-blue-700 shrink-0 font-semibold">Lihat Spek ➔</span>
+            </button>
+            <div id="api-create-sesi" class="hidden border-t border-slate-100 bg-slate-50/50 p-6 space-y-4 text-xs">
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Request Body (JSON)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "tryout_id": "f514b8a2-2cf1-45a7-bc1a-6df26ba9b512"
+}</code></pre>
+              </div>
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Response 201 (Created / Resumed)</h5>
+                <p class="text-[11px] text-slate-500 leading-relaxed">Response mengembalikan tata letak soal teracak
+                  (`question_order`) dan detail acak pilihan (`option_order`) yang aman tersimpan di session database:
+                </p>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "success": true,
+  "session": {
+    "id": "eef7c02b-a8cf-48f5-9be3-c28fa48bb514",
+    "siswa_id": "180bdfb5-12cf-4b77-83eb-69c5e3157e10",
+    "tryout_id": "f514b8a2-2cf1-45a7-bc1a-6df26ba9b512",
+    "status": "berlangsung",
+    "question_order": [
+      "soal-uuid-3",
+      "soal-uuid-1",
+      "soal-uuid-2"
+    ],
+    "option_order": {
+      "soal-uuid-1": ["C", "B", "A", "D"],
+      "soal-uuid-2": ["D", "A", "C", "B"]
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Endpoint 5 -->
+          <div id="api-save-jawab-card" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button onclick="toggleEndpoint('api-save-jawab')"
+              class="w-full flex items-center justify-between p-4 text-left endpoint-btn transition-colors">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class="text-[10px] font-bold px-2.5 py-1 rounded bg-blue-600 text-white font-mono uppercase">POST</span>
+                <span class="text-xs font-mono font-bold text-slate-900">/{sd|smp|sma}/sesi/:sesiId/jawab</span>
+                <span class="text-xs text-slate-500 border-l border-slate-200 pl-3">Auto-save jawaban butir ujian siswa
+                  (Siswa only)</span>
+              </div>
+              <span class="text-xs text-blue-500 hover:text-blue-700 shrink-0 font-semibold">Lihat Spek ➔</span>
+            </button>
+            <div id="api-save-jawab" class="hidden border-t border-slate-100 bg-slate-50/50 p-6 space-y-4 text-xs">
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Request Body (JSON)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">// Untuk Pilihan Ganda (PG)
+{
+  "soal_id": "soal-uuid-1",
+  "opsi_id": "opsi-uuid-c"
+}
+
+// Untuk Essay
+{
+  "soal_id": "soal-uuid-2",
+  "jawaban_teks": "Ini adalah uraian jawaban yang ditik siswa."
+}</code></pre>
+              </div>
+              <div>
+                <h5 class="font-bold text-slate-900 mb-1">Response 200 (Saved)</h5>
+                <pre class="bg-slate-900 p-3 rounded-lg"><code class="language-json">{
+  "success": true,
+  "message": "Jawaban berhasil disimpan otomatis"
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: MAINTENANCE ==================== -->
+      <section id="tab-maintenance" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Lanjutan</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Pemeliharaan &amp; Debugging</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Panduan praktis bagi tim operasional dan DevOps untuk memonitor log kesehatan aplikasi, membersihkan
+            resource, serta mengatasi kendala runtime.
+          </p>
+        </div>
+
+        <!-- CLI Logs Management -->
+        <div id="logs-mgmt" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 1. Manajemen Logging &amp; Monitoring
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Platform mengarahkan log runtime output ke folder `/logs` lokal. Gunakan Makefile command untuk tailing log:
+          </p>
+          <div class="space-y-3 font-mono text-xs">
+            <div class="bg-slate-900 p-4 rounded-xl text-slate-300 space-y-2">
+              <p class="text-slate-500"># Memantau log gabungan semua microservices secara real-time</p>
+              <p class="font-bold text-white">make logs</p>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl text-slate-300 space-y-2">
+              <p class="text-slate-500"># Hanya memantau log yang memicu error / crash</p>
+              <p class="font-bold text-white">make logs-error</p>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl text-slate-300 space-y-2">
+              <p class="text-slate-500"># Menghapus seluruh file logs lokal yang menumpuk</p>
+              <p class="font-bold text-white">make logs-clean</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Port Lockups Troubleshooting -->
+        <div id="port-conflict" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 2. Pembebasan Port yang Terkunci (Port Conflicts)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Jika Anda mengalami kendala kegagalan bind port (EADDRINUSE) saat menjalankan `make dev`, temukan proses PID
+            yang mengunci port dan paksa hentikan:
+          </p>
+          <pre class="bg-slate-900 p-4 rounded-xl text-xs text-slate-300 font-mono"><span class="text-slate-500"># Cari PID yang menempati port API Gateway (4000)</span>
+lsof -i :4000
+
+<span class="text-slate-500"># Contoh output:</span>
+COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node     9876  user   22u  IPv6  0x1a2      0t0  TCP *:4000 (LISTEN)
+
+<span class="text-slate-500"># Hentikan proses secara paksa menggunakan PID tersebut</span>
+kill -9 9876</pre>
+        </div>
+
+        <!-- Custom DOCX Template Upload Syntax -->
+        <div id="docx-syntax" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 3. Aturan Syntax Upload Soal Word (.docx)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Format template dokumen harus terstruktur rapi agar dapat diproses oleh parser. Berikut adalah spesifikasi
+            teks dokumen Word:
+          </p>
+          <div class="bg-slate-900 p-5 rounded-2xl font-mono text-xs text-slate-300 leading-relaxed">
+            <span class="text-slate-500">// === Contoh Soal Pilihan Ganda dengan LaTeX ===</span><br />
+            [SOAL]<br />
+            Tipe: pilihan_ganda<br />
+            Bobot: 3<br />
+            Pertanyaan: Jika nilai dari fungsi kuadrat adalah $$f(x) = x^2 - 4x + 4$$, berapakah nilai $$f(2)$$?<br />
+            A. -1<br />
+            *B. 0<br />
+            C. 1<br />
+            D. 2<br />
+            E. 4<br />
+            <br />
+            <span class="text-slate-500">// === Contoh Soal Uraian (Essay) dengan Gambar ===</span><br />
+            [SOAL]<br />
+            Tipe: essay<br />
+            Bobot: 5<br />
+            Pertanyaan: Tuliskan kesimpulan mekanisme peredaran darah berdasarkan ilustrasi berikut!<br />
+            [IMAGE_1]<br />
+            Rubrik: Jawaban benar harus mencakup aliran darah besar (3 point) dan kecil (2 point).
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: CLOUD ==================== -->
+      <section id="tab-cloud" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Docs / Deployment</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Panduan Deployment Cloud</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Panduan lengkap langkah demi langkah untuk melakukan deploy platform Triton ke lingkungan produksi awan
+            (Supabase, Vercel, &amp; Hosting Microservices).
+          </p>
+        </div>
+
+        <!-- Step A: Supabase -->
+        <div id="deploy-db" class="border-l-4 border-emerald-500 pl-4 space-y-3">
+          <h4 class="font-bold text-slate-900 text-sm">Langkah A: Penyediaan Database PostgreSQL Central di Supabase
+          </h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            1. Buat satu project database utama di konsol admin Supabase.<br />
+            2. Karena Triton menggunakan 5 database terpisah untuk arsitektur mikro, Anda perlu membuat 5 skema/database
+            berbeda di Supabase atau menyewa 5 instance project kecil terpisah. Jika menyewa 5 instance terpisah, ambil
+            masing-masing connection URI string PostgreSQL.<br />
+            3. Jalankan skema migrasi tabel SQL. Masuk ke panel **SQL Editor** pada masing-masing instance Supabase,
+            lalu salin dan jalankan isi file `schema.sql` dari folder masing-masing service:
+          </p>
+          <div class="bg-slate-900 p-3 rounded-lg text-[10px] font-mono text-slate-300">
+            - Jalankan services/auth-service/src/db/schema.sql pada DB Auth<br />
+            - Jalankan services/user-service/src/db/schema.sql pada DB User<br />
+            - Jalankan sd/smp/sma-service schemas pada DB SD, SMP, SMA masing-masing.
+          </div>
+        </div>
+
+        <!-- Step B: Vercel -->
+        <div id="deploy-frontend" class="border-l-4 border-indigo-500 pl-4 space-y-3 pt-2">
+          <h4 class="font-bold text-slate-900 text-sm">Langkah B: Deployment Frontend Client di Vercel</h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            1. Hubungkan akun GitHub repositori Triton Anda ke layanan Vercel.<br />
+            2. Pada konfigurasi project Vercel:
+          </p>
+          <ul class="list-disc pl-5 text-xs text-slate-500 space-y-1">
+            <li>Atur **Root Directory** ke folder `frontend`.</li>
+            <li>Atur **Build Command** ke `npm run build`.</li>
+            <li>Atur **Output Directory** ke `.next`.</li>
+          </ul>
+          <p class="text-xs text-slate-500">
+            3. Masukkan Environment Variables produksi pada dashboard setting Vercel:
+          </p>
+          <pre
+            class="bg-slate-900 p-3 rounded-lg text-[10px] font-mono text-slate-300">NEXT_PUBLIC_API_URL=https://gateway.tritondenpasar.com  # URL endpoint API Gateway produksi</pre>
+        </div>
+
+        <!-- Step C: Microservices Deployment -->
+        <div id="deploy-backend" class="border-l-4 border-blue-500 pl-4 space-y-3 pt-2">
+          <h4 class="font-bold text-slate-900 text-sm">Langkah C: Hosting Backend Microservices (Railway / Render / VPS)
+          </h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            1. Deploy 6 web service backend (Gateway, Auth, User, SD, SMP, SMA) secara terpisah di platform cloud
+            pilihan Anda (misal Railway atau Render).<br />
+            2. Konfigurasikan variabel lingkungan produksi pada masing-masing web service:
+          </p>
+          <pre class="bg-slate-900 p-3 rounded-lg text-[10px] font-mono text-slate-300"># Contoh Variabel Lingkungan Produksi untuk Service Level (contoh: sd-service)
+POSTGRES_HOST=aws-0-ap-southeast-3.pooler.supabase.com
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres.your_project_id
+POSTGRES_PASSWORD=your_secure_supabase_password
+POSTGRES_DB=db_sd
+USER_SERVICE_URL=https://user-service-production.up.railway.app
+PORT=4005</pre>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            3. Pada `api-gateway` produksi, pastikan seluruh variabel URL rute service mengarah ke domain production url
+            masing-masing backend service yang sudah menyala.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer
+    class="bg-slate-900 border-t border-slate-800 px-6 py-5 flex items-center justify-between text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <img src="./logo.png" alt="Triton" class="h-5 object-contain bg-white rounded p-0.5" />
+      <span>&copy; 2026 Developer Portal. All rights reserved.</span>
+    </div>
+    <p>Triton Denpasar</p>
+  </footer>
+
+  <!-- Code Copying & Dynamic Scroll Tracking JS -->
+  <script>
+    // Tab switching logic
+    function switchTab(tabId) {
+      // Hide all tabs
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => {
+        tab.classList.add('hidden');
+      });
+
+      // Show target tab
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Update button highlights
+      const navButtons = document.querySelectorAll('#sidebar-nav button');
+      navButtons.forEach(btn => {
+        btn.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent";
+        const checkSpan = btn.querySelector('.nav-check');
+        if (checkSpan && checkSpan.textContent !== "✓") {
+          checkSpan.textContent = "○";
+          checkSpan.className = "nav-check text-[10px] text-slate-600";
+        }
+      });
+
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-blue-400 bg-slate-900/80 border border-slate-800";
+        const checkSpan = activeBtn.querySelector('.nav-check');
+        if (checkSpan) {
+          checkSpan.textContent = "✓";
+          checkSpan.className = "nav-check text-[10px] text-blue-500 font-bold";
+        }
+      }
+
+      // Update progress bar
+      updateProgress();
+    }
+
+    // Anchor navigation helper
+    function navigateToAnchor(tabId, anchorId) {
+      // First switch tab
+      switchTab(tabId);
+
+      // If the target is an API card, expand it
+      if (anchorId.endsWith('-card')) {
+        const detailId = anchorId.replace('-card', '');
+        const details = document.getElementById(detailId);
+        if (details && details.classList.contains('hidden')) {
+          details.classList.remove('hidden');
+        }
+      }
+
+      // Then scroll to element
+      setTimeout(() => {
+        const element = document.getElementById(anchorId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+
+    // Toggle API endpoint specs accordion
+    function toggleEndpoint(endpointId) {
+      const container = document.getElementById(endpointId);
+      if (container) {
+        container.classList.toggle('hidden');
+      }
+    }
+
+    // Reading progress calculation based on visited tabs
+    function updateProgress() {
+      const buttons = document.querySelectorAll('#sidebar-nav button');
+      let checked = 0;
+      buttons.forEach(btn => {
+        const checkSpan = btn.querySelector('.nav-check');
+        if (checkSpan && checkSpan.textContent === "✓") {
+          checked++;
+        }
+      });
+      const percent = Math.round((checked / buttons.length) * 100);
+      document.getElementById('progress-text').textContent = percent + '%';
+      document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    // Copy block code to clipboard
+    function copyCode(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Kode disalin ke clipboard!");
+      }).catch(err => {
+        console.error("Gagal menyalin kode: ", err);
+      });
+    }
+
+    // Copy plain text to clipboard
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Salin berhasil: " + text);
+      }).catch(err => {
+        console.error("Gagal menyalin: ", err);
+      });
+    }
+
+    // Init progress on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Mark first tab as checked on initial render
+      const firstBtn = document.getElementById('btn-tab-overview');
+      if (firstBtn) {
+        const checkSpan = firstBtn.querySelector('.nav-check');
+        if (checkSpan) {
+          checkSpan.textContent = "✓";
+          checkSpan.className = "nav-check text-[10px] text-blue-500 font-bold";
+        }
+      }
+      // Initialize highlight.js
+      hljs.highlightAll();
+      updateProgress();
+    });
+  </script>
 </body>
+
 </html>

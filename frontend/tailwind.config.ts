@@ -11,6 +11,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ─── Brand palette (Triton Denpasar) — mirrors :root vars ───
+        'primary-blue': '#0309FF',
+        'primary-red': '#FF0303',
+        'navy-dark': '#050A30',
+        'soft-blue': '#E8EAFF',
+        'soft-red': '#FFE7E7',
+        'gray-light': '#F5F7FA',
         triton: {
           blue: {
             50:  '#EFF6FF',
@@ -38,6 +45,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'sans-serif'],
+        inter: ['var(--font-inter)', 'Inter', 'sans-serif'],
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
@@ -47,9 +55,12 @@ const config: Config = {
       animation: {
         'blob': 'blob 7s infinite',
         'float': 'float 6s ease-in-out infinite',
+        'float-slow': 'float 8s ease-in-out infinite',
         'fade-in': 'fadeIn 0.2s ease-out',
         'fade-in-up': 'fadeInUp 0.3s ease-out',
         'slide-in-left': 'slideInLeft 0.3s ease-out',
+        'shimmer': 'shimmer 2.5s linear infinite',
+        'gradient-shift': 'gradientShift 8s ease infinite',
       },
       keyframes: {
         blob: {
@@ -73,6 +84,16 @@ const config: Config = {
         slideInLeft: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(0)' },
+        },
+        // Shimmer sweep across the hero badge pill.
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        // Slow looping gradient drift for the CTA banner background.
+        gradientShift: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
         },
       }
     },

@@ -89,32 +89,34 @@ export default function HasilPage() {
         <ArrowLeft size={14} /> Kembali ke Tryout
       </Link>
 
-      {/* ─── Hero ─── */}
-      <div className="relative bg-gradient-to-br from-triton-blue-600 to-triton-blue-800 rounded-2xl p-8 md:p-10 text-center text-white overflow-hidden shadow-xl">
-        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+      {/* ─── Hero (high-contrast: slate text + solid white score card) ─── */}
+      <div className="relative bg-gradient-to-br from-blue-50 via-white to-slate-50 border border-slate-100 rounded-2xl p-6 md:p-8 text-center overflow-hidden shadow-sm">
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-blue-100/40 pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-slate-100/60 pointer-events-none" />
 
         <div className="relative">
-          <grade.Icon size={80} className={`mx-auto ${grade.iconClass}`} />
+          <grade.Icon size={72} className={`mx-auto ${grade.iconClass}`} />
 
-          <h1 className="text-2xl md:text-3xl font-black mt-4">Tryout Selesai!</h1>
+          <h1 className="text-2xl md:text-3xl font-black mt-3 text-slate-900">Tryout Selesai!</h1>
           {data.tryout && (
-            <p className="text-triton-blue-200 text-base md:text-lg mt-1">{data.tryout.nama_tryout}</p>
+            <p className="text-slate-500 text-base md:text-lg mt-1">{data.tryout.nama_tryout}</p>
           )}
 
-          <div className="mt-7 flex items-baseline justify-center gap-1">
-            <span className="text-7xl md:text-8xl font-black leading-none tabular-nums">{animatedScore}</span>
-            <span className="text-xl md:text-2xl text-triton-blue-300 font-bold">/100</span>
+          {/* Solid high-contrast score container */}
+          <div className="mt-6 inline-flex flex-col items-center bg-white/95 backdrop-blur-sm shadow-lg border border-slate-100 rounded-2xl px-8 md:px-12 py-6 text-slate-900">
+            <div className="flex items-baseline gap-1">
+              <span className="text-6xl md:text-7xl font-black leading-none tabular-nums text-slate-900">{animatedScore}</span>
+              <span className="text-xl md:text-2xl text-slate-400 font-bold">/100</span>
+            </div>
+            <span className={`mt-3 inline-block rounded-full px-5 py-1.5 font-bold text-sm md:text-base ${grade.badge}`}>
+              {grade.label}
+            </span>
           </div>
 
-          <span className={`mt-5 inline-block rounded-full px-6 py-2 font-bold text-sm md:text-base ${grade.badge}`}>
-            {grade.label}
-          </span>
-
-          <div className="mt-8 grid grid-cols-3 divide-x divide-white/15 max-w-md mx-auto">
-            <Stat label="Benar"  value={benar}  color="text-green-300" Icon={CheckCircle2} />
-            <Stat label="Salah"  value={salah}  color="text-red-300"   Icon={XCircle} />
-            <Stat label="Kosong" value={skipCount} color="text-slate-300" Icon={MinusCircle} />
+          <div className="mt-7 grid grid-cols-3 divide-x divide-slate-200 max-w-md mx-auto">
+            <Stat label="Benar"  value={benar}     color="text-green-600" Icon={CheckCircle2} />
+            <Stat label="Salah"  value={salah}     color="text-red-600"   Icon={XCircle} />
+            <Stat label="Kosong" value={skipCount} color="text-slate-500" Icon={MinusCircle} />
           </div>
         </div>
       </div>
@@ -157,7 +159,7 @@ function Stat({ label, value, color, Icon }: { label: string; value: number; col
     <div className="px-3">
       <Icon size={18} className={`mx-auto mb-1 ${color}`} />
       <p className={`text-2xl font-black ${color}`}>{value}</p>
-      <p className="text-xs text-triton-blue-200 mt-0.5">{label}</p>
+      <p className="text-xs text-slate-500 mt-0.5">{label}</p>
     </div>
   )
 }
@@ -223,7 +225,10 @@ function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
         <div className="bg-slate-50 rounded-xl p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Jawaban Anda</p>
           {item.student_answer?.jawaban_teks ? (
-            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{item.student_answer.jawaban_teks}</p>
+            <RenderHTML
+              html={item.student_answer.jawaban_teks}
+              className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"
+            />
           ) : (
             <p className="text-sm italic text-slate-400">(tidak ada jawaban)</p>
           )}
@@ -241,31 +246,31 @@ function computeGrade(nilai: number) {
   if (nilai >= 90) {
     return {
       Icon: Trophy,
-      iconClass: 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]',
-      badge: 'bg-green-400 text-white',
+      iconClass: 'text-amber-500',
+      badge: 'bg-green-600 text-white',
       label: 'Sangat Baik — A',
     }
   }
   if (nilai >= 75) {
     return {
       Icon: Star,
-      iconClass: 'text-yellow-300',
-      badge: 'bg-triton-blue-400 text-white',
+      iconClass: 'text-blue-500',
+      badge: 'bg-blue-600 text-white',
       label: 'Baik — B',
     }
   }
   if (nilai >= 60) {
     return {
       Icon: BookOpen,
-      iconClass: 'text-triton-blue-200',
-      badge: 'bg-yellow-400 text-slate-900',
+      iconClass: 'text-amber-500',
+      badge: 'bg-amber-500 text-white',
       label: 'Cukup — C',
     }
   }
   return {
     Icon: TrendingUp,
-    iconClass: 'text-triton-blue-300',
-    badge: 'bg-red-400 text-white',
+    iconClass: 'text-red-500',
+    badge: 'bg-red-600 text-white',
     label: 'Perlu Peningkatan — D',
   }
 }

@@ -1,46 +1,46 @@
-# 🎓 Triton Denpasar — Platform Tryout Online
+# 🎓 Triton Denpasar — Platform Tryout Online (CBT)
 
-Platform tryout online terintegrasi untuk **Triton Denpasar**.  
-Dibangun dengan arsitektur **Microservices** — Next.js 14 di frontend, Express.js di backend, PostgreSQL + Redis untuk data.
+Platform tryout ujian online (Computer Based Test) terintegrasi yang dirancang khusus untuk **Triton Denpasar**.  
+Dibangun dengan arsitektur **Microservices** — Next.js 14 di frontend client, Node/Express.js di backend API, PostgreSQL untuk penyimpanan data terisolasi, dan Redis untuk session caching.
 
 ---
 
 ## 📋 Daftar Isi
 
-1. [Prerequisites](#-prerequisites)
+1. [Prerequisites / Prasyarat](#-prerequisites)
 2. [Struktur Proyek](#-struktur-proyek)
-3. [Port Map](#-port-map)
-4. [Setup dari Nol](#-setup-dari-nol)
+3. [Pemetaan Port (Port Map)](#-pemetaan-port)
+4. [Panduan Setup dari Nol](#-setup-dari-nol)
    - [1. Clone Repository](#1-clone-repository)
    - [2. Setup File .env](#2-setup-file-env)
-   - [3. Jalankan Docker](#3-jalankan-docker-postgresql--redis)
-   - [4. Buat 4 Database](#4-buat-4-database)
-   - [5. Jalankan Schema Migration](#5-jalankan-schema-migration)
+   - [3. Jalankan Docker Compose](#3-jalankan-docker-postgresql--redis)
+   - [4. Membuat 5 Database](#4-membuat-5-database)
+   - [5. Menginisialisasi Skema Tabel (Migration)](#5-menginisialisasi-skema-tabel-migration)
    - [6. Install Dependencies](#6-install-dependencies)
    - [7. Seed Data Awal](#7-seed-data-awal)
-   - [8. Jalankan Backend](#8-jalankan-backend-services)
-   - [9. Jalankan Frontend](#9-jalankan-frontend)
-   - [10. Verifikasi](#10-verifikasi)
-5. [Akun Default](#-akun-default)
+   - [8. Jalankan Backend Services](#8-jalankan-backend-services)
+   - [9. Jalankan Frontend Client](#9-jalankan-frontend-client)
+   - [10. Verifikasi Kesehatan Layanan](#10-verifikasi-kesehatan-layanan)
+5. [Daftar Akun Default](#-akun-default)
 6. [Referensi Perintah Make](#-referensi-perintah-make)
-7. [Troubleshooting](#-troubleshooting)
-8. [Cara Stop Semua Service](#-cara-stop-semua-service)
+7. [Troubleshooting & Pemecahan Masalah](#-troubleshooting)
+8. [Menghentikan Layanan (Stop Services)](#-cara-stop-semua-service)
 
 ---
 
 ## ✅ Prerequisites
 
-Pastikan semua tools berikut sudah terinstall sebelum mulai:
+Pastikan perkakas berikut telah terinstal sebelum Anda memulai setup:
 
-| Tool | Versi Minimum | Cek Versi | Install |
+| Tool | Versi Minimum | Cek Versi | Unduh / Instalasi |
 |------|--------------|-----------|---------|
 | **Node.js** | 18.x | `node -v` | [nodejs.org](https://nodejs.org) |
-| **npm** | 9.x | `npm -v` | Ikut Node.js |
+| **npm** | 9.x | `npm -v` | Terinstal otomatis bersama Node.js |
 | **Docker** | 20.x | `docker -v` | [docker.com](https://www.docker.com/get-started) |
-| **Docker Compose** | 2.x | `docker compose version` | Sudah bundled dengan Docker Desktop |
-| **Make** | any | `make -v` | macOS: sudah ada / Linux: `sudo apt install make` |
+| **Docker Compose** | 2.x | `docker compose version` | Bundled dalam Docker Desktop |
+| **Make** | any | `make -v` | macOS: CLI Tools / Linux: `sudo apt install make` |
 
-> **Windows?** Gunakan **WSL 2** (Windows Subsystem for Linux). Jalankan semua perintah di dalam WSL terminal, bukan Command Prompt atau PowerShell biasa.
+> **Windows?** Kami sangat merekomendasikan penggunaan **WSL 2** (Windows Subsystem for Linux) untuk kompatibilitas script bash dan perintah `Makefile` yang optimal.
 
 ---
 
@@ -48,487 +48,179 @@ Pastikan semua tools berikut sudah terinstall sebelum mulai:
 
 ```
 tritonapp/
-├── frontend/                   # Next.js 14 App Router (port 3000)
-│   ├── src/app/                # Halaman dan layout
-│   ├── src/components/         # Komponen UI
-│   └── public/                 # Aset statis (logo.png, dll)
+├── frontend/                   # Client Next.js 14 App Router (port 3000)
+│   ├── src/app/                # Halaman, routing, dan global layouts
+│   ├── src/components/         # Reusable UI components (shadcn/tailwind)
+│   └── public/                 # Aset statis & logo.png (logo triton)
 │
 ├── services/
-│   ├── api-gateway/            # Reverse proxy & auth middleware (port 4000)
-│   ├── auth-service/           # Login, logout, session (port 4001)
-│   ├── user-service/           # Manajemen user & profil (port 4002)
-│   ├── soal-service/           # Tryout & soal (port 4003)
-│   └── jawaban-service/        # Jawaban, sesi ujian, scoring (port 4004)
+│   ├── api-gateway/            # Reverse proxy port 4000 & middleware session
+│   ├── auth-service/           # Manajemen login & express-session (port 4001)
+│   ├── user-service/           # Manajemen profil pengguna & audit log (port 4002)
+│   ├── sd-service/             # Bank Soal, CBT runner, scoring SD (port 4005)
+│   ├── smp-service/            # Bank Soal, CBT runner, scoring SMP (port 4006)
+│   └── sma-service/            # Bank Soal, CBT runner, scoring SMA (port 4007)
 │
 ├── scripts/
-│   ├── seed.ts                 # Script untuk isi data awal
-│   ├── dev.sh                  # Script jalankan semua service (dev)
-│   ├── start.sh                # Script jalankan production build
-│   └── stop.sh                 # Script hentikan semua service
+│   ├── seed.ts                 # Script pengisi master data & default users
+│   ├── dev.sh                  # Start dev script dengan ts-node-dev
+│   ├── start.sh                # Start production build script
+│   └── stop.sh                 # Stop script untuk membersihkan background process
 │
-├── logs/                       # Log output per service (auto-generated)
-├── .env                        # Environment variables (WAJIB ada)
-├── docker-compose.yml          # Konfigurasi PostgreSQL + Redis
-├── Makefile                    # Semua perintah make
+├── logs/                       # File logs keluaran stdout per service (auto-generated)
+├── .env                        # Variabel environment (WAJIB ada)
+├── docker-compose.yml          # Container PostgreSQL & Redis local development
+├── Makefile                    # Automasi command-line pipeline pengembang
 └── README.md
 ```
 
 ---
 
-## 🔌 Port Map
+## 🔌 Pemetaan Port
 
 | Service | Port | Database | Keterangan |
 |---------|------|----------|------------|
-| Frontend | **3000** | — | Next.js dev server |
-| API Gateway | **4000** | — | Entry point semua request dari browser |
-| Auth Service | **4001** | db_auth | Login, logout, cek session |
-| User Service | **4002** | db_user | Profil pengguna, kelola user |
-| Soal Service | **4003** | db_soal | Tryout, soal, opsi jawaban |
-| Jawaban Service | **4004** | db_jawaban | Sesi ujian, jawaban, nilai |
-| PostgreSQL | **5432** | — | Database engine |
-| Redis | **6379** | — | Session store |
+| Frontend Client | **3000** | — | Server pengembang Next.js |
+| API Gateway | **4000** | — | Titik masuk utama HTTP request browser |
+| Auth Service | **4001** | `db_auth` | Autentikasi user & cache session Redis |
+| User Service | **4002** | `db_user` | Profil & logs pengguna |
+| SD Service | **4005** | `db_sd` | Manajemen tryout & CBT peserta jenjang SD |
+| SMP Service | **4006** | `db_smp` | Manajemen tryout & CBT peserta jenjang SMP |
+| SMA Service | **4007** | `db_sma` | Manajemen tryout & CBT peserta jenjang SMA |
+| PostgreSQL | **5432** | — | Relational Database Engine lokal |
+| Redis | **6379** | — | Session Caching Store |
 
 ---
 
 ## 🚀 Setup dari Nol
 
-> Ikuti langkah-langkah ini **secara berurutan**. Jangan skip.
-
----
-
 ### 1. Clone Repository
-
 ```bash
 git clone https://github.com/DodikSukma/triton-tryout-app.git
 cd triton-tryout-app
 ```
 
----
-
 ### 2. Setup File `.env`
-
-File `.env` sudah tersedia di root project. Isi defaultnya sudah cocok untuk development lokal, **tidak perlu diubah** kecuali setup kamu berbeda.
-
-Isi file `.env`:
-
-```env
-# Database
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=triton_user
-POSTGRES_PASSWORD=triton_secret_2024
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Session
-SESSION_SECRET=triton_session_super_secret_2024_change_this
-SESSION_MAX_AGE_MS=28800000
-
-# Internal service URLs
-AUTH_SERVICE_URL=http://localhost:4001
-USER_SERVICE_URL=http://localhost:4002
-SOAL_SERVICE_URL=http://localhost:4003
-JAWABAN_SERVICE_URL=http://localhost:4004
-
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:4000
-FRONTEND_URL=http://localhost:3000
+Salin template konfigurasi lokal ke root project:
+```bash
+cp .env.example .env
 ```
-
-> ⚠️ **Jangan commit file `.env` ke Git.** File ini sudah ada di `.gitignore`.
-
----
+*(Bila file `.env` sudah ada, pastikan isinya mendefinisikan port 4000-4007 dengan benar).*
 
 ### 3. Jalankan Docker (PostgreSQL + Redis)
-
-Jalankan PostgreSQL dan Redis menggunakan Docker Compose:
-
+Jalankan container database dan cache lokal:
 ```bash
 docker compose up -d postgres redis
 ```
 
-Cek apakah container sudah berjalan:
-
+### 4. Membuat 5 Database
+Buat kelima skema database PostgreSQL terpisah untuk masing-masing microservices:
 ```bash
-docker ps
+make db-create
 ```
+*(Perintah ini bersifat idempotent, aman dijalankan berkali-kali tanpa menimpa database yang sudah ada).*
 
-Kamu harus melihat dua container: `triton-postgres` dan `triton-redis`.
-
-> Kalau error **port 5432 already in use**, artinya kamu punya PostgreSQL lokal yang sedang berjalan. Hentikan dulu: `sudo systemctl stop postgresql` (Linux) atau hentikan via pgAdmin/Postgres.app (macOS).
-
----
-
-### 4. Buat 4 Database
-
-Proyek ini menggunakan **4 database terpisah** — satu per service. Jalankan perintah berikut satu per satu:
-
+### 5. Menginisialisasi Skema Tabel (Migration)
+Terapkan file SQL skema tabel untuk semua layanan:
 ```bash
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_auth;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_user;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_soal;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_jawaban;"
+make db-init
 ```
-
-Verifikasi database sudah terbuat:
-
-```bash
-docker exec -it triton-postgres psql -U triton_user -c "\l"
-```
-
-Kamu harus melihat `db_auth`, `db_user`, `db_soal`, `db_jawaban` di daftar.
-
----
-
-### 5. Jalankan Schema Migration
-
-Buat semua tabel di masing-masing database dengan menjalankan file SQL schema:
-
-```bash
-docker exec -i triton-postgres psql -U triton_user -d db_auth    < services/auth-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_user    < services/user-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_soal    < services/soal-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_jawaban < services/jawaban-service/src/db/schema.sql
-```
-
-> **Catatan:** Gunakan `-i` (bukan `-it`) saat meneruskan file dengan `<`.
-
-Verifikasi tabel sudah terbuat (contoh untuk db_auth):
-
-```bash
-docker exec -it triton-postgres psql -U triton_user -d db_auth -c "\dt"
-```
-
----
 
 ### 6. Install Dependencies
-
-Install semua npm dependencies untuk seluruh service sekaligus:
-
+Unduh dan pasang dependencies npm untuk semua modul proyek secara sekaligus:
 ```bash
 make install
 ```
 
-Perintah ini akan install dependencies untuk:
-- `services/auth-service`
-- `services/user-service`
-- `services/soal-service`
-- `services/jawaban-service`
-- `services/api-gateway`
-- `frontend`
-- `scripts`
-
-> Proses ini bisa memakan waktu 2–5 menit tergantung koneksi internet.
-
----
-
 ### 7. Seed Data Awal
-
-Isi database dengan akun-akun default untuk testing:
-
+Isi database dengan kelas, mapel master, dan beberapa akun dummy siap pakai:
 ```bash
 make seed
 ```
 
-Output yang diharapkan:
-
-```
-Seeding users...
-  ✓ admin@triton.id (admin)
-  ✓ guru1@triton.id (guru)
-  ✓ guru2@triton.id (guru)
-  ✓ siswa1@triton.id (siswa)
-  ✓ siswa2@triton.id (siswa)
-  ✓ siswa3@triton.id (siswa)
-  ✓ siswa4@triton.id (siswa)
-  ✓ siswa5@triton.id (siswa)
-Seeding selesai!
-```
-
-> Seed aman dijalankan berulang kali — menggunakan `ON CONFLICT DO NOTHING`, jadi tidak akan duplikat data.
-
----
-
 ### 8. Jalankan Backend Services
-
-Jalankan semua backend microservices dalam mode development (dengan hot reload):
-
+Jalankan seluruh Express.js microservices (termasuk API Gateway) di latar belakang:
 ```bash
 make dev
 ```
+Log keluaran services dapat dipantau di direktori `logs/` menggunakan perintah `make logs` atau `make logs-error`.
 
-Perintah ini menjalankan 5 service sekaligus di background:
-- Auth Service (port 4001)
-- User Service (port 4002)
-- Soal Service (port 4003)
-- Jawaban Service (port 4004)
-- API Gateway (port 4000)
-
-Log disimpan ke folder `logs/` — bukan di terminal. Untuk memantau log:
-
-```bash
-# Semua log
-make logs
-
-# Log error saja
-make logs-error
-
-# Log auth service saja
-make logs-auth
-
-# Log gateway saja
-make logs-gateway
-```
-
-Tunggu ~5 detik lalu cek apakah semua service berjalan normal:
-
-```bash
-make health
-```
-
-Output yang diharapkan:
-
-```
-🏥 Triton Health Check
-────────────────────────────────────
-  ✅  auth-service    (4001)
-  ✅  user-service    (4002)
-  ✅  soal-service    (4003)
-  ✅  jawaban-service (4004)
-  ✅  api-gateway     (4000)
-────────────────────────────────────
-  ✅  Redis (6379)
-  ✅  PostgreSQL (5432)
-────────────────────────────────────
-```
-
----
-
-### 9. Jalankan Frontend
-
-Buka **terminal baru** (jangan tutup terminal sebelumnya), lalu:
-
+### 9. Jalankan Frontend Client
+Jalankan server Next.js lokal:
 ```bash
 make frontend
 ```
+Aplikasi frontend akan tersedia di alamat browser: **http://localhost:3000**
 
-Atau bisa langsung:
-
+### 10. Verifikasi Kesehatan Layanan
+Jalankan status checking untuk memastikan seluruh koneksi database dan microservices berjalan baik:
 ```bash
-cd frontend
-npm run dev
+make health
 ```
-
-Frontend akan berjalan di: **http://localhost:3000**
-
-> Kalau port 3000 sudah dipakai, Next.js otomatis pindah ke port 3001. Perhatikan output di terminal.
-
----
-
-### 10. Verifikasi
-
-Buka browser dan akses:
-
-| URL | Keterangan |
-|-----|------------|
-| http://localhost:3000 | Aplikasi utama (halaman login) |
-| http://localhost:4000/health | Health check API Gateway |
-| http://localhost:4001/health | Health check Auth Service |
-
-Login dengan salah satu akun default di bawah — jika berhasil masuk ke dashboard, setup sudah selesai ✅
+Anda harus melihat status checklist hijau `✅` di seluruh daftar layanan.
 
 ---
 
 ## 🔐 Akun Default
 
-| Role | Email | Password | Dashboard |
+Gunakan daftar akun berikut untuk masuk ke dashboard role masing-masing:
+
+| Peran (Role) | Alamat Email | Kata Sandi (Password) | Dialihkan Ke |
 |------|-------|----------|-----------|
-| Admin | `admin@triton.id` | `admin123` | `/admin/dashboard` |
-| Guru | `guru1@triton.id` | `guru123` | `/guru/dashboard` |
-| Guru | `guru2@triton.id` | `guru123` | `/guru/dashboard` |
-| Siswa | `siswa1@triton.id` | `siswa123` | `/siswa/dashboard` |
-| Siswa | `siswa2@triton.id` | `siswa123` | `/siswa/dashboard` |
-| Siswa | `siswa3@triton.id` | `siswa123` | `/siswa/dashboard` |
-| Siswa | `siswa4@triton.id` | `siswa123` | `/siswa/dashboard` |
-| Siswa | `siswa5@triton.id` | `siswa123` | `/siswa/dashboard` |
+| **Admin** | `admin@triton.id` | `admin123` | `/admin/dashboard` |
+| **Guru** | `guru1@triton.id` | `guru123` | `/guru/dashboard` |
+| **Siswa** | `siswa1@triton.id` | `siswa123` | `/siswa/dashboard` |
 
 ---
 
 ## 📋 Referensi Perintah Make
 
-Semua perintah dijalankan dari **root folder project** (`tritonapp/`).
+Semua perintah dijalankan di root direktori proyek `tritonapp/`:
 
-| Perintah | Fungsi |
-|----------|--------|
-| `make install` | Install semua npm dependencies |
-| `make dev` | Jalankan semua backend service (hot reload) |
-| `make frontend` | Jalankan frontend Next.js |
-| `make stop` | Hentikan semua backend service |
-| `make restart` | Stop lalu start ulang semua service |
-| `make health` | Cek status semua service |
-| `make logs` | Pantau semua log (Ctrl+C untuk berhenti) |
-| `make logs-error` | Pantau log error saja |
-| `make logs-auth` | Pantau log auth-service saja |
-| `make logs-gateway` | Pantau log api-gateway saja |
-| `make logs-clean` | Hapus semua file log |
-| `make db-init` | Jalankan ulang schema migration |
-| `make seed` | Seed data pengguna default |
-| `make build` | Compile TypeScript semua service |
-| `make start` | Build + jalankan mode production |
-| `make clean` | Hapus semua folder `dist/` |
-| `make help` | Tampilkan semua perintah yang tersedia |
+| Perintah | Fungsi / Kegunaan |
+|----------|-------------------|
+| `make install` | Menginstal dependencies npm untuk semua modul &amp; frontend |
+| `make dev` | Menjalankan seluruh backend microservices dalam mode hot-reload |
+| `make frontend` | Menjalankan server pengembang Next.js |
+| `make stop` | Menghentikan paksa semua proses backend microservices |
+| `make restart` | Menghentikan lalu menjalankan kembali semua backend |
+| `make health` | Memeriksa status kesehatan koneksi semua layanan |
+| `make logs` | Memantau seluruh file log secara real-time |
+| `make logs-error` | Memantau log error saja |
+| `make logs-clean` | Menghapus semua file log di direktori logs/ |
+| `make db-create` | Membuat database PostgreSQL yang dibutuhkan di Docker |
+| `make db-init` | Menerapkan skema migrasi SQL ke seluruh database |
+| `make seed` | Melakukan seeding akun default dan master data |
+| `make build` | Men-compile TypeScript semua service backend |
+| `make start` | Build &amp; jalankan platform dalam mode production |
+| `make clean` | Menghapus folder dist/ sisa build kompilasi TypeScript |
 
 ---
 
 ## 🔧 Troubleshooting
 
-### ❌ `docker: command not found`
-Docker belum terinstall. Install dari [docker.com](https://www.docker.com/get-started), lalu pastikan Docker Desktop sudah berjalan.
-
----
+### ❌ `database "db_sd" does not exist`
+Anda belum menjalankan perintah pembuatan database di Docker. Jalankan: `make db-create`.
 
 ### ❌ `Error: connect ECONNREFUSED 127.0.0.1:5432`
-PostgreSQL belum berjalan. Jalankan:
+Layanan database PostgreSQL di Docker belum menyala. Jalankan: `docker compose up -d postgres redis`.
+
+### ❌ Port EADDRINUSE (`address already in use`)
+Ada port service (misal 4000) yang terkunci oleh sisa proses sebelumnya. Temukan PID-nya dan bunuh paksa:
 ```bash
-docker compose up -d postgres redis
-```
-Lalu cek: `docker ps` — pastikan `triton-postgres` ada di list.
-
----
-
-### ❌ `database "db_auth" does not exist`
-Kamu belum membuat database. Ulangi [Langkah 4](#4-buat-4-database).
-
----
-
-### ❌ `relation "users" does not exist`
-Schema belum dijalankan. Ulangi [Langkah 5](#5-jalankan-schema-migration).
-
----
-
-### ❌ `make: command not found`
-- **macOS:** Jalankan `xcode-select --install`
-- **Linux (Ubuntu/Debian):** `sudo apt install make`
-- **Windows:** Gunakan WSL 2, atau install [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)
-
----
-
-### ❌ Service tidak muncul di `make health`
-Tunggu ~10 detik setelah `make dev` lalu coba lagi. Kalau masih gagal, cek error log:
-```bash
-make logs-error
-```
-
----
-
-### ❌ Port sudah dipakai (`address already in use`)
-Cari proses yang memakai port tersebut (contoh port 4001):
-```bash
-lsof -i :4001
-```
-Lalu kill prosesnya:
-```bash
+lsof -i :4000
 kill -9 <PID>
 ```
-Atau hentikan semua service Triton dulu:
-```bash
-make stop
-```
-
----
-
-### ❌ `Cannot find module` atau error TypeScript saat `make dev`
-Dependencies belum terinstall sempurna. Coba:
-```bash
-make stop
-make install
-make dev
-```
-
----
-
-### ❌ Frontend tidak bisa konek ke API (`Network Error`)
-Pastikan:
-1. Backend sudah berjalan — cek `make health`
-2. File `.env` ada di root project dan isinya benar
-3. `NEXT_PUBLIC_API_URL=http://localhost:4000` ada di `.env`
-
----
-
-### ❌ Login gagal padahal akun benar
-Kemungkinan seed belum dijalankan. Cek apakah tabel users terisi:
-```bash
-docker exec -it triton-postgres psql -U triton_user -d db_auth -c "SELECT email, role FROM users;"
-```
-Kalau kosong, jalankan: `make seed`
+Atau jalankan `make stop` untuk membersihkan seluruh sisa background node process proyek ini.
 
 ---
 
 ## 🛑 Cara Stop Semua Service
 
-Untuk menghentikan semua backend service:
-
-```bash
-make stop
-```
-
-Untuk menghentikan PostgreSQL dan Redis (Docker):
-
-```bash
-docker compose down
-```
-
-Untuk menghentikan frontend: tekan `Ctrl + C` di terminal yang menjalankan `make frontend`.
+1. Hentikan frontend: Tekan `Ctrl + C` pada terminal Next.js.
+2. Hentikan backend microservices: Jalankan `make stop`.
+3. Hentikan container Docker: Jalankan `docker compose down`.
 
 ---
 
-## 📊 Ringkasan Urutan Setup (Quick Reference)
-
-```bash
-# 1. Clone
-git clone https://github.com/DodikSukma/triton-tryout-app.git
-cd triton-tryout-app
-
-# 2. Docker - jalankan database
-docker compose up -d postgres redis
-
-# 3. Buat 4 database
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_auth;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_user;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_soal;"
-docker exec -it triton-postgres psql -U triton_user -c "CREATE DATABASE db_jawaban;"
-
-# 4. Schema migration
-docker exec -i triton-postgres psql -U triton_user -d db_auth    < services/auth-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_user    < services/user-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_soal    < services/soal-service/src/db/schema.sql
-docker exec -i triton-postgres psql -U triton_user -d db_jawaban < services/jawaban-service/src/db/schema.sql
-
-# 5. Install & seed
-make install
-make seed
-
-# 6. Jalankan backend (terminal 1)
-make dev
-
-# 7. Jalankan frontend (terminal 2 — baru)
-make frontend
-
-# 8. Buka browser
-# http://localhost:3000
-```
-
----
-
-## 👨‍💻 Developer
-
-Developed by **Dodik Sukma Indranata**  
-Software Engineer · Medical Records & Hospital Information System Developer
-
----
-
-## 📄 License
-
-Private Project — Triton Denpasar
+Developed for **Triton Denpasar** Bimbel CBT Platform. All rights reserved.

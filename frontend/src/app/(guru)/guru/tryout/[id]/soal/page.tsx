@@ -6,11 +6,11 @@ import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   ArrowLeft, ChevronLeft, ChevronRight, Plus, Trash2, CheckCircle2,
-  AlertTriangle, Loader2, FileQuestion, Send, Sparkles, Upload, FileType2,
+  AlertTriangle, Loader2, FileQuestion, Send, Upload, FileType2,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import RichTextEditor, { RichTextEditorHandle } from '@/components/editor/RichTextEditor'
-import AIGeneratorModal from '@/components/editor/AIGeneratorModal'
+// AI question generator hidden per client request (TRN-09 Feature 2).
 import ImportSoalModal from '@/components/editor/ImportSoalModal'
 import WordImportModal from '@/components/editor/WordImportModal'
 import { ApiResponse, Soal, SoalTipe, TryoutDetail } from '@/types'
@@ -119,7 +119,6 @@ export default function KelolaSoalPage() {
   const [saving,        setSaving]        = useState(false)
   const [publishing,    setPublishing]    = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [aiModalOpen,   setAiModalOpen]   = useState(false)
   const [importOpen,    setImportOpen]    = useState(false)
   const [wordOpen,      setWordOpen]      = useState(false)
   // Increments on every soal switch — forces SoalEditor to remount so uncontrolled
@@ -370,22 +369,13 @@ export default function KelolaSoalPage() {
             <Plus size={16} />
             Tambah Soal Manual
           </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setAiModalOpen(true)}
-              className="border-2 border-violet-400 text-violet-600 bg-violet-50 hover:bg-violet-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
-            >
-              <Sparkles size={13} />
-              Generate AI
-            </button>
-            <button
-              onClick={() => setImportOpen(true)}
-              className="border border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
-            >
-              <Upload size={13} />
-              Import Soal
-            </button>
-          </div>
+          <button
+            onClick={() => setImportOpen(true)}
+            className="w-full border border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
+          >
+            <Upload size={13} />
+            Import Soal
+          </button>
           <button
             onClick={() => setWordOpen(true)}
             className="w-full border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 font-semibold rounded-xl py-2 px-2 text-xs flex items-center justify-center gap-1.5 transition-colors active:scale-95"
@@ -589,14 +579,7 @@ export default function KelolaSoalPage() {
         </div>
       </main>
 
-      {/* ── AI Generator Modal ────────────────────────────── */}
-      {aiModalOpen && (
-        <AIGeneratorModal
-          tryoutId={tryoutId}
-          onClose={() => setAiModalOpen(false)}
-          onSaved={() => fetchTryout({ silent: true })}
-        />
-      )}
+      {/* AI Generator hidden per client request (TRN-09 Feature 2). */}
 
       {/* ── Import Soal Modal ─────────────────────────────── */}
       {importOpen && (

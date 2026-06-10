@@ -4,6 +4,17 @@
 
 @import url('katex/dist/katex.min.css');
 
+/* ───── Brand palette (Triton Denpasar) ─────────────────────── */
+:root {
+  --primary-blue: #0309FF;
+  --primary-red: #FF0303;
+  --white: #FFFFFF;
+  --navy-dark: #050A30;
+  --soft-blue: #E8EAFF;
+  --soft-red: #FFE7E7;
+  --gray-light: #F5F7FA;
+}
+
 * {
   box-sizing: border-box;
 }

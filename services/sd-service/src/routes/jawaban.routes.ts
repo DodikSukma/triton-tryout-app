@@ -270,11 +270,15 @@ router.post('/sesi/:sesiId/selesai', async (req: Request, res: Response) => {
 
     const nilai = totalBobot > 0 ? (bobotBenar / totalBobot) * 100 : 0
 
+    // Anti-cheat: a disqualified submission is marked 'timeout' rather than 'selesai'.
+    const disqualified = req.body?.disqualified === true
+    const finalStatus = disqualified ? 'timeout' : 'selesai'
+
     await client.query('BEGIN')
 
     await client.query(
-      "UPDATE sesi_tryout SET status = 'selesai', selesai_at = NOW() WHERE id = $1",
-      [req.params.sesiId]
+      'UPDATE sesi_tryout SET status = $1, selesai_at = NOW() WHERE id = $2',
+      [finalStatus, req.params.sesiId]
     )
 
     const hasil = await client.query(
@@ -295,7 +299,7 @@ router.post('/sesi/:sesiId/selesai', async (req: Request, res: Response) => {
     auditLog(req, {
       action: 'EXAM_SESSION_SUBMIT',
       target_id: req.params.sesiId,
-      description: `Siswa ${req.headers['x-user-email'] ?? siswaId} submitted tryout '${tnRes.rows[0]?.nama_tryout ?? ''}' with score ${nilai.toFixed(2)}`,
+      description: `Siswa ${req.headers['x-user-email'] ?? siswaId} submitted tryout '${tnRes.rows[0]?.nama_tryout ?? ''}' with score ${nilai.toFixed(2)}${disqualified ? ' [diskualifikasi: pelanggaran proktor]' : ''}`,
     })
 
     res.json({ success: true, data: hasil.rows[0] })

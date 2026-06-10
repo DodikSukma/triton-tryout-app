@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "name": "Ni Kadek Ayu Permatasari",
+    "role": "Siswa Kelas 12 IPA",
+    "program": "Program SMA",
+    "avatar_initial": "N",
+    "avatar_color": "#0EA5E9",
+    "rating": 5,
+    "text": "Berkat Triton, saya diterima di Kedokteran UNUD! Guru-gurunya sabar dan metodenya sangat efektif untuk persiapan UTBK.",
+    "university": "FK UNUD 2024",
+    "year": "2024"
+  },
+  {
+    "id": 2,
+    "name": "I Made Surya Dharma",
+    "role": "Siswa Kelas 9 SMP",
+    "program": "Program SMP",
+    "avatar_initial": "I",
+    "avatar_color": "#F97316",
+    "rating": 5,
+    "text": "Nilai matematika saya naik dari 60 ke 92 dalam 2 bulan. Cara mengajar di Triton bikin pelajaran sulit jadi mudah dimengerti!",
+    "university": null,
+    "year": "2024"
+  },
+  {
+    "id": 3,
+    "name": "Putu Gede Wirautama",
+    "role": "Alumni 2023",
+    "program": "Program SMA",
+    "avatar_initial": "P",
+    "avatar_color": "#6366F1",
+    "rating": 5,
+    "text": "Tryout online-nya mirip banget dengan ujian asli. Pas SNBT saya jadi nggak gugup karena sudah terbiasa latihan di platform Triton.",
+    "university": "Teknik Informatika ITB 2023",
+    "year": "2023"
+  },
+  {
+    "id": 4,
+    "name": "Kadek Dwi Cahyani",
+    "role": "Orang Tua Siswa",
+    "program": "Program SD",
+    "avatar_initial": "K",
+    "avatar_color": "#EF4444",
+    "rating": 5,
+    "text": "Anak saya jadi lebih semangat belajar sejak ikut Triton. Laporan perkembangannya rutin dan jelas, jadi saya bisa pantau terus.",
+    "university": null,
+    "year": "2024"
+  },
+  {
+    "id": 5,
+    "name": "I Gusti Ngurah Bagus",
+    "role": "Siswa Kelas 12 IPS",
+    "program": "Program SMA",
+    "avatar_initial": "G",
+    "avatar_color": "#0EA5E9",
+    "rating": 5,
+    "text": "Diterima di Manajemen UGM lewat jalur SNBP! Konsultasi pemilihan jurusan di Triton benar-benar membantu menentukan target saya.",
+    "university": "Manajemen UGM 2024",
+    "year": "2024"
+  },
+  {
+    "id": 6,
+    "name": "Ni Putu Intan Maharani",
+    "role": "Siswa Kelas 11 IPA",
+    "program": "Program SMA",
+    "avatar_initial": "N",
+    "avatar_color": "#F97316",
+    "rating": 5,
+    "text": "Pengajarnya asik dan selalu siap ditanya kapan saja. Analisis kesalahan setelah tryout bikin saya tahu persis bagian mana yang harus diperbaiki.",
+    "university": null,
+    "year": "2025"
+  },
+  {
+    "id": 7,
+    "name": "I Komang Agus Saputra",
+    "role": "Alumni 2022",
+    "program": "Program SMA",
+    "avatar_initial": "I",
+    "avatar_color": "#6366F1",
+    "rating": 5,
+    "text": "Dari yang awalnya pesimis bisa kuliah negeri, akhirnya saya lolos UNDIP. Terima kasih Triton sudah percaya sama kemampuan saya!",
+    "university": "Teknik Sipil UNDIP 2022",
+    "year": "2022"
+  },
+  {
+    "id": 8,
+    "name": "Luh Gede Sridevi",
+    "role": "Siswa Kelas 6 SD",
+    "program": "Program SD",
+    "avatar_initial": "L",
+    "avatar_color": "#EF4444",
+    "rating": 5,
+    "text": "Aku suka belajar di Triton karena kakak gurunya seru dan sabar. Sekarang aku jadi lebih pede waktu ulangan di sekolah.",
+    "university": null,
+    "year": "2025"
+  },
+  {
+    "id": 9,
+    "name": "Made Bagus Pramana",
+    "role": "Siswa Kelas 9 SMP",
+    "program": "Program SMP",
+    "avatar_initial": "M",
+    "avatar_color": "#0EA5E9",
+    "rating": 5,
+    "text": "Berhasil masuk SMA favorit di Denpasar! Latihan soal yang konsisten dan bimbingan intensif menjelang ujian sangat menentukan.",
+    "university": null,
+    "year": "2024"
+  },
+  {
+    "id": 10,
+    "name": "Ni Luh Putu Ariani",
+    "role": "Alumni 2023",
+    "program": "Program SMA",
+    "avatar_initial": "N",
+    "avatar_color": "#F97316",
+    "rating": 5,
+    "text": "Suasana belajarnya nyaman dan kelasnya kecil jadi perhatian guru merata. Saya akhirnya diterima di Akuntansi UNAIR sesuai impian.",
+    "university": "Akuntansi UNAIR 2023",
+    "year": "2023"
+  }
+]
