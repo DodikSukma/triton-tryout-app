@@ -15,6 +15,7 @@ declare module 'express-session' {
 }
 
 const app = express()
+app.set('trust proxy', 1) // Trust first proxy (Ngrok and API Gateway)
 const PORT = process.env.PORT ?? 4001
 
 app.use(cors({ origin: true, credentials: true }))
@@ -48,8 +49,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: Number(process.env.SESSION_MAX_AGE_MS ?? 28800000),
     },
   })
