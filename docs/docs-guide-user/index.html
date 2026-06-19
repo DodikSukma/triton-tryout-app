@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panduan Pengguna — Triton Denpasar Tryout CBT</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        triton: {
+                            50: '#f0f9ff',   // sky-50
+                            100: '#e0f2fe',  // sky-100
+                            500: '#0ea5e9',  // sky-500
+                            600: '#0284c7',  // sky-600
+                            700: '#0369a1',  // sky-700
+                            800: '#075985',  // sky-800
+                            900: '#0c4a6e',  // sky-900
+                        },
+                        siswa: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        guru: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        },
+                        admin: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Step pulse animation */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+        }
+
+        .badge-pulse {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header
+        class="h-[72px] sticky top-0 z-40 bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="h-11 object-contain bg-white rounded p-1 flex items-center justify-center">
+                <!-- Logo loaded from ../logo.png -->
+                <img src="../logo.png" alt="Triton Denpasar" class="h-9 object-contain" />
+            </div>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <div>
+                <h1 class="text-slate-900 font-black text-sm md:text-base tracking-tight">Panduan Pengguna Resmi</h1>
+                <p class="text-[10px] text-slate-400 font-medium">Buku Panduan &amp; Alur Fitur Aplikasi Triton Denpasar
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Role Selector Filter in Header -->
+            <span class="text-xs text-slate-400 font-semibold hidden md:inline">Filter Panduan:</span>
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+                <button onclick="filterRole('all')" id="role-btn-all"
+                    class="px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition-all duration-200">Semua</button>
+                <button onclick="filterRole('siswa')" id="role-btn-siswa"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Siswa</button>
+                <button onclick="filterRole('guru')" id="role-btn-guru"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Guru</button>
+                <button onclick="filterRole('admin')" id="role-btn-admin"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Admin</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex flex-col lg:flex-row">
+        <!-- Left Navigation Sidebar -->
+        <aside
+            class="w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] overflow-y-auto">
+            <!-- Search Box inside sidebar -->
+            <div class="p-4 border-b border-slate-100">
+                <div class="relative">
+                    <i data-lucide="search"
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                    <input id="sidebar-search" oninput="searchGuide()" placeholder="Cari topik panduan..."
+                        class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-triton-500/20 focus:border-triton-500 transition-all" />
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-6 flex-1" id="sidebar-nav">
+                <!-- Group 0: Memulai -->
+                <div class="space-y-1 nav-group" data-role="all">
+                    <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 py-1">1. MEMULAI
+                        APLIKASI</div>
+                    <button onclick="showContent('intro')" id="btn-intro"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold bg-triton-50 text-triton-700 border border-triton-100 transition-all">
+                        <i data-lucide="book-open" class="w-4 h-4 text-triton-500"></i>
+                        <span>Pendahuluan &amp; Akses</span>
+                    </button>
+                    <button onclick="showContent('login-profile')" id="btn-login-profile"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="key" class="w-4 h-4"></i>
+                        <span>Login &amp; Pengaturan Profil</span>
+                    </button>
+                </div>
+
+                <!-- Group 1: Siswa -->
+                <div class="space-y-1 nav-group" data-role="siswa">
+                    <div
+                        class="text-[10px] font-bold tracking-wider text-siswa-700 uppercase px-3 py-1 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-siswa-500"></span> 2. PANDUAN SISWA
+                    </div>
+                    <button onclick="showContent('siswa-dashboard')" id="btn-siswa-dashboard"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="layout" class="w-4 h-4"></i>
+                        <span>Dashboard &amp; Beranda Tryout</span>
+                    </button>
+                    <button onclick="showContent('siswa-exam')" id="btn-siswa-exam"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="monitor" class="w-4 h-4"></i>
+                        <span>CBT Exam Cockpit</span>
+                    </button>
+                    <button onclick="showContent('siswa-proctoring')" id="btn-siswa-proctoring"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        <span>Sistem Anti-Kecurangan</span>
+                    </button>
+                    <button onclick="showContent('siswa-math')" id="btn-siswa-math"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="sigma" class="w-4 h-4"></i>
+                        <span>Asisten Rumus Esai LaTeX</span>
+                    </button>
+                    <button onclick="showContent('siswa-results')" id="btn-siswa-results"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        <span>Review Nilai &amp; Jawaban</span>
+                    </button>
+                </div>
+
+                <!-- Group 2: Guru -->
+                <div class="space-y-1 nav-group" data-role="guru">
+                    <div
+                        class="text-[10px] font-bold tracking-wider text-guru-700 uppercase px-3 py-1 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-triton-500"></span> 3. PANDUAN GURU
+                    </div>
+                    <button onclick="showContent('guru-dashboard')" id="btn-guru-dashboard"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="columns" class="w-4 h-4"></i>
+                        <span>Dashboard &amp; Hasil Siswa</span>
+                    </button>
+                    <button onclick="showContent('guru-create')" id="btn-guru-create"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                        <span>Membuat Wadah Tryout</span>
+                    </button>
+                    <button onclick="showContent('guru-soal')" id="btn-guru-soal"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="file-question" class="w-4 h-4"></i>
+                        <span>Kelola Soal Manual (LaTeX)</span>
+                    </button>
+                    <button onclick="showContent('guru-import')" id="btn-guru-import"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="file-type-2" class="w-4 h-4"></i>
+                        <span>Impor Massal (.docx / .txt)</span>
+                    </button>
+                    <button onclick="showContent('guru-approval')" id="btn-guru-approval"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Pengajuan &amp; Siklus Revisi</span>
+                    </button>
+                </div>
+
+                <!-- Group 3: Admin -->
+                <div class="space-y-1 nav-group" data-role="admin">
+                    <div
+                        class="text-[10px] font-bold tracking-wider text-admin-700 uppercase px-3 py-1 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-admin-500"></span> 4. PANDUAN ADMIN
+                    </div>
+                    <button onclick="showContent('admin-dashboard')" id="btn-admin-dashboard"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>Dasbor &amp; Filter Jenjang</span>
+                    </button>
+                    <button onclick="showContent('admin-users')" id="btn-admin-users"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Kelola Guru &amp; Siswa</span>
+                    </button>
+                    <button onclick="showContent('admin-master')" id="btn-admin-master"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="database" class="w-4 h-4"></i>
+                        <span>Kelola Master Data</span>
+                    </button>
+                    <button onclick="showContent('admin-approval')" id="btn-admin-approval"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <span>Sistem Approval Ujian</span>
+                    </button>
+                    <button onclick="showContent('admin-logs')" id="btn-admin-logs"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="scroll-text" class="w-4 h-4"></i>
+                        <span>Log Aktivitas (Audit Log)</span>
+                    </button>
+                </div>
+
+                <!-- Group 4: FAQ -->
+                <div class="space-y-1 nav-group" data-role="all">
+                    <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 py-1">5. BANTUAN
+                    </div>
+                    <button onclick="showContent('faq')" id="btn-faq"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <span>FAQ &amp; Troubleshooting</span>
+                    </button>
+                </div>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 text-[10px] text-slate-400 space-y-1">
+                <p class="font-bold text-slate-700">Triton Denpasar</p>
+                <p>Buku Panduan Pengguna v2.3.0</p>
+                <p>© 2026 Hak Cipta Dilindungi.</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Panel -->
+        <main class="flex-1 bg-white p-6 lg:p-10 overflow-y-auto max-w-full">
+            <div id="content-container" class="max-w-4xl mx-auto">
+
+                <!-- ==================== SECTION: INTRO ==================== -->
+                <section id="content-intro" class="section-content space-y-8 animate-fade-in">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-600 uppercase tracking-wider mb-1">Triton CBT /
+                            Memulai</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Selamat Datang di Portal Panduan
+                            Pengguna</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Buku panduan ini disusun untuk membantu **Siswa, Guru, dan Admin** dalam menavigasi dan
+                            memaksimalkan seluruh fitur platform ujian online Computer Based Test (CBT) Triton Denpasar.
+                        </p>
+                    </div>
+
+                    <div
+                        class="bg-gradient-to-r from-triton-50 to-sky-100/50 border border-triton-100 rounded-2xl p-6 flex gap-4">
+                        <div class="p-3 bg-white rounded-xl shadow-sm self-start text-triton-500">
+                            <i data-lucide="info" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm mb-1">Misi Platform Triton CBT</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Triton CBT dirancang khusus dengan pendekatan multi-level database sekolah demi keamanan
+                                data yang maksimal dan pengawasan ujian ketat anti-kecurangan. Ujian yang adil mengukur
+                                hasil belajar yang sesungguhnya.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-triton-500"></span> Peta Peran &amp; Tanggung Jawab
+                            Pengguna
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="bg-siswa-50/50 rounded-xl border border-siswa-100 p-5 space-y-2">
+                                <span class="font-bold text-siswa-700 px-2 py-0.5 rounded bg-siswa-100">Siswa
+                                    (Student)</span>
+                                <p class="text-slate-500 leading-relaxed">Melihat ujian aktif, mengerjakan soal di bilik
+                                    aman CBT (Exam Cockpit), menggunakan editor LaTeX untuk rumus matematika, dan
+                                    meninjau ulasan nilai ujian.</p>
+                            </div>
+                            <div class="bg-triton-50/50 rounded-xl border border-triton-100 p-5 space-y-2">
+                                <span class="font-bold text-triton-700 px-2 py-0.5 rounded bg-triton-100">Guru
+                                    (Teacher)</span>
+                                <p class="text-slate-500 leading-relaxed">Membuat wadah tryout, menginput soal manual
+                                    (gambar/LaTeX), mengimpor massal soal dari dokumen Microsoft Word (.docx),
+                                    mengajukan tryout, dan merekap skor siswa.</p>
+                            </div>
+                            <div class="bg-admin-50/50 rounded-xl border border-admin-100 p-5 space-y-2">
+                                <span class="font-bold text-admin-700 px-2 py-0.5 rounded bg-admin-100">Admin
+                                    (Administrator)</span>
+                                <p class="text-slate-500 leading-relaxed">Mengelola akun Guru/Siswa, mengelola master
+                                    data tingkat/pelajaran, meninjau &amp; mempublikasikan tryout, serta memantau audit
+                                    log audit.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: LOGIN PROFILE ==================== -->
+                <section id="content-login-profile" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-600 uppercase tracking-wider mb-1">Triton CBT / Akun
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Login &amp; Pengaturan Profil</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan langkah untuk mengamankan akses masuk pertama kali ke sistem dan menyunting data
+                            profil pribadi.
+                        </p>
+                    </div>
+
+                    <!-- Accordion-like Steps -->
+                    <div class="space-y-6">
+                        <h3 class="text-base font-bold text-slate-900">Langkah-langkah Login</h3>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-triton-500 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Buka Halaman Login</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Buka alamat website tryout
+                                    Triton. Pastikan layar menampilkan halaman selamat datang bermotif gelap modern.</p>
+                                <!-- Image Box for fitur-login.png -->
+                                <div
+                                    class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-xl my-3 group">
+                                    <img src="fitur-login.png" alt="Screenshot Halaman Login"
+                                        class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                    <div
+                                        class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                        <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                        <p class="text-xs font-bold text-slate-600">fitur-login.png</p>
+                                        <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot
+                                            halaman Login</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-triton-500 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Masukkan Email &amp; Password</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Input alamat email terdaftar dan
+                                    kata sandi Anda. Akun bawaan default:</p>
+                                <div class="my-3 overflow-x-auto rounded-xl border border-slate-200 text-xs">
+                                    <table class="w-full text-left border-collapse">
+                                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                                            <th class="p-3">Peran</th>
+                                            <th class="p-3">Email</th>
+                                            <th class="p-3">Password</th>
+                                        </tr>
+                                        <tr class="border-b border-slate-100">
+                                            <td class="p-3 font-semibold text-admin-600">Admin</td>
+                                            <td class="p-3 font-mono">admin@triton.id</td>
+                                            <td class="p-3 font-mono">admin123</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-100">
+                                            <td class="p-3 font-semibold text-triton-600">Guru</td>
+                                            <td class="p-3 font-mono">guru1@triton.id</td>
+                                            <td class="p-3 font-mono">guru123</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 font-semibold text-siswa-600">Siswa</td>
+                                            <td class="p-3 font-mono">siswa1@triton.id</td>
+                                            <td class="p-3 font-mono">siswa123</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-triton-500 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Masuk ke Dasbor</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Klik tombol login. Apabila login
+                                    berhasil, cookie sesi akan disimpan otomatis di cache sistem Redis dan Anda
+                                    dialihkan ke halaman dasbor sesuai peran Anda.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-6 space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Pengaturan Profil &amp; Avatar</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Semua pengguna dapat melengkapi data profil seperti nomor telepon, bio deskripsi diri, serta
+                            memperbarui foto profil (avatar) pada halaman **Profil**.
+                        </p>
+                        <div
+                            class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 text-xs text-amber-800">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-amber-500"></i>
+                            <div>
+                                <span class="font-bold">Batasan File Foto Profil:</span>
+                                <p class="mt-1">Format foto yang didukung adalah JPEG, PNG, GIF, atau WEBP. Batas
+                                    maksimal ukuran gambar adalah **2MB**. Unggahan base64 yang lebih dari 2MB akan
+                                    otomatis ditolak dengan pesan: `Ukuran gambar terlalu besar (maksimal 2MB).`</p>
+                            </div>
+                        </div>
+                        <!-- Image Box for fitur-profile.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-xl my-3 group">
+                            <img src="fitur-profile.png" alt="Screenshot Pengaturan Profil"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-profile.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    profil &amp; avatar</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: SISWA DASHBOARD ==================== -->
+                <section id="content-siswa-dashboard" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-siswa-700 uppercase tracking-wider mb-1">Siswa / Beranda
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dashboard &amp; Penyaringan Tryout
+                        </h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan bagi Siswa untuk memahami letak tryout yang tersedia dan status kemajuan ujian.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Mencari Tryout Aktif</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Saat pertama kali mendarat di `/siswa/dashboard`, siswa akan disajikan kartu-kartu tryout
+                            ujian.
+                        </p>
+                        <ul class="list-disc pl-5 text-xs text-slate-500 space-y-2 leading-relaxed">
+                            <li><strong>Informasi Kartu</strong>: Menampilkan Judul Tryout, Mata Pelajaran, Jumlah
+                                Pertanyaan, Durasi Ujian, dan badge Guru pembuat soal.</li>
+                            <li><strong>Penyaringan Otomatis (Jenjang &amp; Kelas)</strong>: Siswa hanya dapat melihat
+                                tryout yang sesuai dengan jenjang pendidikannya (SD, SMP, atau SMA) dan kelas yang
+                                ditetapkan (misalnya: kelas 12 IPA).</li>
+                            <li><strong>Tombol Sesi</strong>:
+                                <ul class="list-circle pl-5 mt-1 space-y-1">
+                                    <li><span class="text-siswa-600 font-semibold">Mulai Tryout</span>: Ujian belum
+                                        pernah dikerjakan. Mengeklik ini akan membuka sesi ujian baru di server.</li>
+                                    <li><span class="text-blue-600 font-semibold">Lanjutkan</span>: Ujian sedang
+                                        dikerjakan dan browser Anda sempat tertutup. Sesi akan dipulihkan tanpa
+                                        mengurangi durasi yang sudah berjalan.</li>
+                                    <li><span class="text-slate-600 font-semibold">Lihat Hasil</span>: Sesi ujian telah
+                                        selesai. Anda dapat meninjau statistik skor nilai Anda.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <!-- Image Box for fitur-siswa-dashboard.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-siswa-dashboard.png" alt="Screenshot Dashboard Siswa"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-siswa-dashboard.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    Dashboard Siswa</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: SISWA EXAM ==================== -->
+                <section id="content-siswa-exam" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-siswa-700 uppercase tracking-wider mb-1">Siswa / Bilik Ujian
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">CBT Exam Cockpit Workspace</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Mengenal antarmuka steril pengerjaan ujian, kotak timer, navigasi soal, dan pengiriman
+                            jawaban.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5"><i
+                                    data-lucide="clock" class="w-4 h-4 text-triton-500"></i> Timer &amp; Sinkronisasi
+                                Waktu</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Di bagian header atas, timer berjalan dalam hitungan mundur. Waktu ini disinkronisasikan
+                                langsung dengan server Triton. Jika sisa waktu ujian kurang dari 10 menit, timer akan
+                                berubah menjadi berwarna merah.
+                            </p>
+                            <p
+                                class="text-xs text-slate-600 leading-relaxed font-semibold text-siswa-700 bg-siswa-50 p-2 rounded-lg border border-siswa-100">
+                                Penting: Apabila waktu habis (timer 00:00), sistem akan memaksa pengiriman jawaban
+                                secara otomatis dan melock sesi agar adil.
+                            </p>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5"><i data-lucide="grid"
+                                    class="w-4 h-4 text-triton-500"></i> Kotak Navigasi Soal</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Bilah navigasi samping menampilkan kotak nomor soal. Warna kotak menunjukkan status:
+                            </p>
+                            <ul class="list-disc pl-5 text-xs text-slate-500 space-y-1.5">
+                                <li><span
+                                        class="inline-block w-3 h-3 bg-slate-100 border border-slate-200 rounded"></span>
+                                    **Abu-abu**: Belum dijawab.</li>
+                                <li><span class="inline-block w-3 h-3 bg-triton-500 rounded"></span> **Biru**: Sudah
+                                    dijawab dan tersimpan di server.</li>
+                                <li><span class="inline-block w-3 h-3 bg-orange-400 rounded"></span> **Bendera Orange**:
+                                    Ditandai ragu-ragu.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Image Box for fitur-siswa-exam.png -->
+                    <div
+                        class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                        <img src="fitur-siswa-exam.png" alt="Screenshot CBT Cockpit Ujian"
+                            class="w-full object-cover max-h-80 group-hover:scale-[1.02] transition-transform duration-300"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                        <div
+                            class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                            <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                            <p class="text-xs font-bold text-slate-600">fitur-siswa-exam.png</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman CBT Exam
+                                Siswa</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-6 space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Cara Pengumpulan Jawaban</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Gunakan tombol **Berikutnya** di bilah bawah untuk berpindah soal. Pada nomor terakhir,
+                            tombol Berikutnya berubah menjadi **Selesai &amp; Kumpulkan**. Mengeklik tombol ini akan
+                            membuka dialog modal peninjauan.
+                        </p>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-2">
+                            <h4 class="font-bold text-slate-800">Isi Kotak Dialog Konfirmasi Akhir:</h4>
+                            <p class="text-slate-500 leading-relaxed">
+                                Sistem akan membeberkan ringkasan jumlah soal yang berhasil dijawab, jumlah soal
+                                terlewat, dan soal yang masih ditandai ragu-ragu. Anda wajib melepas status ragu-ragu
+                                agar jawaban tersebut dinilai. Setelah mengklik "Ya, Kumpulkan", sesi dikunci permanen.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: SISWA PROCTORING ==================== -->
+                <section id="content-siswa-proctoring" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-siswa-700 uppercase tracking-wider mb-1">Siswa / Proteksi
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Sistem Pengawasan Keamanan
+                            (Anti-Cheating)</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan kepatuhan ujian aman guna menghindari peringatan pelanggaran proktor dan
+                            diskualifikasi otomatis.
+                        </p>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 space-y-4 text-red-900">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="shield-alert" class="w-6 h-6 text-red-500"></i>
+                            <h3 class="font-bold text-base">Aturan Keras Proctoring Engine</h3>
+                        </div>
+                        <p class="text-xs text-red-700 leading-relaxed">
+                            Ujian CBT Triton Denpasar dipantau ketat secara sistem pada browser Anda. Harap patuhi
+                            aturan di bawah untuk mencegah lembar jawaban Anda terkunci:
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
+                            <div class="bg-white/80 rounded-xl p-4 border border-red-100 space-y-1">
+                                <span class="font-bold text-red-800">1. Wajib Layar Penuh (Fullscreen)</span>
+                                <p class="text-slate-600 leading-relaxed">Ujian harus berjalan dalam mode fullscreen
+                                    browser. Menekan tombol keluar fullscreen akan memblokir layar Anda dengan tameng
+                                    merah.</p>
+                            </div>
+                            <div class="bg-white/80 rounded-xl p-4 border border-red-100 space-y-1">
+                                <span class="font-bold text-red-800">2. Dilarang Berpindah Tab</span>
+                                <p class="text-slate-600 leading-relaxed">Membuka tab baru browser atau menimpa dengan
+                                    aplikasi lain (alt+tab) langsung memicu peringatan proktor.</p>
+                            </div>
+                            <div class="bg-white/80 rounded-xl p-4 border border-red-100 space-y-1">
+                                <span class="font-bold text-red-800">3. Larangan Keyboard &amp; Mouse</span>
+                                <p class="text-slate-600 leading-relaxed">Fungsi keyboard untuk Copy (salin), Cut
+                                    (potong), Paste (tempel), klik kanan context menu, dan seleksi teks dinonaktifkan
+                                    total.</p>
+                            </div>
+                            <div class="bg-white/80 rounded-xl p-4 border border-red-100 space-y-1">
+                                <span class="font-bold text-red-800">4. Batas Maksimal 3 Peringatan</span>
+                                <p class="text-slate-600 leading-relaxed">Jika sistem mencatat 3 kali pelanggaran layar,
+                                    pada pelanggaran ke-4 Anda akan didiskualifikasi seketika.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Cara Membuka Blokir Layar Ujian</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Jika Anda tidak sengaja keluar layar penuh (misal karena pop-up sistem operasi), layar ujian
+                            akan berubah menjadi merah. Untuk melanjutkan, klik tombol putih **Kembali ke Layar Penuh**
+                            di tengah layar.
+                        </p>
+                        <!-- Image Box for fitur-siswa-proctoring.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-siswa-proctoring.png" alt="Screenshot Layar Pemblokiran"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-siswa-proctoring.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    layar merah pemblokiran proktor</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: SISWA MATH ==================== -->
+                <section id="content-siswa-math" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-siswa-700 uppercase tracking-wider mb-1">Siswa / Esai
+                            Matematika</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Asisten Penulisan Rumus LaTeX</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan memanfaatkan asisten formula matematika untuk menyisipkan rumus kompleks di lembar
+                            jawaban esai.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Menggunakan Toolbar Formula</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Pada lembar soal essay, terdapat asisten editor LaTeX. Anda tidak perlu menghafal baris
+                            perintah matematika yang rumit:
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mb-3">
+                            <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-white">
+                                <span class="font-bold text-triton-700 bg-triton-50 px-2 py-0.5 rounded">1. Gunakan
+                                    Template</span>
+                                <p class="text-slate-500 leading-relaxed">Klik tombol **Sisipkan Formula** di atas kolom
+                                    esai. Di dalam dropdown, klik template pecahan, pangkat, akar, integral, atau sigma.
+                                    Rumus akan otomatis tersisip pada kursor.</p>
+                            </div>
+                            <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-white">
+                                <span class="font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded">2. Tulis LaTeX
+                                    Kustom</span>
+                                <p class="text-slate-500 leading-relaxed">Masukkan kode LaTeX buatan Anda pada kolom
+                                    kustom. Aplikasi akan merender pratinjau rumus secara real-time. Jika sudah benar,
+                                    klik **Sisipkan**.</p>
+                            </div>
+                        </div>
+
+                        <!-- Image Box for fitur-siswa-math.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-siswa-math.png" alt="Screenshot Asisten LaTeX"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-siswa-math.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot asisten
+                                    LaTeX di kolom esai</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2">
+                            <h4 class="font-bold text-slate-800">Menulis Manual Delimeter:</h4>
+                            <p class="text-slate-500 leading-relaxed">
+                                Anda juga dapat mengetik rumus secara manual di tengah esai dengan mengapit rumus
+                                menggunakan simbol dolar (`$`).
+                                Contoh pengetikan: <code
+                                    class="bg-slate-200 px-1 rounded text-violet-700">Diketahui rumus pythagoras adalah $a^2 + b^2 = c^2$ maka...</code>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: SISWA RESULTS ==================== -->
+                <section id="content-siswa-results" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-siswa-700 uppercase tracking-wider mb-1">Siswa / Penilaian
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Melihat Ulasan Nilai &amp; Lembar
+                            Pembahasan</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan membaca skor akhir tryout dan menganalisis kunci jawaban soal pasca ujian selesai.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Halaman Hasil Ujian</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Setelah sesi dikumpulkan, Anda dialihkan langsung ke halaman laporan
+                            `/siswa/hasil/[sesiId]`. Lembar ini memaparkan:
+                        </p>
+                        <ul class="list-disc pl-5 text-xs text-slate-500 space-y-2 leading-relaxed">
+                            <li><strong>Skor Angka &amp; Klasifikasi Huruf</strong>: Menampilkan total nilai akhir
+                                berkisar 0-100 beserta grade predikatnya (A, B, C, atau D).</li>
+                            <li><strong>Diagram Statistik Jawaban</strong>: Grafik lingkar rasio detail total jawaban
+                                benar, jawaban salah, dan soal yang terlewat (skipped).</li>
+                            <li><strong>Pembahasan Soal Detail</strong>: Daftar seluruh soal yang diujikan lengkap
+                                dengan indikator kontras warna.</li>
+                        </ul>
+                        <!-- Image Box for fitur-siswa-results.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-siswa-results.png" alt="Screenshot Review Nilai"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-siswa-results.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    review nilai &amp; pembahasan kunci</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: GURU DASHBOARD ==================== -->
+                <section id="content-guru-dashboard" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-700 uppercase tracking-wider mb-1">Guru / Dasbor</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dasbor Utama &amp; Nilai Peserta
+                        </h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan mengelola draf tryout yang sudah dibuat dan memantau perolehan nilai siswa secara
+                            kolektif.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Menyaring Tryout di Dasbor</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Daftar tryout milik Guru dapat dikelompokkan berdasarkan status pengerjaan menggunakan tab
+                            penyaring di atas tabel:
+                        </p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-center font-bold">
+                            <div class="bg-white border rounded-xl p-3 shadow-sm">Draft (Soal disunting)</div>
+                            <div class="bg-blue-50 border border-blue-100 text-blue-700 rounded-xl p-3">Menunggu
+                                Persetujuan</div>
+                            <div class="bg-green-50 border border-green-100 text-green-700 rounded-xl p-3">Aktif
+                                (Published)</div>
+                            <div class="bg-amber-50 border border-amber-100 text-amber-700 rounded-xl p-3">Selesai
+                                (Closed)</div>
+                        </div>
+                        <!-- Image Box for fitur-guru-dashboard.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-guru-dashboard.png" alt="Screenshot Dasbor Guru"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-guru-dashboard.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot dasbor guru
+                                    dan panel rekap nilai</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: GURU CREATE ==================== -->
+                <section id="content-guru-create" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-700 uppercase tracking-wider mb-1">Guru / Wadah Tryout
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Membuat Wadah Tryout Baru</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan menginisiasi kartu lembar ujian tryout dan mengikat kelas serta parameter durasi
+                            waktu.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Formulir Pembuatan Ujian</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Klik tombol biru **Buat Tryout Baru** pada dasbor Guru. Isilah kolom formulir dengan data
+                            Judul, Mapel, Kelas, dan Durasi Ujian.
+                        </p>
+
+                        <div
+                            class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 text-xs text-amber-800">
+                            <i data-lucide="info" class="w-5 h-5 shrink-0 text-amber-500"></i>
+                            <div>
+                                <span class="font-bold">Perilaku Tombol Batal (TRN-05):</span>
+                                <p class="mt-1">Mengeklik tombol Batal atau Kembali pada form pembuatan tryout ini akan
+                                    langsung mengarahkan Anda ke Dashboard Utama tanpa memicu modal konfirmasi. Pastikan
+                                    Anda tidak mengekliknya secara tidak sengaja agar data input tidak hilang.</p>
+                            </div>
+                        </div>
+                        <!-- Image Box for fitur-guru-create.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-xl my-3 group">
+                            <img src="fitur-guru-create.png" alt="Screenshot Buat Tryout"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-guru-create.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot form dialog
+                                    buat tryout baru</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: GURU SOAL ==================== -->
+                <section id="content-guru-soal" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-700 uppercase tracking-wider mb-1">Guru / Editor Soal
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Penyusunan Lembar Soal Manual
+                            (LaTeX)</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan menyusun lembar soal, menyisipkan gambar base64, menyematkan rumus matematika, dan
+                            menetapkan kunci jawaban.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Mengunggah Soal &amp; LaTeX</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Klik **Kelola Soal** pada tryout Anda, lalu klik **Tambah Soal Manual**. Anda dapat
+                            memasukkan bobot soal, menulis pertanyaan menggunakan Rich Text Editor, menyisipkan gambar
+                            base64 dengan drag-and-drop, dan menyematkan rumus matematika LaTeX via dialog **∑**.
+                        </p>
+                        <!-- Image Box for fitur-guru-soal.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-guru-soal.png" alt="Screenshot Editor Soal"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-guru-soal.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot workspace
+                                    editor soal dan opsi kunci jawaban</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: GURU IMPORT ==================== -->
+                <section id="content-guru-import" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-700 uppercase tracking-wider mb-1">Guru / Impor Massal
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Unggah Massal via Microsoft Word
+                            (.docx)</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Aturan tata cara penulisan draf lembar soal pada berkas Word (.docx) dan Teks (.txt) agar
+                            dapat terbaca sempurna oleh parser sistem Triton.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-1.5"><i
+                                data-lucide="file-type-2" class="w-5 h-5 text-blue-500"></i> Format Penulisan Microsoft
+                            Word (.docx)</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Unduh berkas template `.docx` yang disiapkan pada modal impor. Setiap butir soal dalam file
+                            Word wajib mengikuti aturan sintaks pemisah `[SOAL]`, `Tipe:`, `Bobot:`, `Pertanyaan:`, dan
+                            penanda kunci jawaban benar berupa simbol bintang (`*`).
+                        </p>
+
+                        <!-- Image Box for fitur-guru-import-word.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-guru-import-word.png" alt="Screenshot Impor Word"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-guru-import-word.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot modal impor
+                                    berkas Word dan hasil preview soal</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: GURU APPROVAL ==================== -->
+                <section id="content-guru-approval" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-700 uppercase tracking-wider mb-1">Guru / Validasi
+                            Ujian</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Pengajuan Persetujuan &amp; Siklus
+                            Revisi</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Prosedur pengajuan verifikasi draf tryout ke pihak Admin dan cara membaca instruksi
+                            perbaikan jika ditolak.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Mengajukan Ujian &amp; Revisi</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Apabila tryout telah diisi soal, ajukan persetujuan ke Admin. Apabila Admin mengembalikan
+                            status ke **Butuh Revisi** (Rejected), guru dapat membaca catatan di samping workspace soal
+                            dan mengajukan ulang setelah perbaikan.
+                        </p>
+                        <!-- Image Box for fitur-guru-revisi.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-guru-revisi.png" alt="Screenshot Revisi Tryout"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-guru-revisi.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot panel
+                                    catatan revisi admin pada halaman soal guru</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: ADMIN DASHBOARD ==================== -->
+                <section id="content-admin-dashboard" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-admin-700 uppercase tracking-wider mb-1">Admin / Beranda
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dasbor Statistik &amp; Penyaringan
+                            Jenjang</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan bagi Admin untuk membaca kartu-kartu metrik statistik global dan melakukan
+                            penyaringan data.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Saringan Filter Jenjang</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Dasbor admin menampilkan data pengguna dan tryout yang disaring secara real-time berdasarkan
+                            jenjang sekolah (SD/SMP/SMA). Data Guru dikecualikan dari saringan (tetap tampil global).
+                        </p>
+                        <!-- Image Box for fitur-admin-dashboard.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-admin-dashboard.png" alt="Screenshot Dasbor Admin"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-admin-dashboard.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    dashboard utama Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: ADMIN USERS ==================== -->
+                <section id="content-admin-users" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-admin-700 uppercase tracking-wider mb-1">Admin / Pengguna
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Manajemen Akun Guru &amp; Siswa
+                        </h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan mengontrol akun pengguna, menambahkan user baru, dan menangguhkan hak akses login.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Registrasi Pengguna &amp; Suspend</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Admin mengelola CRUD Guru dan Siswa pada tab terpisah. Menonaktifkan sakelar status aktif
+                            user akan memotong sesi login mereka saat itu juga.
+                        </p>
+                        <!-- Image Box for fitur-admin-users.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-admin-users.png" alt="Screenshot Kelola User"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-admin-users.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    registrasi &amp; kelola user admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: ADMIN MASTER ==================== -->
+                <section id="content-admin-master" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-admin-700 uppercase tracking-wider mb-1">Admin / Master Data
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Manajemen Data Master Pendukung
+                        </h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Pengelolaan kelas, mata pelajaran, dan sub-mapel induk sebagai syarat wajib pembuatan materi
+                            Guru.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Daftar Kolom Master</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Tambahkan data master secara berurutan: Kelas &amp; Mapel Induk, kemudian Sub-Mapel.
+                            Mencegah error duplikasi data nama master pada satu jenjang yang sama.
+                        </p>
+                        <!-- Image Box for fitur-admin-master.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-admin-master.png" alt="Screenshot Master Data"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-admin-master.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot panel kelola
+                                    master data kelas dan mata pelajaran</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: ADMIN APPROVAL ==================== -->
+                <section id="content-admin-approval" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-admin-700 uppercase tracking-wider mb-1">Admin / Validasi
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Sistem Persetujuan Tryout
+                            (Approval)</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan mengontrol kualitas soal ujian sebelum dirilis ke aplikasi siswa.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Menolak &amp; Menyetujui</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Admin memeriksa draf butir soal guru. Klik **Setujui** atau **Publikasikan** untuk
+                            mengaktifkan tryout. Klik **Tolak / Revisi** dan isi modal catatan perbaikan untuk
+                            mengembalikannya ke draf guru.
+                        </p>
+                        <!-- Image Box for fitur-admin-approval.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-admin-approval.png" alt="Screenshot Approval Admin"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-admin-approval.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    persetujuan tryout admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: ADMIN LOGS ==================== -->
+                <section id="content-admin-logs" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-admin-700 uppercase tracking-wider mb-1">Admin / Audit</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Pemantauan Log Aktivitas (Audit
+                            Log)</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Laporan jejak rekam digital seluruh aktivitas pengguna pada platform tryout Triton.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Membaca Log Audit</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Halaman `/admin/logs` menampilkan riwayat login, CRUD data, persetujuan tryout, dan
+                            pelanggaran proktor CBT. Hover kursor pada ikon informasi untuk melihat alamat IP dan
+                            User-Agent browser aktor.
+                        </p>
+                        <!-- Image Box for fitur-admin-logs.png -->
+                        <div
+                            class="relative overflow-hidden border border-slate-200 rounded-2xl bg-slate-100 shadow-sm max-w-2xl my-3 group">
+                            <img src="fitur-admin-logs.png" alt="Screenshot Log Aktivitas"
+                                class="w-full object-cover max-h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div
+                                class="hidden flex flex-col items-center justify-center p-8 bg-slate-50 text-slate-400 font-sans text-center">
+                                <i data-lucide="image" class="w-10 h-10 text-slate-300 mb-2"></i>
+                                <p class="text-xs font-bold text-slate-600">fitur-admin-logs.png</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
+                                    audit log platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ==================== SECTION: FAQ ==================== -->
+                <section id="content-faq" class="section-content hidden space-y-8">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-triton-600 uppercase tracking-wider mb-1">Triton CBT / FAQ
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">FAQ &amp; Troubleshooting</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Pertanyaan yang sering diajukan dan solusi pemecahan masalah teknis mandiri bagi pengguna.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Q1 -->
+                        <div class="border border-slate-200 rounded-2xl p-5 space-y-2 bg-white shadow-sm">
+                            <h4 class="font-extrabold text-slate-900 text-sm flex items-start gap-2">
+                                <span class="text-triton-600 font-black">Q:</span>
+                                <span>Mengapa layar saya tiba-tiba terkunci warna merah saat sedang mengerjakan
+                                    tryout?</span>
+                            </h4>
+                            <p class="text-xs text-slate-500 pl-6 leading-relaxed">
+                                **Jawab**: Layar merah menandakan Anda keluar dari mode Layar Penuh (Fullscreen) selama
+                                ujian, yang melanggar aturan proktor. Segera klik tombol **Kembali ke Layar Penuh** di
+                                tengah layar untuk membuka blokir dan melanjutkan ujian Anda.
+                            </p>
+                        </div>
+
+                        <!-- Q2 -->
+                        <div class="border border-slate-200 rounded-2xl p-5 space-y-2 bg-white shadow-sm">
+                            <h4 class="font-extrabold text-slate-900 text-sm flex items-start gap-2">
+                                <span class="text-triton-600 font-black">Q:</span>
+                                <span>Mengapa siswa menemui pesan error "LEVEL_FORBIDDEN" saat mengklik ujian?</span>
+                            </h4>
+                            <p class="text-xs text-slate-500 pl-6 leading-relaxed">
+                                **Jawab**: Hal ini terjadi karena tingkat jenjang pendidikan siswa di profilnya tidak
+                                cocok dengan tingkat jenjang tryout yang diakses. Firewall Triton API Gateway memblokir
+                                akses lintas jenjang demi keamanan data. Hubungi Admin untuk mengoreksi jenjang
+                                pendidikan pada profil siswa bersangkutan.
+                            </p>
+                        </div>
+
+                        <!-- Q3 -->
+                        <div class="border border-slate-200 rounded-2xl p-5 space-y-2 bg-white shadow-sm">
+                            <h4 class="font-extrabold text-slate-900 text-sm flex items-start gap-2">
+                                <span class="text-triton-600 font-black">Q:</span>
+                                <span>Bagaimana format penulisan file Word (.docx) agar parser tidak menampilkan warning
+                                    kesalahan?</span>
+                            </h4>
+                            <p class="text-xs text-slate-500 pl-6 leading-relaxed">
+                                **Jawab**: Pastikan setiap butir soal diawali penanda <code
+                                    class="bg-slate-100 px-1 rounded text-red-500">[SOAL]</code>, baris tipe diisi tepat
+                                <code class="bg-slate-100 px-1 rounded text-red-500">Tipe: pilihan_ganda</code>, dan
+                                **kunci jawaban** ditandai dengan bintang (<code
+                                    class="bg-slate-100 px-1 rounded text-red-500">*</code>) menempel langsung di depan
+                                huruf opsi (contoh: <code
+                                    class="bg-slate-100 px-1 rounded text-red-500">*A. Pilihan A</code>). Hindari adanya
+                                spasi di antara bintang dan huruf opsi.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer
+        class="bg-slate-900 border-t border-slate-800 px-6 py-5 flex items-center justify-between text-xs text-slate-400 shrink-0">
+        <div class="flex items-center gap-2">
+            <img src="../logo.png" alt="Triton" class="h-5 object-contain bg-white rounded p-0.5" />
+            <span>&copy; 2026 Panduan Pengguna Resmi. Hak Cipta Dilindungi.</span>
+        </div>
+        <p class="hidden sm:block">Triton Denpasar Bimbel Platform</p>
+    </footer>
+
+    <!-- JavaScript for interactive filters and sidebar search -->
+    <script>
+        // Lucide Icons initialization
+        lucide.createIcons();
+
+        // Show Content based on Navigation click
+        function showContent(sectionId) {
+            // Hide all content sections
+            const sections = document.querySelectorAll('.section-content');
+            sections.forEach(sec => sec.classList.add('hidden'));
+
+            // Show target content section
+            const target = document.getElementById('content-' + sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+                // Scroll main content to top
+                document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // Update active sidebar item styling
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.className = "nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all";
+                // Reset lucide icon color (remove indigo/sky classes if any)
+                const icon = item.querySelector('i');
+                if (icon) icon.className = icon.className.replace('text-triton-500', '');
+            });
+
+            const activeBtn = document.getElementById('btn-' + sectionId);
+            if (activeBtn) {
+                activeBtn.className = "nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold bg-triton-50 text-triton-700 border border-triton-100 transition-all";
+                const icon = activeBtn.querySelector('i');
+                if (icon) icon.classList.add('text-triton-500');
+            }
+        }
+
+        // Role-based filtering logic
+        function filterRole(role) {
+            // Update role buttons active state
+            const buttons = document.querySelectorAll('header button');
+            buttons.forEach(btn => {
+                btn.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200";
+            });
+            const activeBtn = document.getElementById('role-btn-' + role);
+            if (activeBtn) {
+                activeBtn.className = "px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition-all duration-200";
+            }
+
+            // Hide or show sidebar groups based on role
+            const groups = document.querySelectorAll('.nav-group');
+            groups.forEach(group => {
+                const groupRole = group.getAttribute('data-role');
+                if (role === 'all') {
+                    group.classList.remove('hidden');
+                } else if (groupRole === 'all' || groupRole === role) {
+                    group.classList.remove('hidden');
+                } else {
+                    group.classList.add('hidden');
+                }
+            });
+        }
+
+        // Real-time Search Logic through Sidebar items
+        function searchGuide() {
+            const query = document.getElementById('sidebar-search').value.toLowerCase();
+            const items = document.querySelectorAll('.nav-item');
+
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Hide empty groups headers
+            const groups = document.querySelectorAll('.nav-group');
+            groups.forEach(group => {
+                const visibleItems = group.querySelectorAll('.nav-item:not(.hidden)');
+                if (visibleItems.length === 0) {
+                    group.style.display = 'none';
+                } else {
+                    group.style.display = 'block';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
