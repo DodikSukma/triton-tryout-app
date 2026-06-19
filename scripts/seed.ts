@@ -1,16 +1,69 @@
 import { Pool } from 'pg'
 import bcrypt from 'bcrypt'
+import fs from 'fs'
+import path from 'path'
 
-const PG = { host: 'localhost', port: 5432, user: 'triton_user', password: 'triton_secret_2024' }
+// Custom dotenv loader to load environment variables from the root .env file
+function loadEnv() {
+  let rootDir = process.cwd()
+  if (rootDir.endsWith('scripts') || rootDir.endsWith('scripts/')) {
+    rootDir = path.dirname(rootDir)
+  }
+  const envPath = path.join(rootDir, '.env')
+  if (!fs.existsSync(envPath)) return
+  const lines = fs.readFileSync(envPath, 'utf-8').split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const firstEq = trimmed.indexOf('=')
+    if (firstEq === -1) continue
+    const key = trimmed.substring(0, firstEq).trim()
+    const val = trimmed.substring(firstEq + 1).trim()
+    const cleanVal = val.replace(/^["']|["']$/g, '')
+    process.env[key] = cleanVal
+  }
+}
 
-const authPool = new Pool({ ...PG, database: 'db_auth' })
-const userPool = new Pool({ ...PG, database: 'db_user' })
+loadEnv()
+
+const host = process.env.POSTGRES_HOST || 'localhost'
+const port = Number(process.env.POSTGRES_PORT) || 5432
+const user = process.env.POSTGRES_USER || 'triton_user'
+const password = process.env.POSTGRES_PASSWORD || 'triton_secret_2024'
+const sharedDb = process.env.POSTGRES_DB // e.g. 'postgres' on Supabase
+
+const isSupabase = host.includes('supabase')
+
+const getPoolConfig = (dbName: string, schema: string) => {
+  if (sharedDb) {
+    return {
+      host,
+      port,
+      user,
+      password,
+      database: sharedDb,
+      options: `-c search_path=${schema}`,
+      ssl: isSupabase ? { rejectUnauthorized: false } : false
+    }
+  } else {
+    return {
+      host,
+      port,
+      user,
+      password,
+      database: dbName
+    }
+  }
+}
+
+const authPool = new Pool(getPoolConfig('db_auth', 'auth_svc'))
+const userPool = new Pool(getPoolConfig('db_user', 'user_svc'))
 
 // One pool per education-level database (formerly a single db_soal + db_jawaban).
 const levelPools = {
-  sd:  new Pool({ ...PG, database: 'db_sd' }),
-  smp: new Pool({ ...PG, database: 'db_smp' }),
-  sma: new Pool({ ...PG, database: 'db_sma' }),
+  sd:  new Pool(getPoolConfig('db_sd', 'sd')),
+  smp: new Pool(getPoolConfig('db_smp', 'smp')),
+  sma: new Pool(getPoolConfig('db_sma', 'sma')),
 }
 
 const users = [
