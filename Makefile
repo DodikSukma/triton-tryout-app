@@ -94,13 +94,8 @@ db-create:
 	@echo "✅ Databases ready (db_auth, db_user, db_sd, db_smp, db_sma)"
 
 db-init:
-	@echo "⚡ Initializing all databases..."
-	@psql -U triton_user -d db_auth -f services/auth-service/src/db/schema.sql && echo "  ✅ db_auth"
-	@psql -U triton_user -d db_user -f services/user-service/src/db/schema.sql && echo "  ✅ db_user"
-	@psql -U triton_user -d db_sd   -f services/sd-service/src/db/schema.sql   && echo "  ✅ db_sd"
-	@psql -U triton_user -d db_smp  -f services/smp-service/src/db/schema.sql  && echo "  ✅ db_smp"
-	@psql -U triton_user -d db_sma  -f services/sma-service/src/db/schema.sql  && echo "  ✅ db_sma"
-	@echo "✅ All databases initialized"
+	@echo "⚡ Initializing all database schemas..."
+	@(cd scripts && npx ts-node db-init.ts)
 
 seed:
 	@echo "🌱 Seeding database..."

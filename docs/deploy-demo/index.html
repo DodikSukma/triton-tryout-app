@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panduan Demo &amp; Integrasi Supabase — Triton Denpasar</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            triton: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .scenario-step:hover {
+      background-color: #f8fafc;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-700 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header
+    class="h-[72px] sticky top-0 z-40 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-4">
+      <img src="../logo.png" alt="Triton Denpasar" class="h-9 object-contain bg-white rounded p-1" />
+      <div class="h-6 w-px bg-slate-700"></div>
+      <div>
+        <h1 class="text-white font-extrabold text-sm md:text-base tracking-tight">Panduan Demo &amp; Integrasi Cloud
+        </h1>
+        <p class="text-[10px] text-slate-400 font-medium">Instruksi Presentasi &amp; Setup Supabase Hybrid</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-triton-500/10 text-triton-400 border border-triton-500/20 shadow-sm">
+        Demo Guide V1
+      </span>
+      <span class="text-xs font-mono text-slate-400 hidden sm:inline">Build v1.0.0</span>
+    </div>
+  </header>
+
+  <div class="flex-1 flex flex-col lg:flex-row">
+    <!-- Left Navigation Sidebar -->
+    <aside
+      class="w-full lg:w-80 bg-slate-950 border-r border-slate-900 flex flex-col shrink-0 lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:overflow-y-auto lg:self-start">
+      <!-- Reading Progress Tracker -->
+      <div class="p-5 border-b border-slate-900 bg-slate-900/30">
+        <div class="flex items-center justify-between text-xs text-slate-400 font-medium mb-1.5">
+          <span>Progress Membaca Panduan:</span>
+          <span id="progress-text" class="font-bold text-blue-400">0%</span>
+        </div>
+        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-blue-500 rounded-full transition-all duration-300 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-5 space-y-4 overflow-y-auto max-h-[calc(100vh-12rem)]" id="sidebar-nav">
+        <div class="space-y-4">
+          <!-- Group 1: Ikhtisar Demo -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">1. IKHTISAR &amp;
+              KREDENSIAL</div>
+
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-demo-overview')" id="btn-tab-demo-overview"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-blue-400 bg-slate-900/80 border border-slate-800">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Akun Default &amp; Peran
+                </span>
+                <span class="nav-check text-[10px] text-blue-500">○</span>
+              </button>
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-demo-overview', 'akun-default-table')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Tabel Kredensial</button>
+                <button onclick="navigateToAnchor('tab-demo-overview', 'flow-visual-card')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Skema Alur Uji</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 2: Skenario Presentasi -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">2. SKENARIO DEMO</div>
+
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-scenarios')" id="btn-tab-scenarios"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Naskah Demo Langkah Uji
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-scenarios', 'scen-guru')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Skenario A (Guru &amp; KaTeX)</button>
+                <button onclick="navigateToAnchor('tab-scenarios', 'scen-admin')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Skenario B (Admin Approval)</button>
+                <button onclick="navigateToAnchor('tab-scenarios', 'scen-siswa')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Skenario C (Siswa &amp; Anti-Cheat)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 3: Supabase Setup -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">3. MENGGUNAKAN SUPABASE
+            </div>
+
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-supabase-setup')" id="btn-tab-supabase-setup"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  Setup Supabase Database
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-supabase-setup', 'step-schemas')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Membuat PostgreSQL Schemas</button>
+                <button onclick="navigateToAnchor('tab-supabase-setup', 'step-pool-edit')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Modifikasi pool.ts</button>
+                <button onclick="navigateToAnchor('tab-supabase-setup', 'step-env-edit')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Konfigurasi .env Lokal</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 4: Deploy Vercel -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">4. DEPLOY VERCEL &amp;
+              SUPABASE</div>
+
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-vercel-deploy')" id="btn-tab-vercel-deploy"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                  Deploy Vercel &amp; Cloud DB
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-vercel-deploy', 'vercel-back')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Deploy Backend Serverless</button>
+                <button onclick="navigateToAnchor('tab-vercel-deploy', 'vercel-front')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Deploy Frontend Client</button>
+                <button onclick="navigateToAnchor('tab-vercel-deploy', 'seed-cloud-db')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Seed Database Supabase</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 5: Tunneling & Share -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">5. SHARING &amp;
+              TUNNELING</div>
+
+            <div class="space-y-1">
+              <button onclick="switchTab('tab-tunneling')" id="btn-tab-tunneling"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8.684 10.742l3.263 1.631a2 2 0 001.736 0l3.263-1.631m-9.042-3.197l3.263 1.63a2 2 0 001.736 0l3.263-1.63M9.61 16.355l3.263 1.631a2 2 0 001.736 0l3.263-1.631M6.433 11.236a2.41 2.41 0 010-3.416 2.41 2.41 0 013.416 0 2.41 2.41 0 010 3.416 2.41 2.41 0 01-3.416 0zm10.718 5.12a2.41 2.41 0 010-3.416 2.41 2.41 0 013.416 0 2.41 2.41 0 010 3.416 2.41 2.41 0 01-3.416 0z" />
+                  </svg>
+                  Bagikan Demo via Internet
+                </span>
+                <span class="nav-check text-[10px] text-slate-600">○</span>
+              </button>
+              <div class="pl-9 space-y-1 border-l border-slate-900 ml-4">
+                <button onclick="navigateToAnchor('tab-tunneling', 'tunnel-ngrok')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Ekspos dengan Ngrok</button>
+                <button onclick="navigateToAnchor('tab-tunneling', 'tunnel-localtunnel')"
+                  class="block text-[11px] text-slate-400 hover:text-white transition-colors text-left py-0.5 w-full">➔
+                  Ekspos dengan Localtunnel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="p-5 mt-auto border-t border-slate-900 bg-slate-950/80 text-[10px] text-slate-500 space-y-1">
+        <p class="font-semibold text-slate-400">Triton Denpasar</p>
+        <p>Demo &amp; Deployment Manual</p>
+        <p>&copy; 2026 Triton Denpasar</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="flex-1 bg-white p-6 lg:p-10 overflow-y-auto max-w-full">
+
+      <!-- ==================== TAB: OVERVIEW ==================== -->
+      <section id="tab-demo-overview" class="tab-content space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Demo / Ikhtisar</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Akun Pengguna Default</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Data login awal (seed data) yang disiapkan di database lokal maupun cloud Supabase untuk simulasi 3 jenis
+            peran utama platform Triton.
+          </p>
+        </div>
+
+        <!-- Credentials Table -->
+        <div id="akun-default-table">
+          <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Tabel Kredensial Uji Coba
+          </h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
+                  <th class="p-4">Peran (Role)</th>
+                  <th class="p-4">Email</th>
+                  <th class="p-4">Password</th>
+                  <th class="p-4">Target Dashboard</th>
+                  <th class="p-4">Kewenangan / Batasan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-semibold text-slate-900 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Admin
+                  </td>
+                  <td class="p-4 font-mono">admin@triton.id</td>
+                  <td class="p-4 font-mono bg-slate-50">admin123</td>
+                  <td class="p-4">`/admin/dashboard`</td>
+                  <td class="p-4 text-slate-500">Memiliki kontrol penuh. Melakukan Approval/Reject Tryout yang diajukan
+                    Guru, melihat Logs, memfilter visual dashboard berdasarkan SD/SMP/SMA.</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-semibold text-slate-900 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Guru
+                  </td>
+                  <td class="p-4 font-mono">guru1@triton.id</td>
+                  <td class="p-4 font-mono bg-slate-50">guru123</td>
+                  <td class="p-4">`/guru/dashboard`</td>
+                  <td class="p-4 text-slate-500">Membuat bank soal tryout (manual, Word, AI), menulis rumus matematika
+                    KaTeX, melihat statistik, mengajukan status review tryout.</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-4 font-semibold text-slate-900 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Siswa
+                  </td>
+                  <td class="p-4 font-mono">siswa1@triton.id</td>
+                  <td class="p-4 font-mono bg-slate-50">siswa123</td>
+                  <td class="p-4">`/siswa/dashboard`</td>
+                  <td class="p-4 text-slate-500">Mengikuti ujian CBT, memiliki toolbar penyisip rumus LaTeX kustom,
+                    melihat hasil evaluasi, terikat **Anti-Cheating Sandbox**.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Flow Visual -->
+        <div id="flow-visual-card">
+          <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Aliran Siklus Uji Presentasi
+          </h3>
+          <div class="bg-slate-900 rounded-2xl p-6 relative overflow-hidden shadow-md border border-slate-800">
+            <pre class="text-emerald-400 font-mono text-xs overflow-x-auto leading-relaxed">
+[ 1. GURU ] ➔ Login ➔ Buat Tryout &amp; Soal Matematika (RichText / Seleksi Persamaan) ➔ Ajukan Review
+                                                                  │
+                                                                  ▼
+[ 2. ADMIN ] ➔ Login ➔ Meninjau Soal Guru di Panel Approval ➔ Memberikan Status 'Setujui' / 'Publish'
+                                                                  │
+                                                                  ▼
+[ 3. SISWA ] ➔ Login ➔ Mengikuti Tryout ➔ Terdeteksi Proctoring / Kumpul Uraian ➔ Lihat Hasil Ujian</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: SCENARIOS ==================== -->
+      <section id="tab-scenarios" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Demo / Skenario</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Naskah Skenario Uji Coba Demo</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Ikuti petunjuk langkah demi langkah ini untuk mensimulasikan fitur-fitur utama platform Triton di hadapan
+            klien/penguji.
+          </p>
+        </div>
+
+        <!-- Scenario A -->
+        <div id="scen-guru" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold px-2.5 py-1 rounded bg-blue-100 text-blue-800">Skenario A</span>
+            <h4 class="font-extrabold text-slate-900 text-base">Pembuatan Tryout &amp; Konversi Rumus Matematika (Guru)
+            </h4>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Simulasi pembuatan tryout baru, pengetikan formula matematika mentah, konversi instan ke visual persamaan,
+            dan pengajuan draf.
+          </p>
+          <div class="border-t border-slate-100 pt-4 space-y-2 text-xs">
+            <p><strong>Langkah Uji:</strong></p>
+            <ol class="list-decimal pl-5 space-y-2 text-slate-600">
+              <li>Masuk ke browser dan akses <code
+                  class="bg-slate-100 px-1 rounded text-red-600 font-semibold">http://localhost:3000/login</code>.</li>
+              <li>Login dengan akun guru: Email <code class="bg-slate-100 px-1 font-mono">guru1@triton.id</code> dan
+                Password <code class="bg-slate-100 px-1 font-mono">guru123</code>.</li>
+              <li>Pada dashboard guru, klik tombol **"Buat Tryout Baru"**.</li>
+              <li>Isi Nama Tryout: <code class="bg-slate-100 px-1 font-mono">Ujian Aljabar Kelas 12</code>, pilih mata
+                pelajaran matematika, kelas <code class="bg-slate-100 px-1">12 SMA</code>, lalu klik simpan.</li>
+              <li>Pada halaman kelola soal, klik **"Tambah Soal Manual"**.</li>
+              <li>Di editor pertanyaan, ketik teks pecahan mentah: <code
+                  class="bg-slate-100 px-1 font-mono">2/4 + 2/3 = x/y</code>.</li>
+              <li>Sorot/blok teks <code class="bg-slate-100 px-1 font-mono">2/4 + 2/3 = x/y</code> menggunakan mouse
+                Anda. Floating button **"Σ Ubah Jadi Persamaan"** akan muncul di dekat kursor.</li>
+              <li>Klik tombol **"Σ Ubah Jadi Persamaan"**. Teks pecahan mentah akan otomatis terkonversi secara instan
+                menjadi format visual pecahan matematika yang indah!</li>
+              <li>(Opsional) Klik tepat pada rumus matematika yang baru terbentuk. Dialog input LaTeX Word-like akan
+                muncul otomatis di mana Anda dapat mengubah angka pembilang/penyebut secara langsung.</li>
+              <li>Pilih opsi jawaban, tentukan kunci jawaban, lalu klik **"Simpan Soal"**.</li>
+              <li>Di bagian bawah sidebar kiri, klik **"Ajukan Persetujuan"** agar status tryout berubah menjadi
+                *Pending Approval*.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Scenario B -->
+        <div id="scen-admin" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold px-2.5 py-1 rounded bg-red-100 text-red-800">Skenario B</span>
+            <h4 class="font-extrabold text-slate-900 text-base">Verifikasi Draf &amp; Alur Approval Tryout (Admin)</h4>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Menunjukkan peran administrator dalam menyaring data jenjang pendidikan sekolah dan melakukan review
+            terhadap usulan materi guru.
+          </p>
+          <div class="border-t border-slate-100 pt-4 space-y-2 text-xs">
+            <p><strong>Langkah Uji:</strong></p>
+            <ol class="list-decimal pl-5 space-y-2 text-slate-600">
+              <li>Logout dari halaman guru, masuk kembali ke halaman login.</li>
+              <li>Login dengan akun administrator: Email <code
+                  class="bg-slate-100 px-1 font-mono">admin@triton.id</code> dan Password <code
+                  class="bg-slate-100 px-1 font-mono">admin123</code>.</li>
+              <li>Pada dashboard utama admin, klik tab filter **"SD"**, **"SMP"**, atau **"SMA"** di bagian atas untuk
+                menunjukkan penyaringan data tryout dan siswa secara real-time.</li>
+              <li>Pada card "Daftar Tryout Menunggu Persetujuan", klik link **"Lihat semua"** untuk membuka halaman
+                **Approval**.</li>
+              <li>Temukan nama tryout yang diajukan oleh guru pada Skenario A, lalu klik tombol **"Tinjau / Review"**.
+              </li>
+              <li>Admin dapat membaca butir soal yang diusulkan guru. Klik **"Setujui &amp; Publish"** untuk merilis
+                ujian secara resmi agar dapat dikerjakan siswa.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Scenario C -->
+        <div id="scen-siswa" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold px-2.5 py-1 rounded bg-green-100 text-green-800">Skenario C</span>
+            <h4 class="font-extrabold text-slate-900 text-base">CBT Sandbox, Ujian Matematika Siswa &amp; Anti-Cheating
+            </h4>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Menunjukkan sistem ujian siswa dengan integrasi pengerjaan matematika (sintaks $) beserta demonstrasi sistem
+            penangkapan kecurangan (anti-cheat).
+          </p>
+          <div class="border-t border-slate-100 pt-4 space-y-2 text-xs">
+            <p><strong>Langkah Uji:</strong></p>
+            <ol class="list-decimal pl-5 space-y-2 text-slate-600">
+              <li>Logout dari admin, lalu login menggunakan akun siswa: Email <code
+                  class="bg-slate-100 px-1 font-mono">siswa1@triton.id</code> dan Password <code
+                  class="bg-slate-100 px-1 font-mono">siswa123</code>.</li>
+              <li>Pilih menu **Tryout**, cari tryout matematika yang dirilis pada Skenario B, dan klik **"Mulai"**. Klik
+                checklist persetujuan dan klik **"Mulai Tryout Sekarang"**.</li>
+              <li>Ujian akan memaksa siswa memasuki **Mode Layar Penuh (Fullscreen)**.</li>
+              <li><strong>Demo Anti-Cheat A (Exit Fullscreen):</strong> Tekan tombol <code
+                  class="bg-slate-100 px-1 font-mono">ESC</code> pada keyboard. Layar pengerjaan soal akan langsung
+                terkunci oleh panel merah peringatan. Ujian tidak bisa dilanjutkan sampai siswa mengeklik tombol
+                **"Kembali ke Layar Penuh"**.</li>
+              <li><strong>Demo Anti-Cheat B (Pindah Tab):</strong> Coba klik kanan atau buka tab baru di browser Anda.
+                Layar akan mendeteksi hilangnya fokus window (*Window Blur*) dan memunculkan notifikasi pop-up
+                pelanggaran: *Peringatan 1/3*.</li>
+              <li>Coba lakukan copy teks soal menggunakan kursor/klik kanan mouse. Anda akan melihat bahwa seleksi teks
+                dan klik kanan diblokir sepenuhnya.</li>
+              <li>Pada tipe soal essay/uraian, klik tombol **"Sisipkan Formula (Σ)"** di atas textarea jawaban siswa.
+              </li>
+              <li>Pilih template formula **"Pecahan"**. Sintaks LaTeX <code
+                  class="bg-slate-100 px-1 font-mono">$\frac{a}{b}$</code> akan disisipkan ke textarea kursor. Ganti
+                nilai <code class="bg-slate-100 px-1 font-mono">a</code> dan <code
+                  class="bg-slate-100 px-1 font-mono">b</code> dengan angka pilihan Anda.</li>
+              <li>Klik tombol **"Pratinjau Jawaban"** di bawah textarea. Hasil jawaban matematika uraian Anda akan
+                di-render menggunakan KaTeX secara rapi dan nyata.</li>
+              <li>Lakukan pelanggaran pindah tab/window sebanyak 3 kali berturut-turut. Pada pelanggaran keempat, sesi
+                ujian akan langsung dihentikan paksa oleh sistem, lembar jawaban dikumpulkan otomatis, dan status Anda
+                diubah menjadi terdiskualifikasi.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: SUPABASE SETUP ==================== -->
+      <section id="tab-supabase-setup" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Demo / Integrasi Cloud</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Konfigurasi Database Cloud Supabase</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Ikuti petunjuk di bawah ini untuk menghubungkan 6 microservices lokal Anda dengan 1 database cloud terpusat
+            di Supabase menggunakan skema PostgreSQL terisolasi.
+          </p>
+        </div>
+
+        <!-- SQL Script Schemas -->
+        <div id="step-schemas" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 1. Inisialisasi Skema di SQL Editor Supabase
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Daftar di Supabase, buat satu proyek database gratisan, lalu masuk ke menu **SQL Editor**. Salin dan
+            jalankan skrip berikut untuk memisahkan tabel microservices Anda agar tidak bertabrakan:
+          </p>
+          <div class="relative group">
+            <button onclick="copyCode('supabase-schemas-sql')"
+              class="absolute right-3 top-3 px-2.5 py-1 text-[10px] bg-slate-800 text-slate-300 rounded hover:bg-slate-700 transition-colors">Copy</button>
+            <pre class="bg-slate-900 p-4 rounded-xl shadow-inner"><code id="supabase-schemas-sql" class="language-sql">-- Buat schema virtual terpisah untuk membagi 5 database microservices
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS user_svc;
+CREATE SCHEMA IF NOT EXISTS sd;
+CREATE SCHEMA IF NOT EXISTS smp;
+CREATE SCHEMA IF NOT EXISTS sma;</code></pre>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Lalu, buka file migrasi lokal Anda (seperti <code
+              class="bg-slate-100 px-1 font-mono">services/sd-service/src/db/schema.sql</code>), salin seluruh isi teks
+            SQL-nya, tempelkan ke SQL Editor Supabase dengan menyisipkan baris penanda di baris pertama:
+          </p>
+          <pre class="bg-slate-900 p-3 rounded-lg text-xs text-emerald-400 font-mono">SET search_path TO sd; -- Wajib ditulis di baris pertama agar tabel masuk ke skema 'sd'
+-- [Salin seluruh tabel dari sd-service/src/db/schema.sql ke sini...]</pre>
+        </div>
+
+        <!-- Modification pool.ts -->
+        <div id="step-pool-edit" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 2. Hubungkan Skema pada pool.ts Backend
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Modifikasi file koneksi database <code class="bg-slate-100 px-1 font-mono">pool.ts</code> pada setiap modul
+            layanan backend (misalnya di <code
+              class="bg-slate-100 px-1 font-mono">services/sd-service/src/db/pool.ts</code>) agar membaca parameter
+            <code class="bg-slate-100 px-1">options</code> saat menginisialisasi pool koneksi Postgres:
+          </p>
+          <div class="relative group">
+            <button onclick="copyCode('pool-edit-code')"
+              class="absolute right-3 top-3 px-2.5 py-1 text-[10px] bg-slate-800 text-slate-300 rounded hover:bg-slate-700 transition-colors">Copy</button>
+            <pre class="bg-slate-900 p-4 rounded-xl shadow-inner"><code id="pool-edit-code" class="language-typescript">import { Pool } from 'pg'
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST,
+  port: Number(process.env.POSTGRES_PORT),
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
+  // Tambahkan ini agar dapat mengatur skema search_path database secara dinamis
+  options: process.env.POSTGRES_OPTIONS, 
+})
+
+export default pool</code></pre>
+          </div>
+        </div>
+
+        <!-- Environment Variables configuration -->
+        <div id="step-env-edit" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 3. Sesuaikan File .env Lokal Anda
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Buka file <code class="bg-slate-100 px-1 font-mono">.env</code> pada root proyek Anda. Ubah alamat host
+            mengarah ke link Supabase, dan definisikan parameter pencarian skema masing-masing:
+          </p>
+          <div class="relative group">
+            <button onclick="copyCode('env-supabase-code')"
+              class="absolute right-3 top-3 px-2.5 py-1 text-[10px] bg-slate-800 text-slate-300 rounded hover:bg-slate-700 transition-colors">Copy</button>
+            <pre class="bg-slate-900 p-4 rounded-xl shadow-inner"><code id="env-supabase-code" class="language-bash"># Koneksi Database Terpusat Cloud Supabase (Opsi 1)
+POSTGRES_HOST=aws-0-ap-southeast-3.pooler.supabase.com  # Ganti dengan host Supabase Anda
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres.your_project_id                 # Ganti dengan user id Supabase Anda
+POSTGRES_PASSWORD=your_secure_supabase_password        # Ganti dengan password database Supabase Anda
+POSTGRES_DB=postgres                                   # Database default di Supabase</code></pre>
+          </div>
+          <div
+            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 text-xs text-slate-800 leading-relaxed">
+            <strong>Catatan Tambahan untuk Developer:</strong><br />
+            Pastikan script penjalan dev/production (seperti <code
+              class="bg-slate-100 px-1 font-mono">scripts/dev.sh</code>) mewariskan parameter <code
+              class="bg-slate-100 px-1 font-mono">POSTGRES_OPTIONS</code> untuk masing-masing container backend dengan
+            format string CLI: <code class="bg-slate-100 px-1 font-mono">"-c search_path=sd"</code>, <code
+              class="bg-slate-100 px-1 font-mono">"-c search_path=smp"</code>, dsb.
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: VERCEL DEPLOY ==================== -->
+      <section id="tab-vercel-deploy" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Demo / Cloud Deploy</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Deployment Penuh ke Vercel &amp; Supabase</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Panduan lengkap langkah demi langkah untuk men-deploy frontend Next.js dan 6 backend microservices Express
+            ke **Vercel Serverless** dengan database cloud **Supabase**.
+          </p>
+        </div>
+
+        <div
+          class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
+          <span class="text-2xl mt-0.5">⚠️</span>
+          <div class="text-sm text-slate-800 leading-relaxed">
+            <strong>Keterbatasan Serverless Vercel</strong><br />
+            Menjalankan Express.js di Vercel menggunakan model **Serverless Functions**. Hal ini sangat baik untuk
+            keperluan demo gratisan karena tidak membutuhkan server VM menyala terus (no cold-start pricing). Namun,
+            session persistent di memori lokal server Express tidak bekerja; **Redis mutlak diperlukan** untuk menyimpan
+            cookies session (`triton.sid`).
+          </div>
+        </div>
+
+        <!-- Section A: Backend Deploy -->
+        <div id="vercel-back" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 1. Deploy 6 Microservices ke Vercel (Backend)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Untuk setiap service di dalam folder <code class="bg-slate-100 px-1 font-mono">services/</code> (seperti
+            <code class="bg-slate-100 px-1 font-mono">auth-service</code>, <code
+              class="bg-slate-100 px-1 font-mono">user-service</code>, dsb), Anda harus menambahkan berkas <code
+              class="bg-slate-100 px-1 font-mono">vercel.json</code> di folder root service masing-masing agar Vercel
+            dapat mengompilasi dan mengarahkan rute Express.js:
+          </p>
+          <div class="relative group">
+            <button onclick="copyCode('vercel-json-code')"
+              class="absolute right-3 top-3 px-2.5 py-1 text-[10px] bg-slate-800 text-slate-300 rounded hover:bg-slate-700 transition-colors">Copy</button>
+            <pre class="bg-slate-900 p-4 rounded-xl shadow-inner"><code id="vercel-json-code" class="language-json">{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/index.ts"
+    }
+  ]
+}</code></pre>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            <strong>Langkah Deploy Backend di Vercel Dashboard:</strong>
+          </p>
+          <ol class="list-decimal pl-5 text-xs text-slate-500 space-y-2">
+            <li>Commit dan push seluruh kode proyek Triton Anda ke **GitHub**.</li>
+            <li>Buka dashboard Vercel, lalu klik **"Add New Project"**.</li>
+            <li>Pilih repositori proyek Triton Anda.</li>
+            <li>Pada bagian konfigurasi:
+              <ul class="list-disc pl-5 mt-1 space-y-1">
+                <li>Beri nama project yang unik (misal: <code
+                    class="bg-slate-100 px-1 font-mono">triton-sd-service</code>).</li>
+                <li>Atur **Root Directory** ke folder service spesifik (contoh: <code
+                    class="bg-slate-100 px-1 font-mono">services/sd-service</code>).</li>
+                <li>Atur **Framework Preset** ke *Other*.</li>
+              </ul>
+            </li>
+            <li>Buka dropdown **Environment Variables**, masukkan seluruh variabel dari `.env` lokal Anda yang
+              disesuaikan dengan koneksi database cloud Supabase:
+              <pre class="bg-slate-900 p-3 rounded-lg text-emerald-400 font-mono mt-1 text-[10px] leading-snug"># Ganti host database mengarah ke Supabase (gunakan detail dari Opsi 1)
+POSTGRES_HOST=aws-0-ap-southeast-3.pooler.supabase.com
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres.your_project_id
+POSTGRES_PASSWORD=your_secure_supabase_password
+POSTGRES_DB=postgres
+POSTGRES_OPTIONS="-c search_path=sd"  # sesuaikan skema database per service (auth, user_svc, sd, smp, sma)
+
+# Khusus auth-service, Anda wajib menggunakan Upstash Redis (Serverless Redis)
+REDIS_HOST=your-upstash-redis-endpoint.upstash.io
+REDIS_PORT=31234
+REDIS_PASSWORD=your_upstash_redis_password</pre>
+            </li>
+            <li>Klik **"Deploy"**. Ulangi langkah di atas untuk ke-6 service backend (api-gateway, auth-service,
+              user-service, sd-service, smp-service, sma-service) sehingga Anda memiliki 6 URL Vercel backend.</li>
+          </ol>
+        </div>
+
+        <!-- Section B: Frontend Deploy -->
+        <div id="vercel-front" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 2. Deploy Next.js ke Vercel (Frontend)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Men-deploy frontend Next.js 14 client agar terhubung secara online dengan API Gateway yang sudah di-deploy
+            pada langkah sebelumnya:
+          </p>
+          <ol class="list-decimal pl-5 text-xs text-slate-500 space-y-2">
+            <li>Di dashboard Vercel, klik **"Add New Project"** dan pilih repositori yang sama.</li>
+            <li>Atur **Root Directory** ke folder <code class="bg-slate-100 px-1 font-mono">frontend</code>.</li>
+            <li>Pilih **Framework Preset** ke **Next.js**.</li>
+            <li>Di kolom **Environment Variables**, masukkan URL API Gateway yang sudah di-deploy di Vercel:
+              <pre
+                class="bg-slate-900 p-3 rounded-lg text-emerald-400 font-mono mt-1 text-[10px]">NEXT_PUBLIC_API_URL=https://triton-gateway.vercel.app  # Domain API Gateway hasil deploy</pre>
+            </li>
+            <li>Klik **"Deploy"**. Frontend web Next.js Anda kini online dan siap digunakan demo oleh siapapun di
+              internet!</li>
+          </ol>
+        </div>
+
+        <!-- Section C: Seeding Database -->
+        <div id="seed-cloud-db" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> 3. Seeding Database Supabase (Master Data &amp;
+            User Dummy)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Karena Vercel berjalan secara serverless, Anda tidak bisa memicu perintah pengisian data awal (`make seed`)
+            langsung dari server Vercel.
+          </p>
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 text-xs text-slate-800 leading-relaxed">
+            <strong>Trik Pengembang (Trik Seeding Supabase):</strong><br />
+            Anda hanya perlu melakukan seeding **satu kali saja** dari laptop lokal Anda dengan mengarahkan koneksinya
+            langsung ke Supabase!
+            <ol class="list-decimal pl-5 mt-2 space-y-1.5">
+              <li>Ubah sementara konfigurasi database di file <code class="bg-slate-100 px-1 font-mono">.env</code> root
+                lokal Anda menggunakan Host, User, dan Password **Supabase** Anda.</li>
+              <li>Pastikan skema database dan tabel sudah terbuat di Supabase (dari langkah Tab 3).</li>
+              <li>Buka terminal lokal Anda, lalu jalankan perintah seeding:
+                <pre class="bg-slate-900 p-2.5 rounded-lg text-emerald-400 font-mono mt-1 text-[10px]">make seed</pre>
+              </li>
+              <li>Skrip TypeScript lokal akan berjalan dan langsung menyuntikkan data akun dummy (Admin, Guru, Siswa,
+                Mapel, Tryout SD/SMP/SMA) ke database cloud Supabase Anda.</li>
+              <li>Verifikasi data dengan membuka menu **Table Editor** di dashboard Supabase. Jika tabel telah berisi
+                data, proses seeding telah berhasil 100%!</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: TUNNELING ==================== -->
+      <section id="tab-tunneling" class="tab-content hidden space-y-8">
+        <div class="border-b border-slate-100 pb-5">
+          <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Triton Demo / Tunneling</div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Membagikan Link Demo secara Online</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            Gunakan teknik tunneling untuk membagikan aplikasi Triton yang sedang berjalan di laptop lokal Anda ke
+            internet agar bisa diakses oleh penguji jarak jauh.
+          </p>
+        </div>
+
+        <!-- Ngrok Guide -->
+        <div id="tunnel-ngrok" class="space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Metode A: Ekspos Menggunakan Ngrok (Rekomendasi)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Ngrok adalah utilitas tunneling paling populer dan aman. Ikuti instruksi ini:
+          </p>
+          <ol class="list-decimal pl-5 text-xs text-slate-500 space-y-2">
+            <li>Download dan daftarkan akun gratis di <a href="https://ngrok.com" target="_blank"
+                class="text-blue-500 hover:underline">ngrok.com</a> untuk mendapatkan auth token.</li>
+            <li>Hubungkan komputer Anda dengan token ngrok di terminal:
+              <pre
+                class="bg-slate-900 p-3 rounded-lg text-emerald-400 font-mono mt-1">ngrok config add-authtoken &lt;your_auth_token&gt;</pre>
+            </li>
+            <li>Jalankan demo aplikasi Triton Anda secara lokal di port 3000 (<code
+                class="bg-slate-100 px-1 font-mono">make dev</code> dan <code
+                class="bg-slate-100 px-1 font-mono">make frontend</code>).</li>
+            <li>Buka tab terminal baru, lalu ekspos port web Next.js Anda (3000):
+              <pre class="bg-slate-900 p-3 rounded-lg text-emerald-400 font-mono mt-1">ngrok http 3000</pre>
+            </li>
+            <li>Salin alamat HTTPS acak yang dihasilkan oleh ngrok (contoh: <code
+                class="bg-slate-100 px-1">https://a1b2-103-120-10.ngrok-free.app</code>) dan bagikan ke klien.</li>
+          </ol>
+        </div>
+
+        <!-- Localtunnel Guide -->
+        <div id="tunnel-localtunnel" class="space-y-4 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Metode B: Ekspos Menggunakan Localtunnel (Instan
+            Tanpa Daftar)
+          </h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Jika Anda ingin cara yang paling instan tanpa perlu mendaftar akun atau memasang token, gunakan
+            **Localtunnel** berbasis Node.js package:
+          </p>
+          <ol class="list-decimal pl-5 text-xs text-slate-500 space-y-2">
+            <li>Jalankan server demo Triton lokal Anda terlebih dahulu.</li>
+            <li>Buka terminal baru, lalu jalankan perintah berikut secara langsung menggunakan NPM:
+              <pre class="bg-slate-900 p-3 rounded-lg text-emerald-400 font-mono mt-1">npx localtunnel --port 3000</pre>
+            </li>
+            <li>Localtunnel akan memberikan URL internet sementara secara gratis.</li>
+            <li>Saat URL dibuka di browser luar, masukkan alamat IP eksternal komputer host Anda (ditunjukkan oleh
+              terminal localtunnel) sebagai kunci pembuka keamanan awal.</li>
+          </ol>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer
+    class="bg-slate-900 border-t border-slate-800 px-6 py-5 flex items-center justify-between text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <img src="../logo.png" alt="Triton" class="h-5 object-contain bg-white rounded p-0.5" />
+      <span>&copy; 2026 Developer Portal. All rights reserved.</span>
+    </div>
+    <p>Triton Denpasar</p>
+  </footer>
+
+  <!-- Code Copying & Dynamic Scroll Tracking JS -->
+  <script>
+    // Tab switching logic
+    function switchTab(tabId) {
+      // Hide all tabs
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => {
+        tab.classList.add('hidden');
+      });
+
+      // Show target tab
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Update button highlights
+      const navButtons = document.querySelectorAll('#sidebar-nav button');
+      navButtons.forEach(btn => {
+        btn.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent";
+        const checkSpan = btn.querySelector('.nav-check');
+        if (checkSpan && checkSpan.textContent !== "✓") {
+          checkSpan.textContent = "○";
+          checkSpan.className = "nav-check text-[10px] text-slate-600";
+        }
+      });
+
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-blue-400 bg-slate-900/80 border border-slate-800";
+        const checkSpan = activeBtn.querySelector('.nav-check');
+        if (checkSpan) {
+          checkSpan.textContent = "✓";
+          checkSpan.className = "nav-check text-[10px] text-blue-500 font-bold";
+        }
+      }
+
+      // Update progress bar
+      updateProgress();
+    }
+
+    // Anchor navigation helper
+    function navigateToAnchor(tabId, anchorId) {
+      // First switch tab
+      switchTab(tabId);
+
+      // Scroll to element
+      setTimeout(() => {
+        const element = document.getElementById(anchorId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+
+    // Reading progress calculation based on visited tabs
+    function updateProgress() {
+      const buttons = document.querySelectorAll('#sidebar-nav button');
+      let checked = 0;
+      buttons.forEach(btn => {
+        const checkSpan = btn.querySelector('.nav-check');
+        if (checkSpan && checkSpan.textContent === "✓") {
+          checked++;
+        }
+      });
+      const percent = Math.round((checked / buttons.length) * 100);
+      document.getElementById('progress-text').textContent = percent + '%';
+      document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    // Copy block code to clipboard
+    function copyCode(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Kode disalin ke clipboard!");
+      }).catch(err => {
+        console.error("Gagal menyalin kode: ", err);
+      });
+    }
+
+    // Copy plain text to clipboard
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Salin berhasil: " + text);
+      }).catch(err => {
+        console.error("Gagal menyalin: ", err);
+      });
+    }
+
+    // Init progress on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Mark first tab as checked on initial render
+      const firstBtn = document.getElementById('btn-tab-demo-overview');
+      if (firstBtn) {
+        const checkSpan = firstBtn.querySelector('.nav-check');
+        if (checkSpan) {
+          checkSpan.textContent = "✓";
+          checkSpan.className = "nav-check text-[10px] text-blue-500 font-bold";
+        }
+      }
+      // Initialize highlight.js
+      hljs.highlightAll();
+      updateProgress();
+    });
+  </script>
+</body>
+
+</html>
