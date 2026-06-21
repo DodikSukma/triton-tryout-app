@@ -52,8 +52,8 @@ export default function ProfilePage({ role, email }: ProfilePageProps) {
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-black text-slate-900">Profil Saya</h1>
-        <p className="text-slate-500 mt-1">Kelola informasi pribadi dan keamanan akun Anda.</p>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100">Profil Saya</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Kelola informasi pribadi dan keamanan akun Anda.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -64,9 +64,9 @@ export default function ProfilePage({ role, email }: ProfilePageProps) {
         </aside>
 
         {/* RIGHT CARD — tabs */}
-        <section className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <section className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
 
-          <div className="border-b border-slate-100 flex">
+          <div className="border-b border-slate-100 dark:border-slate-700 flex">
             <TabButton active={tab === 'info'} onClick={() => setTab('info')} Icon={User} label="Informasi Pribadi" />
             <TabButton active={tab === 'security'} onClick={() => setTab('security')} Icon={Lock} label="Keamanan" />
           </div>
@@ -133,7 +133,7 @@ function AvatarCard({ profile, role, email, onUpdate }: {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center sticky top-6">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8 text-center sticky top-6">
 
       <div
         onClick={() => !uploading && fileRef.current?.click()}
@@ -176,22 +176,22 @@ function AvatarCard({ profile, role, email, onUpdate }: {
         />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-6">{name}</h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-6">{name}</h2>
       <span className="inline-block bg-triton-blue-50 text-triton-blue-600 rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider mt-2">
         {role}
       </span>
-      <p className="text-slate-400 text-sm mt-2">{email}</p>
+      <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{email}</p>
 
       {profile?.bio && (
-        <p className="text-slate-600 text-sm mt-4 italic border-t border-slate-100 pt-4">
+        <p className="text-slate-600 dark:text-slate-400 text-sm mt-4 italic border-t border-slate-100 dark:border-slate-700 pt-4">
           {profile.bio}
         </p>
       )}
 
       {role === 'siswa' && profile?.kelas && (
-        <div className="mt-4 pt-4 border-t border-slate-100">
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Kelas</p>
-          <p className="font-semibold text-slate-700 mt-1">{profile.kelas}</p>
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">Kelas</p>
+          <p className="font-semibold text-slate-700 dark:text-slate-300 mt-1">{profile.kelas}</p>
         </div>
       )}
     </div>
@@ -207,8 +207,8 @@ function TabButton({ active, onClick, Icon, label }: {
       onClick={onClick}
       className={`flex-1 px-5 py-4 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2 ${
         active
-          ? 'text-triton-blue-600 border-b-2 border-triton-blue-500 -mb-px bg-white'
-          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+          ? 'text-triton-blue-600 border-b-2 border-triton-blue-500 -mb-px bg-white dark:bg-slate-800'
+          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'
       }`}
     >
       <Icon size={16} />
@@ -281,7 +281,7 @@ function InfoTab({ role, profile, email, onUpdate }: {
         <input
           value={email}
           disabled
-          className={`${inputCls} bg-slate-50 text-slate-400 cursor-not-allowed`}
+          className={`${inputCls} bg-slate-50 dark:bg-slate-800 text-slate-400 cursor-not-allowed`}
         />
       </Field>
 
@@ -297,7 +297,7 @@ function InfoTab({ role, profile, email, onUpdate }: {
 
       {role === 'guru' && (
         <Field label="Mata Pelajaran yang Diajar">
-          <div className="border border-slate-200 rounded-xl p-3 min-h-[48px] flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-triton-blue-500/20 focus-within:border-triton-blue-500 transition-all">
+          <div className="border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl p-3 min-h-[48px] flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-triton-blue-500/20 focus-within:border-triton-blue-500 transition-all">
             {subjectTags.map((s) => (
               <span key={s} className="bg-triton-blue-50 text-triton-blue-600 rounded-full px-3 py-1 text-sm font-medium flex items-center gap-1.5">
                 {s}
@@ -309,7 +309,7 @@ function InfoTab({ role, profile, email, onUpdate }: {
             <select
               value=""
               onChange={(e) => { if (e.target.value) { addSubject(e.target.value); e.target.value = '' } }}
-              className="bg-transparent outline-none text-sm text-slate-500 cursor-pointer hover:text-slate-700"
+              className="bg-transparent outline-none text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300"
             >
               <option value="">+ Tambah mata pelajaran</option>
               {SUBJECTS.filter((s) => !subjectTags.includes(s)).map((s) => (
@@ -418,7 +418,7 @@ function SecurityTab() {
               <span
                 key={seg}
                 className={`h-1.5 rounded-full transition-colors ${
-                  seg <= strength.score ? strength.barColor : 'bg-slate-200'
+                  seg <= strength.score ? strength.barColor : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               />
             ))}
@@ -450,18 +450,18 @@ function SecurityTab() {
 }
 
 // ─── Subcomponents ─────────────────────────────────────────────
-const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 text-slate-900 text-sm transition-all bg-white'
+const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 text-slate-900 dark:text-slate-100 text-sm transition-all bg-white dark:bg-slate-700 dark:placeholder:text-slate-500'
 
 function Field({ label, required, hint, children }: {
   label: string; required?: boolean; hint?: string; children: React.ReactNode
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
+      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-slate-400 mt-1.5">{hint}</p>}
+      {hint && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">{hint}</p>}
     </div>
   )
 }
@@ -472,7 +472,7 @@ function PasswordField({ label, value, onChange, show, onToggle, placeholder, er
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{label}</label>
       <div className="relative">
         <input
           type={show ? 'text' : 'password'}
@@ -484,7 +484,7 @@ function PasswordField({ label, value, onChange, show, onToggle, placeholder, er
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition-colors"
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>

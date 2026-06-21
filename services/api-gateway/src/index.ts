@@ -7,13 +7,13 @@ import { requireAuth, requireRole } from './middleware/auth.middleware'
 const app = express()
 const PORT = process.env.PORT ?? 4000
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL ?? 'http://localhost:4001'
-const USER_SERVICE_URL = process.env.USER_SERVICE_URL ?? 'http://localhost:4002'
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:4001'
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:4002'
 
 // ─── Education-level services (replace soal-service + jawaban-service) ───────
-const SD_SERVICE_URL = process.env.SD_SERVICE_URL ?? 'http://localhost:4005'
-const SMP_SERVICE_URL = process.env.SMP_SERVICE_URL ?? 'http://localhost:4006'
-const SMA_SERVICE_URL = process.env.SMA_SERVICE_URL ?? 'http://localhost:4007'
+const SD_SERVICE_URL = process.env.SD_SERVICE_URL || 'http://localhost:4005'
+const SMP_SERVICE_URL = process.env.SMP_SERVICE_URL || 'http://localhost:4006'
+const SMA_SERVICE_URL = process.env.SMA_SERVICE_URL || 'http://localhost:4007'
 
 app.use(cors({
   origin: (origin, callback) => {

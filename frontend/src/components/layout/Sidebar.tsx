@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   LogOut, LayoutDashboard, Users, BookOpen, GraduationCap,
   User, BarChart2, FileText, X, Database, ClipboardCheck, ScrollText,
+  Sun, Moon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
@@ -13,6 +14,7 @@ import { Role } from '@/types'
 import { useProfile } from '@/hooks/useAuth'
 import { getEducationLevel, LEVEL_THEME } from '@/lib/level'
 import LevelSwitcher from './LevelSwitcher'
+import { useDarkMode } from '@/contexts/ThemeContext'
 
 type NavItem =
   | { type: 'link'; label: string; href: string; icon: React.ReactNode }
@@ -58,6 +60,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
   const searchParams = useSearchParams()
   const router = useRouter()
   const { profile } = useProfile()
+  const { theme, toggleTheme } = useDarkMode()
   const navItems = navByRole[role]
 
   const displayName = profile?.nama_lengkap || fallbackName || 'User'
@@ -90,7 +93,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
 
   const sidebarContent = (
     <>
-      <div className="px-6 pt-8 pb-6 border-b border-slate-100/60 flex items-center justify-between">
+      <div className="px-6 pt-8 pb-6 border-b border-slate-100/60 dark:border-slate-700/60 flex items-center justify-between">
         <Link href={`/${role}/dashboard`} className="inline-block hover:opacity-80 transition-opacity" onClick={onMobileClose}>
           <div className="w-32 h-10 relative">
             <Image src="/logo.png" alt="Triton Denpasar" fill priority className="object-contain" />
@@ -137,7 +140,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
         })}
       </nav>
 
-      <div className="border-t border-slate-100/80 p-4 space-y-2 bg-slate-50/50">
+      <div className="border-t border-slate-100/80 dark:border-slate-700/80 p-4 space-y-2 bg-slate-50/50 dark:bg-slate-800/50">
         <Link
           href={`/${role}/profil`}
           onClick={onMobileClose}
@@ -164,8 +167,18 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
           </div>
         </Link>
         <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-all group"
+        >
+          {theme === 'dark'
+            ? <Sun size={18} className="text-yellow-400 group-hover:rotate-12 transition-transform" />
+            : <Moon size={18} className="text-slate-400 group-hover:-rotate-12 transition-transform" />
+          }
+          {theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}
+        </button>
+        <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all group"
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all group"
         >
           <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
           Keluar
@@ -177,7 +190,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
   return (
     <>
       {/* Desktop sidebar — visible lg+ */}
-      <aside className="hidden lg:flex w-64 shrink-0 fixed left-0 top-0 h-screen flex-col bg-white border-r border-slate-100 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      <aside className="hidden lg:flex w-64 shrink-0 fixed left-0 top-0 h-screen flex-col bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-700 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         {sidebarContent}
       </aside>
 
@@ -188,7 +201,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
             className="absolute inset-0 bg-black/40"
             onClick={onMobileClose}
           />
-          <aside className="absolute left-0 top-0 h-full w-[280px] flex flex-col bg-white shadow-xl z-50 animate-slide-in-left">
+          <aside className="absolute left-0 top-0 h-full w-[280px] flex flex-col bg-white dark:bg-slate-900 shadow-xl z-50 animate-slide-in-left">
             {sidebarContent}
           </aside>
         </div>

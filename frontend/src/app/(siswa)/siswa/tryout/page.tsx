@@ -65,7 +65,7 @@ export default function SiswaTryoutListPage() {
           const r = riwayatMap.get(t.id)
           let status_siswa: EnrichedTryout['status_siswa'] = 'not_started'
           if (r) {
-            if (r.status === 'selesai') status_siswa = 'done'
+            if (r.status === 'selesai' || r.status === 'timeout') status_siswa = 'done'
             else if (r.status === 'berlangsung') status_siswa = 'in_progress'
           }
           return { ...t, status_siswa, nilai: r?.nilai, sesi_id: r?.sesi_id }
@@ -99,8 +99,8 @@ export default function SiswaTryoutListPage() {
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-black text-slate-900">Tryout Tersedia</h1>
-        <p className="text-slate-500 mt-1">Pilih tryout untuk dikerjakan atau lanjutkan yang sedang berjalan.</p>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100">Tryout Tersedia</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Pilih tryout untuk dikerjakan atau lanjutkan yang sedang berjalan.</p>
       </header>
 
       {/* Filters */}
@@ -111,13 +111,13 @@ export default function SiswaTryoutListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama tryout..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 text-sm transition-all"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 text-sm transition-all"
           />
         </div>
         <select
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 transition-all min-w-[180px]"
+          className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 transition-all min-w-[180px]"
         >
           <option value="all">Semua Mata Pelajaran</option>
           {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -125,7 +125,7 @@ export default function SiswaTryoutListPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as StatusFilter)}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 transition-all min-w-[180px]"
+          className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-triton-blue-500/20 focus:border-triton-blue-500 transition-all min-w-[180px]"
         >
           <option value="all">Semua Status</option>
           <option value="not_started">Belum Dikerjakan</option>
@@ -138,10 +138,10 @@ export default function SiswaTryoutListPage() {
       {loading ? (
         <div className="text-slate-400 text-center py-16">Memuat data...</div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
-          <p className="text-slate-500 text-lg font-medium">Tidak ada tryout yang cocok</p>
-          <p className="text-slate-400 text-sm mt-1">Coba ubah filter atau kata kunci pencarian.</p>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
+          <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+          <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">Tidak ada tryout yang cocok</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Coba ubah filter atau kata kunci pencarian.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -166,7 +166,7 @@ export default function SiswaTryoutListPage() {
             return (
               <div
                 key={t.id}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col"
+                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col"
               >
                 <div className={`h-1.5 ${stripeColor}`} />
                 <div className="p-6 flex-1 flex flex-col">
@@ -177,9 +177,9 @@ export default function SiswaTryoutListPage() {
                     </span>
                   </div>
 
-                  <h3 className="font-bold text-lg text-slate-900 leading-snug mb-3">{t.nama_tryout}</h3>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 leading-snug mb-3">{t.nama_tryout}</h3>
 
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-4">
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
                     <span className="inline-flex items-center gap-1.5">
                       <Clock size={14} className="text-slate-400" />
                       {formatDurasi(t.durasi_menit)}
@@ -192,7 +192,7 @@ export default function SiswaTryoutListPage() {
 
                   {t.status_siswa === 'done' && t.nilai !== undefined && t.nilai !== null && (
                     <div className="mb-4 flex items-baseline gap-1">
-                      <span className="text-sm text-slate-500">Nilai:</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">Nilai:</span>
                       <span className="text-3xl font-black text-green-500 leading-none">{Math.round(Number(t.nilai))}</span>
                       <span className="text-sm text-slate-400">/100</span>
                     </div>

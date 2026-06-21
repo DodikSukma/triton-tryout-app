@@ -135,8 +135,8 @@ export default function GuruDashboard() {
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900">Dashboard Guru</h1>
-          <p className="text-slate-500 mt-1 text-sm">Kelola dan pantau tryout yang Anda buat.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100">Dashboard Guru</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Kelola dan pantau tryout yang Anda buat.</p>
         </div>
         <button
           onClick={() => setCreateOpen(true)}
@@ -156,15 +156,15 @@ export default function GuruDashboard() {
 
       {/* Filter tabs */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <h2 className="text-xl font-bold text-slate-900">Tryout Saya</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Tryout Saya</h2>
         <div className="flex gap-1.5 flex-wrap">
           {(['all', 'published', 'draft', 'closed'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`text-sm px-4 py-1.5 rounded-xl font-medium transition-colors ${filter === f
-                  ? 'bg-blue-50 text-blue-600 font-semibold'
-                  : 'text-slate-500 hover:bg-slate-100'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                 }`}
             >
               {f === 'all' ? 'Semua' : f === 'published' ? 'Aktif' : f === 'draft' ? 'Draft' : 'Selesai'}
@@ -179,10 +179,10 @@ export default function GuruDashboard() {
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center bg-white rounded-2xl border border-slate-100">
-          <BookOpen className="w-16 h-16 text-slate-200 mb-4" />
-          <p className="font-semibold text-slate-400">Belum ada tryout</p>
-          <p className="text-sm text-slate-400 mt-1">
+        <div className="flex flex-col items-center justify-center py-24 text-center bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+          <BookOpen className="w-16 h-16 text-slate-200 dark:text-slate-700 mb-4" />
+          <p className="font-semibold text-slate-400 dark:text-slate-500">Belum ada tryout</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
             {filter === 'all' ? "Klik '+ Buat Tryout Baru' untuk mulai" : `Tidak ada tryout dengan status "${filter}"`}
           </p>
         </div>
@@ -280,7 +280,7 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
   const hiddenCount = (students?.length ?? 0) - SHOW_MAX
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col">
+    <div className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col">
       {/* Subject color bar */}
       <div className={`h-1.5 bg-gradient-to-r ${colors.bar}`} />
 
@@ -297,15 +297,15 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
-                className="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 flex items-center justify-center transition-colors"
               >
                 <MoreHorizontal size={16} />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-20 py-1 animate-fade-in">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 z-20 py-1 animate-fade-in">
                   <Link
                     href={`/guru/tryout/${t.id}/soal`}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
                     <BookOpen size={14} className="text-blue-500" />
@@ -313,7 +313,7 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
                   </Link>
                   <Link
                     href={`/guru/tryout/${t.id}/hasil`}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
                     <BarChart2 size={14} className="text-violet-500" />
@@ -321,12 +321,12 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
                   </Link>
                   <button
                     onClick={() => { setMenuOpen(false); onEdit() }}
-                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
                   >
-                    <Pencil size={14} className="text-slate-400" />
+                    <Pencil size={14} className="text-slate-400 dark:text-slate-500" />
                     Edit Tryout
                   </button>
-                  <div className="border-t border-slate-100 my-1" />
+                  <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
                   <button
                     onClick={() => { setMenuOpen(false); onDelete() }}
                     className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
@@ -341,10 +341,10 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-lg text-slate-900 line-clamp-1">{t.nama_tryout}</h3>
+        <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 line-clamp-1">{t.nama_tryout}</h3>
 
         {/* Meta */}
-        <div className="flex gap-4 mt-2 text-slate-400 text-sm">
+        <div className="flex gap-4 mt-2 text-slate-400 dark:text-slate-500 text-sm">
           <span className="flex items-center gap-1">
             <Clock size={14} /> {t.durasi_menit} mnt
           </span>
@@ -362,18 +362,18 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
         )}
 
         {/* Primary action */}
-        <div className="pt-4 mt-4 border-t border-slate-100">
+        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
           <Link
             href={`/guru/tryout/${t.id}/soal`}
-            className="flex items-center justify-center gap-1.5 w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-xl py-2 text-sm transition-colors"
+            className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 font-semibold rounded-xl py-2 text-sm transition-colors"
           >
             Kelola Soal <span className="group-hover:translate-x-0.5 transition-transform inline-block">→</span>
           </Link>
         </div>
 
         {/* ── Peserta toggle row ── */}
-        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <span className={`flex items-center gap-1.5 text-sm ${peserta === 0 ? 'text-slate-300' : 'text-slate-500'}`}>
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <span className={`flex items-center gap-1.5 text-sm ${peserta === 0 ? 'text-slate-300 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
             <Users size={14} className={peserta === 0 ? 'text-slate-200' : 'text-slate-400'} />
             {peserta === 0 ? 'Belum ada siswa mengerjakan' : `${peserta} siswa selesai`}
           </span>
@@ -427,8 +427,8 @@ function StudentRow({ student: s }: { student: RekapStudent }) {
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
         {initial}
       </div>
-      <span className="text-sm font-medium text-slate-700 flex-1 truncate min-w-0">{s.nama_siswa}</span>
-      <span className="text-xs text-slate-400 w-16 shrink-0 truncate">{s.kelas}</span>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1 truncate min-w-0">{s.nama_siswa}</span>
+      <span className="text-xs text-slate-400 dark:text-slate-500 w-16 shrink-0 truncate">{s.kelas}</span>
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold shrink-0 ${badge}`}>
         {Math.round(s.nilai)}
       </span>
@@ -441,10 +441,10 @@ function StudentSkeleton() {
     <div className="space-y-2 pt-1">
       {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} className="flex items-center gap-2.5 py-1.5">
-          <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse shrink-0" />
-          <div className="flex-1 h-3 bg-slate-100 animate-pulse rounded-lg" />
-          <div className="w-12 h-3 bg-slate-100 animate-pulse rounded-lg shrink-0" />
-          <div className="w-10 h-5 bg-slate-100 animate-pulse rounded-full shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 animate-pulse shrink-0" />
+          <div className="flex-1 h-3 bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg" />
+          <div className="w-12 h-3 bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg shrink-0" />
+          <div className="w-10 h-5 bg-slate-100 dark:bg-slate-700 animate-pulse rounded-full shrink-0" />
         </div>
       ))}
     </div>
@@ -527,19 +527,19 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={saving ? undefined : onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">
+      <div className="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
             {mode === 'create' ? 'Buat Tryout Baru' : 'Edit Tryout'}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               Nama Tryout <span className="text-red-500">*</span>
             </label>
             <input
@@ -553,7 +553,7 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
 
           {/* Level — locked on edit (a tryout can't move between level services) */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               Jenjang <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -564,14 +564,14 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
                   disabled={mode === 'edit'}
                   onClick={() => changeLevel(lvl)}
                   className={`py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    form.level === lvl ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    form.level === lvl ? 'bg-blue-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
                 >
                   {lvl}
                 </button>
               ))}
             </div>
-            {mode === 'edit' && <p className="text-xs text-slate-400 mt-1.5">Jenjang tidak dapat diubah saat mengedit.</p>}
+            {mode === 'edit' && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Jenjang tidak dapat diubah saat mengedit.</p>}
           </div>
 
           <SelectField
@@ -600,7 +600,7 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
           />
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Durasi</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Durasi</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
@@ -611,9 +611,9 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
                 onChange={(e) => setForm({ ...form, durasi_menit: Number(e.target.value) || 90 })}
                 className={`${inputCls} w-28 text-center`}
               />
-              <span className="text-sm text-slate-500">menit</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">menit</span>
             </div>
-            <p className="text-xs text-slate-400 mt-1.5">Waktu pengerjaan untuk siswa (15–300 menit)</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Waktu pengerjaan untuk siswa (15–300 menit)</p>
           </div>
 
           <div className="space-y-2">
@@ -632,7 +632,7 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">
+            <button type="button" onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">
               Batal
             </button>
             <button type="submit" disabled={saving} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-60">
@@ -657,7 +657,7 @@ function SelectField({ label, value, onChange, options, placeholder, required, d
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
+      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
@@ -665,7 +665,7 @@ function SelectField({ label, value, onChange, options, placeholder, required, d
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className={`${inputCls} appearance-none pr-10 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}
+          className={`${inputCls} appearance-none pr-10 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed`}
         >
           <option value="">{placeholder}</option>
           {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -684,21 +684,21 @@ function DeleteTryoutDialog({ tryout, onCancel, onConfirm }: {
 }) {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mx-auto mb-3">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 mx-auto mb-3">
           <AlertTriangle size={22} />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 text-center">Hapus Tryout?</h3>
-        <p className="text-sm font-semibold text-slate-600 text-center mt-1">"{tryout.nama_tryout}"</p>
-        <p className="text-xs text-slate-400 text-center mt-2">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 text-center">Hapus Tryout?</h3>
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 text-center mt-1">"{tryout.nama_tryout}"</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-2">
           Tryout beserta semua soalnya akan dihapus permanen.
         </p>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-4 flex items-start gap-2">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 mt-4 flex items-start gap-2">
           <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
           <p className="text-xs text-red-600">Data yang sudah dihapus tidak bisa dikembalikan.</p>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onCancel} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors">Batal</button>
+          <button onClick={onCancel} className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors">Batal</button>
           <button onClick={onConfirm} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors">Ya, Hapus Permanen</button>
         </div>
       </div>
@@ -711,13 +711,13 @@ function StatCard({ label, value, Icon, color }: {
   label: string; value: number; Icon: React.ElementType; color: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center gap-4">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex items-center gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
         <Icon size={22} />
       </div>
       <div>
-        <p className="text-3xl font-black text-slate-900 tabular-nums">{value}</p>
-        <p className="text-sm text-slate-500 mt-0.5">{label}</p>
+        <p className="text-3xl font-black text-slate-900 dark:text-slate-100 tabular-nums">{value}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
       </div>
     </div>
   )
@@ -727,10 +727,10 @@ function ToggleRow({ label, desc, checked, onChange }: {
   label: string; desc: string; checked: boolean; onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-700">{label}</p>
-        <p className="text-xs text-slate-400">{desc}</p>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{desc}</p>
       </div>
       <button
         type="button"
@@ -744,4 +744,4 @@ function ToggleRow({ label, desc, checked, onChange }: {
   )
 }
 
-const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 text-sm transition-all bg-white'
+const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm transition-all bg-white dark:bg-slate-700 dark:placeholder:text-slate-500'
