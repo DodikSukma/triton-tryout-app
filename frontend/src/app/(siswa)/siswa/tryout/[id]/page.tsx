@@ -92,11 +92,11 @@ export default function TryoutConfirmationPage() {
         <ArrowLeft size={14} /> Kembali ke Tryout
       </Link>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 md:p-10">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-8 md:p-10">
         <span className={`inline-block ${theme.accentBg} rounded-full px-3 py-1 text-xs font-semibold`}>
           {tryout.mata_pelajaran}
         </span>
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900 mt-3">{tryout.nama_tryout}</h1>
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100 mt-3">{tryout.nama_tryout}</h1>
         {isResume && (
           <p className="mt-3 text-sm font-medium text-amber-600 bg-amber-50 inline-flex items-center gap-2 rounded-full px-3 py-1.5">
             <AlertCircle size={14} />
@@ -106,16 +106,16 @@ export default function TryoutConfirmationPage() {
 
         <div className="grid grid-cols-2 gap-3 mt-7">
           {infoItems.map(({ Icon, label, value }) => (
-            <div key={label} className="bg-slate-50 rounded-xl p-4">
+            <div key={label} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
               <Icon size={18} className="text-triton-blue-500" />
-              <p className="text-xs text-slate-400 mt-2">{label}</p>
-              <p className="font-bold text-slate-900 text-sm">{value}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">{label}</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{value}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-8">
-          <h2 className="font-bold text-slate-900 mb-4">Peraturan Tryout</h2>
+          <h2 className="font-bold text-slate-900 dark:text-slate-100 mb-4">Peraturan Tryout</h2>
           <ul className="space-y-2.5">
             {rules.map((rule) => (
               <li key={rule} className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed">
@@ -126,14 +126,14 @@ export default function TryoutConfirmationPage() {
           </ul>
         </div>
 
-        <label className="mt-8 flex items-start gap-3 cursor-pointer select-none p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+        <label className="mt-8 flex items-start gap-3 cursor-pointer select-none p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
             className="w-5 h-5 mt-0.5 accent-triton-blue-500 cursor-pointer"
           />
-          <span className="text-sm text-slate-700 font-medium">
+          <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
             Saya telah membaca dan menyetujui semua peraturan di atas.
           </span>
         </label>

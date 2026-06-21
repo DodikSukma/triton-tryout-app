@@ -86,7 +86,7 @@ export default function HasilSiswaPage() {
           {loading || !tryoutMeta ? (
             <div className="h-6 w-48 bg-slate-100 animate-pulse rounded-lg" />
           ) : (
-            <h1 className="text-xl font-bold text-slate-900">{tryoutMeta.nama_tryout}</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{tryoutMeta.nama_tryout}</h1>
           )}
           <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
             <BarChart2 size={13} />
@@ -113,7 +113,7 @@ export default function HasilSiswaPage() {
       {!loading && !error && data && tryoutMeta && (
         <>
           {/* Tryout meta strip */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex flex-wrap items-center gap-4 mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm px-5 py-4 flex flex-wrap items-center gap-4 mb-6">
             <SubjectBadge subject={tryoutMeta.mata_pelajaran} />
             <span className="flex items-center gap-1.5 text-sm text-slate-500">
               <BookOpen size={14} className="text-slate-400" />
@@ -159,7 +159,7 @@ export default function HasilSiswaPage() {
 
           {/* Results table */}
           {data.hasil.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center py-20 text-center">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col items-center py-20 text-center">
               <Users className="w-16 h-16 text-slate-200 mb-4" />
               <p className="font-semibold text-slate-400 text-lg">
                 Belum ada siswa yang mengerjakan tryout ini
@@ -169,16 +169,16 @@ export default function HasilSiswaPage() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="font-bold text-slate-800">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <h2 className="font-bold text-slate-800 dark:text-slate-100">
                   Daftar Hasil ({data.hasil.length} siswa)
                 </h2>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[600px]">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-slate-50 dark:bg-slate-700/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider w-8">#</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Siswa</th>
@@ -209,14 +209,14 @@ function ResultRow({ row, rank, totalSoal }: { row: HasilRekapItem; rank: number
   const pct = totalSoal > 0 ? (row.total_benar / totalSoal) * 100 : 0
 
   return (
-    <tr className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+    <tr className="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
       <td className="px-6 py-4 text-sm text-slate-400 font-medium">{rank}</td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
             {initial}
           </div>
-          <p className="font-semibold text-slate-800 text-sm">{row.nama_siswa}</p>
+          <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{row.nama_siswa}</p>
         </div>
       </td>
       <td className="px-6 py-4 text-sm text-slate-500">{row.kelas}</td>
@@ -227,7 +227,7 @@ function ResultRow({ row, rank, totalSoal }: { row: HasilRekapItem; rank: number
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-700 tabular-nums">
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
             {row.total_benar}
             <span className="text-slate-400 font-normal">/{row.total_soal}</span>
           </span>
@@ -270,11 +270,11 @@ function SummaryCard({
   suffix?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
       <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <p className="text-2xl font-black text-slate-900 tabular-nums">
+      <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
         {decimal ? value.toFixed(1) : value}{suffix}
       </p>
       <p className="text-xs text-slate-500 mt-0.5">{label}</p>

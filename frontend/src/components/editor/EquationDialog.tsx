@@ -112,25 +112,25 @@ export default function EquationDialog({ open, onClose, onInsert, initialLatex, 
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-500">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center text-violet-500">
             <Calculator size={20} />
           </div>
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-slate-900">Sisipkan Persamaan Matematika</h2>
-            <p className="text-xs text-slate-400">Tulis dengan sintaks LaTeX, preview otomatis di bawah</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Sisipkan Persamaan Matematika</h2>
+            <p className="text-xs text-slate-400 dark:text-slate-500">Tulis dengan sintaks LaTeX, preview otomatis di bawah</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100">
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
             <X size={18} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="px-6 pt-4 border-b border-slate-100 flex gap-1">
+        <div className="px-6 pt-4 border-b border-slate-100 dark:border-slate-700 flex gap-1">
           <button
             onClick={() => setTab('latex')}
             className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${

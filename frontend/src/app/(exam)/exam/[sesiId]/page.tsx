@@ -373,17 +373,17 @@ export default function ExamPage() {
   const isCritical = timeLeft <= 60 && timeLeft > 0
 
   return (
-    <div className="min-h-screen bg-slate-50 select-none">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 select-none">
 
       {/* ─── HEADER (fixed) ─── */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-24 h-8 relative shrink-0">
               <Image src="/logo.png" alt="Triton Denpasar" fill className="object-contain" />
             </div>
-            <div className="w-px h-6 bg-slate-200 hidden md:block" />
-            <p className="font-semibold text-slate-800 text-sm truncate hidden md:block max-w-[260px]">
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-600 hidden md:block" />
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate hidden md:block max-w-[260px]">
               {tryout.nama_tryout}
             </p>
           </div>
@@ -395,8 +395,8 @@ export default function ExamPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-sm text-slate-500 tabular-nums">
-              <strong className="text-slate-900">{answeredCount}</strong>/{total} dijawab
+            <span className="hidden sm:block text-sm text-slate-500 dark:text-slate-400 tabular-nums">
+              <strong className="text-slate-900 dark:text-slate-100">{answeredCount}</strong>/{total} dijawab
             </span>
             <button
               onClick={() => setShowSubmit(true)}
@@ -412,9 +412,9 @@ export default function ExamPage() {
       <div className="flex pt-16">
 
         {/* ─── Navigation Panel ─── */}
-        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-slate-100 flex-col z-30">
-          <div className="p-4 border-b border-slate-100">
-            <h2 className="font-semibold text-slate-700 text-sm">Navigasi Soal</h2>
+        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex-col z-30">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+            <h2 className="font-semibold text-slate-700 dark:text-slate-300 text-sm">Navigasi Soal</h2>
             <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-triton-blue-500 transition-all duration-300"
@@ -470,9 +470,9 @@ export default function ExamPage() {
         <main className="flex-1 lg:ml-64 pb-24 px-4 md:px-8">
           <div className="max-w-3xl mx-auto py-8">
 
-            <article className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <article className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
 
-              <header className="px-6 md:px-8 pt-7 pb-4 border-b border-slate-50 flex flex-wrap items-center gap-3">
+              <header className="px-6 md:px-8 pt-7 pb-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center gap-3">
                 <span className="bg-triton-blue-500 text-white rounded-full px-3.5 py-1.5 text-xs font-bold">
                   Soal {currentIdx + 1}
                 </span>
@@ -497,7 +497,7 @@ export default function ExamPage() {
               <div className="px-6 md:px-8 py-6">
                 <RenderHTML
                   html={currentSoal.pertanyaan_html || currentSoal.pertanyaan}
-                  className="text-base leading-relaxed text-slate-800"
+                  className="text-base leading-relaxed text-slate-800 dark:text-slate-100"
                 />
               </div>
 
@@ -612,7 +612,7 @@ export default function ExamPage() {
                       onBlur={blurEssay}
                       placeholder="Tuliskan jawaban lengkap Anda di sini..."
                       rows={8}
-                      className="w-full min-h-[200px] border-2 border-slate-200 rounded-xl p-4 text-slate-800 text-base leading-relaxed resize-y outline-none focus:border-triton-blue-500 focus:ring-4 focus:ring-triton-blue-500/10 transition-all"
+                      className="w-full min-h-[200px] border-2 border-slate-200 dark:border-slate-600 rounded-xl p-4 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 dark:placeholder:text-slate-500 text-base leading-relaxed resize-y outline-none focus:border-triton-blue-500 focus:ring-4 focus:ring-triton-blue-500/10 transition-all"
                     />
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-slate-400 tabular-nums">
@@ -645,7 +645,7 @@ export default function ExamPage() {
                           {(answers[currentSoal.id]?.jawaban_teks ?? '').trim() ? (
                             <RenderHTML
                               html={escapeForPreview(answers[currentSoal.id]?.jawaban_teks ?? '')}
-                              className="text-sm text-slate-800 leading-relaxed"
+                              className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed"
                             />
                           ) : (
                             <span className="text-sm italic text-slate-400">Belum ada jawaban untuk ditampilkan.</span>
@@ -663,18 +663,18 @@ export default function ExamPage() {
       </div>
 
       {/* ─── Bottom Navigation (fixed) ─── */}
-      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-slate-100 shadow-lg z-40">
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg z-40">
         <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4">
           <button
             onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
             disabled={currentIdx === 0}
-            className="inline-flex items-center gap-1.5 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft size={16} />
             Sebelumnya
           </button>
 
-          <span className="text-sm font-semibold text-slate-600 tabular-nums">
+          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
             {currentIdx + 1} / {total}
           </span>
 
@@ -718,12 +718,12 @@ export default function ExamPage() {
       {/* ─── Anti-cheat: fullscreen start gate ─── */}
       {!examStarted && !disqualified && (
         <div className="fixed inset-0 z-[300] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center mx-auto mb-4">
               <Maximize2 size={26} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Mode Ujian Aman</h2>
-            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Mode Ujian Aman</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
               Untuk memulai ujian, Anda harus masuk ke mode layar penuh. Berpindah tab,
               keluar dari layar penuh, atau menyalin teks akan tercatat sebagai pelanggaran.
             </p>
@@ -787,18 +787,18 @@ function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfir
 }) {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={submitting ? undefined : onCancel}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+          <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500">
             <AlertTriangle size={22} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Kumpulkan Jawaban?</h3>
-            <p className="text-sm text-slate-500">Setelah dikumpulkan, jawaban tidak dapat diubah.</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Kumpulkan Jawaban?</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Setelah dikumpulkan, jawaban tidak dapat diubah.</p>
           </div>
         </div>
 
-        <div className="bg-slate-50 rounded-xl p-5 space-y-2.5 text-sm">
+        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-5 space-y-2.5 text-sm">
           <Row label="Total soal" value={total} valueClass="text-slate-900" />
           <Row label="Sudah dijawab" value={answered} valueClass="text-green-600" />
           <Row label="Belum dijawab" value={unanswered} valueClass={unanswered > 0 ? 'text-red-500' : 'text-slate-400'} />
@@ -816,7 +816,7 @@ function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfir
           <button
             onClick={onCancel}
             disabled={submitting}
-            className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
+            className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
           >
             Periksa Lagi
           </button>
