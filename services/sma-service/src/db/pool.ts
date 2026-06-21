@@ -6,7 +6,7 @@ const pool = new Pool({
   user: (process.env.POSTGRES_USER || 'triton_user').trim(),
   password: (process.env.POSTGRES_PASSWORD || '').trim(),
   database: (process.env.POSTGRES_DB || 'db_sma').trim(),
-  options: (process.env.POSTGRES_OPTIONS || '-c search_path=sma').trim(),
+  options: process.env.POSTGRES_OPTIONS ? process.env.POSTGRES_OPTIONS.trim() : (process.env.POSTGRES_HOST?.includes('supabase') ? '-c search_path=sma' : undefined),
 })
 
 export default pool
