@@ -30,7 +30,7 @@ export default function BuatTryoutPage() {
   }
 
   return (
-    <div className="animate-fade-in-up pb-8 max-w-2xl mx-auto">
+    <div className="animate-fade-in-up pb-8 mt-8 max-w-2xl mx-auto">
       <Link href="/guru/dashboard" className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-triton-blue-600 transition-colors mb-6 font-medium">
         <ArrowLeft size={18} />
         Kembali ke Dashboard

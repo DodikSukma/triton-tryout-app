@@ -29,8 +29,8 @@ app.use((req, _res, next) => {
 
 const redisClient = createClient({
   socket: {
-    host: process.env.REDIS_HOST ?? 'localhost',
-    port: Number(process.env.REDIS_PORT ?? 6379),
+    host: (process.env.REDIS_HOST || 'localhost').trim(),
+    port: Number(process.env.REDIS_PORT || 6379),
   },
 })
 
@@ -49,8 +49,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: Number(process.env.SESSION_MAX_AGE_MS ?? 28800000),
     },
   })

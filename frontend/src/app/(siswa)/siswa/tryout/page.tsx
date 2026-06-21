@@ -65,7 +65,7 @@ export default function SiswaTryoutListPage() {
           const r = riwayatMap.get(t.id)
           let status_siswa: EnrichedTryout['status_siswa'] = 'not_started'
           if (r) {
-            if (r.status === 'selesai') status_siswa = 'done'
+            if (r.status === 'selesai' || r.status === 'timeout') status_siswa = 'done'
             else if (r.status === 'berlangsung') status_siswa = 'in_progress'
           }
           return { ...t, status_siswa, nilai: r?.nilai, sesi_id: r?.sesi_id }

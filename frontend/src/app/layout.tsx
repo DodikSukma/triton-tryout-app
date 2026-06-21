@@ -35,9 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
-            var t = localStorage.getItem('triton-theme');
-            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (t === 'dark' || (!t && d)) document.documentElement.classList.add('dark');
+            if (localStorage.getItem('triton-theme') === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
           })()
         `}} />
         <link

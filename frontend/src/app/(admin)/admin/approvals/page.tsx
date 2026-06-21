@@ -300,23 +300,23 @@ function RejectDialog({ tryout, onClose, onConfirm }: {
   const [saving, setSaving] = useState(false)
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={saving ? undefined : onClose}>
-      <div className=”bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6” onClick={(e) => e.stopPropagation()}>
-        <div className=”flex items-center justify-between mb-3”>
-          <h3 className=”text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2”><AlertTriangle size={18} className=”text-red-500” /> Minta Revisi</h3>
-          <button onClick={onClose} className=”text-slate-400 dark:text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700”><X size={18} /></button>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"><AlertTriangle size={18} className="text-red-500"/> Minta Revisi</h3>
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"><X size={18} /></button>
         </div>
-        <p className=”text-sm text-slate-500 dark:text-slate-400 mb-3”>Tulis catatan untuk guru — tryout dikembalikan dengan status “Butuh Revisi”.</p>
-        <p className=”text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 truncate”>{tryout.nama_tryout}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">Tulis catatan untuk guru — tryout dikembalikan dengan status “Butuh Revisi”.</p>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 truncate">{tryout.nama_tryout}</p>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
           autoFocus
-          placeholder=”Contoh: Soal nomor 3 kurang jelas, mohon perbaiki opsi jawaban.”
-          className=”w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 p-3 text-sm outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 resize-none”
+          placeholder="Contoh: Soal nomor 3 kurang jelas, mohon perbaiki opsi jawaban."
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 p-3 text-sm outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 resize-none"
         />
-        <div className=”flex gap-3 mt-4”>
-          <button onClick={onClose} disabled={saving} className=”flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50”>Batal</button>
+        <div className="flex gap-3 mt-4">
+          <button onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">Batal</button>
           <button
             onClick={async () => { if (!notes.trim()) { toast.error('Catatan revisi wajib diisi.'); return } setSaving(true); await onConfirm(notes.trim()) }}
             disabled={saving}

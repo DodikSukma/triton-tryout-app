@@ -28,14 +28,14 @@ export default function SiswaDashboard() {
   }, [])
 
   const stats = useMemo(() => {
-    const done = riwayat.filter((r) => r.status === 'selesai')
+    const done = riwayat.filter((r) => r.status === 'selesai' || r.status === 'timeout')
     const inProgress = riwayat.filter((r) => r.status === 'berlangsung')
     const avg = done.length ? done.reduce((s, r) => s + Number(r.nilai ?? 0), 0) / done.length : 0
     return { available: available.length, done: done.length, inProgress: inProgress.length, avg }
   }, [available, riwayat])
 
   // Not-yet-done tryouts (exclude completed)
-  const doneIds = new Set(riwayat.filter((r) => r.status === 'selesai').map((r) => r.tryout_id))
+  const doneIds = new Set(riwayat.filter((r) => r.status === 'selesai' || r.status === 'timeout').map((r) => r.tryout_id))
   const recommend = available.filter((t) => !doneIds.has(t.id)).slice(0, 3)
   const inProgressTryouts = riwayat
     .filter((r) => r.status === 'berlangsung')
