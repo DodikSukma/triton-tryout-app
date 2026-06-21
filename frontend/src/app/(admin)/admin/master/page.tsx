@@ -15,7 +15,7 @@ const LEVEL_BADGE: Record<EducationLevel, string> = {
   SMA: 'bg-slate-100 text-slate-600 border border-slate-200',
 }
 
-const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 text-sm transition-all bg-white'
+const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm transition-all bg-white dark:bg-slate-700 dark:placeholder:text-slate-500'
 
 export default function AdminMasterPage() {
   const [kelas, setKelas] = useState<MasterKelas[]>([])
@@ -64,8 +64,8 @@ export default function AdminMasterPage() {
   return (
     <div className="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900">Master Data</h1>
-        <p className="text-slate-500 mt-1 text-sm">
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100">Master Data</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
           Kelola kelas, mata pelajaran, dan sub mata pelajaran yang dipakai guru saat membuat tryout.
         </p>
       </header>
@@ -80,7 +80,7 @@ export default function AdminMasterPage() {
         >
           {kelas.length === 0 ? <Empty /> : kelas.map((k) => (
             <Row key={k.id} onDelete={() => remove('kelas', k.id)}>
-              <span className="font-semibold text-slate-800">{k.nama}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-100">{k.nama}</span>
               <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${LEVEL_BADGE[k.level]}`}>{k.level}</span>
             </Row>
           ))}
@@ -95,7 +95,7 @@ export default function AdminMasterPage() {
         >
           {mapel.length === 0 ? <Empty /> : mapel.map((m) => (
             <Row key={m.id} onDelete={() => remove('mata-pelajaran', m.id)}>
-              <span className="font-semibold text-slate-800">{m.nama}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-100">{m.nama}</span>
               <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${LEVEL_BADGE[m.level]}`}>{m.level}</span>
             </Row>
           ))}
@@ -111,8 +111,8 @@ export default function AdminMasterPage() {
           {sub.length === 0 ? <Empty /> : sub.map((s) => (
             <Row key={s.id} onDelete={() => remove('sub-mata-pelajaran', s.id)}>
               <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">{s.nama}</span>
-                <span className="text-[11px] text-slate-400">{s.mata_pelajaran_nama}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{s.nama}</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">{s.mata_pelajaran_nama}</span>
               </div>
             </Row>
           ))}
@@ -152,12 +152,12 @@ function Section({ title, icon, count, onAdd, children }: {
   title: string; icon: React.ReactNode; count: number; onAdd: () => void; children: React.ReactNode
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {icon}
-          <h2 className="font-bold text-slate-900">{title}</h2>
-          <span className="text-xs text-slate-400 tabular-nums">({count})</span>
+          <h2 className="font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+          <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">({count})</span>
         </div>
         <button
           onClick={onAdd}
@@ -173,7 +173,7 @@ function Section({ title, icon, count, onAdd, children }: {
 
 function Row({ children, onDelete }: { children: React.ReactNode; onDelete: () => void }) {
   return (
-    <div className="group flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 hover:bg-slate-50 transition-colors">
+    <div className="group flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
       <div className="flex items-center gap-2 min-w-0">{children}</div>
       <button
         onClick={onDelete}
@@ -187,7 +187,7 @@ function Row({ children, onDelete }: { children: React.ReactNode; onDelete: () =
 }
 
 function Empty() {
-  return <p className="text-center text-sm text-slate-400 py-8">Belum ada data.</p>
+  return <p className="text-center text-sm text-slate-400 dark:text-slate-500 py-8">Belum ada data.</p>
 }
 
 function FormDialog({ title, fields, mapelOptions, onClose, onSubmit }: {
@@ -220,22 +220,22 @@ function FormDialog({ title, fields, mapelOptions, onClose, onSubmit }: {
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={saving ? undefined : onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
             <X size={18} />
           </button>
         </div>
         <form onSubmit={submit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Nama <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Nama <span className="text-red-500">*</span></label>
             <input value={nama} onChange={(e) => setNama(e.target.value)} autoFocus placeholder="Contoh: 6 SD / Matematika / Aljabar" className={inputCls} />
           </div>
 
           {fields.includes('level') && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Jenjang <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Jenjang <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={level} onChange={(e) => setLevel(e.target.value as EducationLevel)} className={`${inputCls} appearance-none pr-10`}>
                   {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
@@ -247,7 +247,7 @@ function FormDialog({ title, fields, mapelOptions, onClose, onSubmit }: {
 
           {fields.includes('mapel') && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Mata Pelajaran <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Mata Pelajaran <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={mapel} onChange={(e) => setMapel(e.target.value)} className={`${inputCls} appearance-none pr-10`}>
                   {(mapelOptions ?? []).map((m) => <option key={m.id} value={m.id}>{m.nama} ({m.level})</option>)}
@@ -258,7 +258,7 @@ function FormDialog({ title, fields, mapelOptions, onClose, onSubmit }: {
           )}
 
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">Batal</button>
+            <button type="button" onClick={onClose} disabled={saving} className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50">Batal</button>
             <button type="submit" disabled={saving} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-60">
               {saving && <Loader2 size={14} className="animate-spin" />}
               {saving ? 'Menyimpan...' : 'Simpan'}

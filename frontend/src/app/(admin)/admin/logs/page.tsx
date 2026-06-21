@@ -112,27 +112,27 @@ export default function AdminLogsPage() {
     setQ(''); setDebouncedQ(''); setRole(''); setCategory(''); setRange('all'); setPage(1)
   }
 
-  const selectCls = 'rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all'
+  const selectCls = 'rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all'
 
   return (
     <div className="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto">
       <header className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <ScrollText className="w-6 h-6 text-blue-500" /> Log Aktivitas
         </h1>
-        <p className="text-slate-500 mt-1 text-sm">Jejak audit seluruh aktivitas pengguna di platform.</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Jejak audit seluruh aktivitas pengguna di platform.</p>
       </header>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-5">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 mb-5">
         <div className="flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Cari email atau deskripsi..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
             />
           </div>
           <select value={role} onChange={(e) => setRole(e.target.value)} className={selectCls}>
@@ -147,7 +147,7 @@ export default function AdminLogsPage() {
           {hasFilter && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center justify-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
             >
               <RotateCcw size={14} /> Reset
             </button>
@@ -156,10 +156,10 @@ export default function AdminLogsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[820px]">
-            <thead className="bg-slate-50 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               <tr>
                 <th className="text-left px-4 py-3 w-44">Waktu</th>
                 <th className="text-left px-4 py-3 w-56">Aktor</th>
@@ -168,7 +168,7 @@ export default function AdminLogsPage() {
                 <th className="text-center px-4 py-3 w-16">Meta</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-mono">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-mono">
               {loading ? (
                 <tr><td colSpan={5} className="text-center py-16"><Loader2 size={22} className="mx-auto animate-spin text-blue-500" /></td></tr>
               ) : logs.length === 0 ? (
@@ -177,21 +177,21 @@ export default function AdminLogsPage() {
                 logs.map((log) => {
                   const cat = categoryOf(log.action)
                   return (
-                    <tr key={log.id} className="hover:bg-slate-50/60 transition-colors align-top">
-                      <td className="px-4 py-3 text-xs text-slate-500 tabular-nums whitespace-nowrap">{fmtTime(log.created_at)}</td>
+                    <tr key={log.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-700/50 transition-colors align-top">
+                      <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">{fmtTime(log.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
-                          <span className="text-xs text-slate-700 font-sans font-medium truncate max-w-[200px]">{log.email}</span>
+                          <span className="text-xs text-slate-700 dark:text-slate-300 font-sans font-medium truncate max-w-[200px]">{log.email}</span>
                           <span className={`self-start text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border ${ROLE_BADGE[log.role] ?? ROLE_BADGE.system}`}>{log.role}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-[11px] font-bold rounded-md px-2 py-1 font-sans ${ACTION_BADGE[cat]}`}>{log.action}</span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600 font-sans leading-relaxed">{log.description}</td>
+                      <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed">{log.description}</td>
                       <td className="px-4 py-3 text-center">
                         <span
-                          className="inline-flex text-slate-300 hover:text-blue-500 cursor-help transition-colors"
+                          className="inline-flex text-slate-300 dark:text-slate-600 hover:text-blue-500 cursor-help transition-colors"
                           title={`IP: ${log.ip_address ?? '—'}\nTarget: ${log.target_id ?? '—'}\nUser-Agent: ${log.user_agent ?? '—'}`}
                         >
                           <Info size={15} />
@@ -206,20 +206,20 @@ export default function AdminLogsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-          <span className="text-xs text-slate-500">{total} log · Halaman {page} / {totalPages}</span>
+        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+          <span className="text-xs text-slate-500 dark:text-slate-400">{total} log · Halaman {page} / {totalPages}</span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={14} /> Sebelumnya
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Berikutnya <ChevronRight size={14} />
             </button>

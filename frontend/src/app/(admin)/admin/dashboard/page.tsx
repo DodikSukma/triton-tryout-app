@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
       {/* ── LEVEL FILTER TABS ──────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Jenjang:</span>
+        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">Jenjang:</span>
         {LEVEL_TABS.map((lvl) => (
           <button
             key={lvl}
@@ -140,13 +140,13 @@ export default function AdminDashboard() {
             className={`text-sm px-4 py-1.5 rounded-xl font-semibold transition-colors ${
               selectedLevel === lvl
                 ? 'bg-blue-500 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'
             }`}
           >
             {lvl === 'ALL' ? 'Semua' : lvl}
           </button>
         ))}
-        <span className="text-xs text-slate-400 ml-1 hidden sm:inline">· Statistik guru tetap global</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500 ml-1 hidden sm:inline">· Statistik guru tetap global</span>
       </div>
 
       {/* ── STATS GRID ─────────────────────────────────────────────── */}
@@ -195,9 +195,9 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Akses Cepat — takes 2/3 */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Akses Cepat</h2>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Akses Cepat</h2>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -247,46 +247,46 @@ export default function AdminDashboard() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`group flex items-center gap-4 p-4 rounded-xl border border-slate-100 ${item.border} bg-white hover:shadow-sm transition-all duration-200 active:scale-95`}
+                className={`group flex items-center gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-700 ${item.border} bg-white dark:bg-slate-800 hover:shadow-sm transition-all duration-200 active:scale-95`}
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${item.iconBg}`}>
                   {item.icon}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 leading-tight">{item.label}</p>
-                  <p className="text-xs text-slate-400 mt-0.5 truncate">{item.desc}</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight">{item.label}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{item.desc}</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 ml-auto shrink-0 transition-colors" />
+                <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 ml-auto shrink-0 transition-colors" />
               </Link>
             ))}
           </div>
         </div>
 
         {/* Activity summary — takes 1/3 */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-5">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 flex flex-col gap-5">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-blue-500" />
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Ringkasan</h2>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest">Ringkasan</h2>
           </div>
 
           {/* Active rate bar */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500">Siswa Aktif</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Siswa Aktif</span>
               <span className="text-xs font-black text-blue-600">{activeRate}%</span>
             </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all duration-700"
                 style={{ width: `${activeRate}%` }}
               />
             </div>
-            <p className="text-xs text-slate-400 mt-1.5">
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
               {stats?.siswaAktif ?? 0} dari {stats?.siswa ?? 0} siswa aktif
             </p>
           </div>
 
-          <div className="border-t border-slate-50 pt-4 space-y-3">
+          <div className="border-t border-slate-50 dark:border-slate-700 pt-4 space-y-3">
             {[
               {
                 label: 'Guru aktif',
@@ -306,11 +306,11 @@ export default function AdminDashboard() {
               <div key={row.label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${row.dot}`} />
-                  <span className="text-xs text-slate-500 font-medium">{row.label}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{row.label}</span>
                 </div>
                 <span className={`text-xs font-black tabular-nums ${row.color}`}>
                   {row.value}
-                  <span className="text-slate-300 font-normal"> / {row.total}</span>
+                  <span className="text-slate-300 dark:text-slate-600 font-normal"> / {row.total}</span>
                 </span>
               </div>
             ))}
@@ -318,24 +318,24 @@ export default function AdminDashboard() {
 
           {/* Skeleton while loading */}
           {!loaded && (
-            <div className="absolute inset-6 bg-white flex flex-col gap-3">
-              <div className="bg-slate-100 animate-pulse rounded-lg h-4 w-24" />
-              <div className="bg-slate-100 animate-pulse rounded-xl h-2 w-full" />
-              <div className="bg-slate-100 animate-pulse rounded-lg h-3 w-32 mt-2" />
-              <div className="bg-slate-100 animate-pulse rounded-lg h-3 w-28" />
+            <div className="absolute inset-6 bg-white dark:bg-slate-800 flex flex-col gap-3">
+              <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-4 w-24" />
+              <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-xl h-2 w-full" />
+              <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-3 w-32 mt-2" />
+              <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-3 w-28" />
             </div>
           )}
         </div>
       </div>
 
       {/* ── INFO NOTICE ────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-6 py-4 flex items-start gap-4">
-        <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+      <div className="rounded-2xl border border-blue-100 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10 px-6 py-4 flex items-start gap-4">
+        <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-800 flex items-center justify-center shrink-0 mt-0.5">
           <ShieldCheck className="w-4 h-4 text-blue-600" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-blue-800 leading-snug">Anda login sebagai Administrator</p>
-          <p className="text-xs text-blue-600/80 mt-1 leading-relaxed">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 leading-snug">Anda login sebagai Administrator</p>
+          <p className="text-xs text-blue-600/80 dark:text-blue-400/80 mt-1 leading-relaxed">
             Kelola semua akun guru dan siswa, serta pantau seluruh tryout yang berjalan di platform.
           </p>
         </div>
@@ -376,7 +376,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`relative bg-white rounded-2xl border border-slate-100 ${hoverBorder} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
+      className={`relative bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 ${hoverBorder} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
     >
       {/* Colored accent bar at top */}
       <div className={`absolute top-0 left-0 right-0 h-0.5 ${accentBar}`} />
@@ -395,7 +395,7 @@ function StatCard({
             </div>
             <Link
               href={href}
-              className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-blue-500 transition-colors group"
+              className="flex items-center gap-1 text-xs font-semibold text-slate-400 dark:text-slate-500 hover:text-blue-500 transition-colors group"
             >
               Lihat semua
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -403,17 +403,17 @@ function StatCard({
           </div>
 
           {/* Metric */}
-          <p className="text-4xl font-black text-slate-900 tabular-nums leading-none">{value}</p>
-          <p className="text-sm font-medium text-slate-400 mt-1.5">{title}</p>
+          <p className="text-4xl font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">{value}</p>
+          <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mt-1.5">{title}</p>
 
           {/* Sub-metrics */}
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-50">
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-50 dark:border-slate-700">
             <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {aktif} {aktifLabel}
             </span>
-            <span className="w-px h-3 bg-slate-200 shrink-0" />
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+            <span className="w-px h-3 bg-slate-200 dark:bg-slate-700 shrink-0" />
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500">
               <XCircle className="w-3.5 h-3.5" />
               {nonaktif} {nonaktifLabel}
             </span>

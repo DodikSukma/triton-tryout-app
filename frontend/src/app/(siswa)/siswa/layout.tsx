@@ -14,7 +14,7 @@ export default function SiswaLayout({ children }: { children: React.ReactNode })
   return (
     <RoleGuard allowedRoles={['siswa']}>
       {(user) => (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
           <Sidebar
             role="siswa"
             fallbackName={user.email}
@@ -23,10 +23,10 @@ export default function SiswaLayout({ children }: { children: React.ReactNode })
           />
 
           {/* Mobile top bar — visible only on < lg */}
-          <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 shadow-sm">
+          <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-16 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between px-4 shadow-sm">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               aria-label="Buka menu"
             >
               <Menu size={22} />

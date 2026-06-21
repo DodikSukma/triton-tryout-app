@@ -18,8 +18,8 @@ function safeRedirect(target: string | null): string | null {
 function SkeletonField() {
   return (
     <div className="space-y-2">
-      <div className="bg-slate-100 animate-pulse rounded-lg h-4 w-20" />
-      <div className="bg-slate-100 animate-pulse rounded-xl h-12 w-full" />
+      <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-4 w-20" />
+      <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-xl h-12 w-full" />
     </div>
   )
 }
@@ -151,7 +151,7 @@ function LoginInner() {
       </div>
 
       {/* ── RIGHT PANEL — Form ───────────────────────────────────── */}
-      <div className="flex-1 bg-white flex items-center justify-center px-6 md:px-12 xl:px-16">
+      <div className="flex-1 bg-white dark:bg-slate-800 flex items-center justify-center px-6 md:px-12 xl:px-16">
         <div className="w-full max-w-md">
 
           {/* Mobile: logo */}
@@ -170,21 +170,21 @@ function LoginInner() {
           {checkingSession ? (
             <div className="space-y-6 animate-fade-in">
               <div className="space-y-2">
-                <div className="bg-slate-100 animate-pulse rounded-lg h-8 w-48" />
-                <div className="bg-slate-100 animate-pulse rounded-lg h-4 w-64" />
+                <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-8 w-48" />
+                <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-lg h-4 w-64" />
               </div>
               <div className="mt-8 space-y-5">
                 <SkeletonField />
                 <SkeletonField />
-                <div className="bg-slate-100 animate-pulse rounded-xl h-12 w-full" />
+                <div className="bg-slate-100 dark:bg-slate-700 animate-pulse rounded-xl h-12 w-full" />
               </div>
             </div>
           ) : (
             <>
               {/* Header */}
               <div className="animate-fade-in-up">
-                <h1 className="text-3xl font-black text-slate-900">Selamat Datang! 👋</h1>
-                <p className="text-slate-500 text-sm mt-2">
+                <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100">Selamat Datang! 👋</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
                   Silakan masuk untuk melanjutkan belajar.
                 </p>
               </div>
@@ -200,12 +200,12 @@ function LoginInner() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                   >
                     Email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <input
                       id="email"
                       type="email"
@@ -214,7 +214,7 @@ function LoginInner() {
                       required
                       disabled={loading}
                       placeholder="email@contoh.com"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 transition-all duration-200 text-sm disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 transition-all duration-200 text-sm disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -223,12 +223,12 @@ function LoginInner() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-semibold text-slate-700 mb-2"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
@@ -237,14 +237,14 @@ function LoginInner() {
                       required
                       disabled={loading}
                       placeholder="••••••••"
-                      className="w-full pl-11 pr-12 py-3.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 transition-all duration-200 text-sm disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="w-full pl-11 pr-12 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 transition-all duration-200 text-sm disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:cursor-not-allowed"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       disabled={loading}
                       aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-40"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition-colors disabled:opacity-40"
                     >
                       {showPassword
                         ? <EyeOff className="w-4 h-4" />
@@ -281,7 +281,7 @@ function LoginInner() {
 
               {/* Footer note */}
               <p
-                className="animate-fade-in-up text-slate-400 text-xs text-center mt-8"
+                className="animate-fade-in-up text-slate-400 dark:text-slate-500 text-xs text-center mt-8"
                 style={{ animationDelay: '0.10s' }}
               >
                 Belum punya akun?{' '}
@@ -300,7 +300,7 @@ function LoginInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+    <Suspense fallback={<div className="min-h-screen bg-white dark:bg-slate-800" />}>
       <LoginInner />
     </Suspense>
   )

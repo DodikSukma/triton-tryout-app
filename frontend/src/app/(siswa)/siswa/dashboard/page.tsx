@@ -47,8 +47,8 @@ export default function SiswaDashboard() {
 
       <header className="mb-8">
         <p className={`text-sm ${theme.accentText} font-semibold`}>Selamat datang,</p>
-        <h1 className="text-3xl font-black text-slate-900 mt-1">{profile?.nama_lengkap || 'Siswa'} 👋</h1>
-        <p className="text-slate-500 mt-1">Ayo lanjutkan persiapan ujianmu hari ini.</p>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">{profile?.nama_lengkap || 'Siswa'} 👋</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Ayo lanjutkan persiapan ujianmu hari ini.</p>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -88,17 +88,17 @@ export default function SiswaDashboard() {
 
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-900">Tryout Direkomendasikan</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Tryout Direkomendasikan</h2>
           <Link href="/siswa/tryout" className="text-sm font-semibold text-triton-blue-600 hover:text-triton-blue-700 hover:underline">
             Lihat Semua →
           </Link>
         </div>
 
         {recommend.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <Trophy size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500 font-medium">Anda sudah menyelesaikan semua tryout!</p>
-            <p className="text-slate-400 text-sm mt-1">Pantau riwayat di menu Riwayat & Nilai.</p>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
+            <Trophy size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+            <p className="text-slate-500 dark:text-slate-400 font-medium">Anda sudah menyelesaikan semua tryout!</p>
+            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Pantau riwayat di menu Riwayat & Nilai.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -106,13 +106,13 @@ export default function SiswaDashboard() {
               <Link
                 key={t.id}
                 href={`/siswa/tryout/${t.id}`}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 p-6 flex flex-col group"
+                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 p-6 flex flex-col group"
               >
                 <span className={`inline-block ${theme.accentBg} rounded-full px-3 py-1 text-xs font-semibold self-start`}>
                   {t.mata_pelajaran}
                 </span>
-                <h3 className="font-bold text-slate-900 mt-3">{t.nama_tryout}</h3>
-                <div className="mt-3 flex items-center gap-4 text-sm text-slate-500">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 mt-3">{t.nama_tryout}</h3>
+                <div className="mt-3 flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                   <span className="inline-flex items-center gap-1.5"><Clock size={13} />{t.durasi_menit} mnt</span>
                   <span className="inline-flex items-center gap-1.5"><BookOpen size={13} />{t.soal_count ?? 0} soal</span>
                 </div>
@@ -133,14 +133,14 @@ function StatCard({ label, value, Icon, color, suffix }: {
   label: string; value: number | string; Icon: React.ElementType; color: string; suffix?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
         <Icon size={18} />
       </div>
-      <p className="text-2xl font-black text-slate-900 mt-3 tabular-nums">
-        {value}{suffix && <span className="text-sm text-slate-400 font-medium">{suffix}</span>}
+      <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-3 tabular-nums">
+        {value}{suffix && <span className="text-sm text-slate-400 dark:text-slate-500 font-medium">{suffix}</span>}
       </p>
-      <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
     </div>
   )
 }

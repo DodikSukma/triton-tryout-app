@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,26 +30,35 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
-        {/* FontAwesome icon set (used across the marketing landing page) */}
+        {/* Prevent flash of wrong theme */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var t = localStorage.getItem('triton-theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (t === 'dark' || (!t && d)) document.documentElement.classList.add('dark');
+          })()
+        `}} />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
       </head>
-      <body className={`${plusJakartaSans.className} bg-slate-50 text-slate-800`}>
-        {children}
-        <Toaster
-          position="bottom-right"
-          richColors
-          closeButton
-          duration={3500}
-          toastOptions={{
-            className: 'rounded-xl border-slate-200 shadow-lg',
-            style: { fontFamily: 'var(--font-jakarta), sans-serif' },
-          }}
-        />
+      <body className={`${plusJakartaSans.className} bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300`}>
+        <ThemeProvider>
+          {children}
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            duration={3500}
+            toastOptions={{
+              className: 'rounded-xl border-slate-200 shadow-lg',
+              style: { fontFamily: 'var(--font-jakarta), sans-serif' },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   )
