@@ -236,21 +236,21 @@ export default function ImportSoalModal({ tryoutId, onClose, onSaved }: ImportSo
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-100 flex items-start justify-between rounded-t-3xl sm:rounded-t-2xl">
+        <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700/50 dark:to-blue-900/20 border-b border-slate-100 dark:border-slate-700 flex items-start justify-between rounded-t-3xl sm:rounded-t-2xl">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Upload size={18} className="text-blue-500" />
               Import Soal
             </h2>
-            <p className="text-sm text-slate-500 mt-0.5">Unggah file .txt, .docx, atau .pdf berisi soal</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Unggah file .txt, .docx, atau .pdf berisi soal</p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-white/60 transition-colors mt-0.5"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-colors mt-0.5"
           >
             <X size={18} />
           </button>

@@ -174,7 +174,7 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-700 transition-colors">{displayName}</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{displayName}</p>
             <p className="text-xs font-medium text-slate-500 capitalize mt-0.5">{role}</p>
           </div>
         </Link>

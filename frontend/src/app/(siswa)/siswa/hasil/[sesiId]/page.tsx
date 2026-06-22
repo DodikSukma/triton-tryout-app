@@ -87,22 +87,22 @@ export default function HasilPage() {
       </Link>
 
       {/* ─── Hero (high-contrast: slate text + solid white score card) ─── */}
-      <div className="relative bg-gradient-to-br from-blue-50 via-white to-slate-50 border border-slate-100 rounded-2xl p-6 md:p-8 text-center overflow-hidden shadow-sm">
+      <div className="relative bg-gradient-to-br from-blue-50 via-white to-slate-50 dark:from-blue-950/30 dark:via-slate-800 dark:to-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 md:p-8 text-center overflow-hidden shadow-sm">
         <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-blue-100/40 pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-slate-100/60 pointer-events-none" />
 
         <div className="relative">
           <grade.Icon size={72} className={`mx-auto ${grade.iconClass}`} />
 
-          <h1 className="text-2xl md:text-3xl font-black mt-3 text-slate-900">Tryout Selesai!</h1>
+          <h1 className="text-2xl md:text-3xl font-black mt-3 text-slate-900 dark:text-slate-100">Tryout Selesai!</h1>
           {data.tryout && (
-            <p className="text-slate-500 text-base md:text-lg mt-1">{data.tryout.nama_tryout}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg mt-1">{data.tryout.nama_tryout}</p>
           )}
 
           {/* Solid high-contrast score container */}
-          <div className="mt-6 inline-flex flex-col items-center bg-white/95 backdrop-blur-sm shadow-lg border border-slate-100 rounded-2xl px-8 md:px-12 py-6 text-slate-900">
+          <div className="mt-6 inline-flex flex-col items-center bg-white/95 dark:bg-slate-700/95 backdrop-blur-sm shadow-lg border border-slate-100 dark:border-slate-600 rounded-2xl px-8 md:px-12 py-6 text-slate-900 dark:text-slate-100">
             <div className="flex items-baseline gap-1">
-              <span className="text-6xl md:text-7xl font-black leading-none tabular-nums text-slate-900">{animatedScore}</span>
+              <span className="text-6xl md:text-7xl font-black leading-none tabular-nums text-slate-900 dark:text-slate-100">{animatedScore}</span>
               <span className="text-xl md:text-2xl text-slate-400 font-bold">/100</span>
             </div>
             <span className={`mt-3 inline-block rounded-full px-5 py-1.5 font-bold text-sm md:text-base ${grade.badge}`}>
@@ -119,13 +119,13 @@ export default function HasilPage() {
       </div>
 
       {/* ─── Detail per soal ─── */}
-      <div className="mt-8 bg-white rounded-2xl border border-slate-100 shadow-sm">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h2 className="font-bold text-lg text-slate-900">Detail Jawaban</h2>
+      <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <h2 className="font-bold text-lg text-slate-900 dark:text-slate-100">Detail Jawaban</h2>
           <p className="text-xs text-slate-500 mt-0.5">Periksa kembali jawaban Anda untuk belajar dari kesalahan.</p>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 dark:divide-slate-700">
           {data.detail.map((item, idx) => (
             <DetailItem key={item.soal.id} item={item} idx={idx} />
           ))}
@@ -219,12 +219,12 @@ function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
       )}
 
       {!isPG && (
-        <div className="bg-slate-50 rounded-xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Jawaban Anda</p>
+        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Jawaban Anda</p>
           {item.student_answer?.jawaban_teks ? (
             <RenderHTML
               html={item.student_answer.jawaban_teks}
-              className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"
+              className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap"
             />
           ) : (
             <p className="text-sm italic text-slate-400">(tidak ada jawaban)</p>

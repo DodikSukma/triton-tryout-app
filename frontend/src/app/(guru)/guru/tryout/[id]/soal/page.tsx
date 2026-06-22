@@ -379,7 +379,7 @@ export default function KelolaSoalPage() {
             <ArrowLeft size={14} />
             Kembali ke Dashboard
           </Link>
-          <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">{tryout.nama_tryout}</h2>
+          <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 leading-tight">{tryout.nama_tryout}</h2>
           <p className="text-xs text-slate-400 mt-1">{tryout.mata_pelajaran} · {tryout.durasi_menit} menit</p>
           <span className={`mt-2 inline-block ${sb.bg} ${sb.text} text-xs font-semibold px-2.5 py-0.5 rounded-full`}>
             {sb.label}
@@ -480,10 +480,10 @@ export default function KelolaSoalPage() {
         </div>
 
         {/* Footer stats + publish */}
-        <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50">
-          <p className="text-xs text-slate-500 mb-3">
-            <strong className="text-slate-900">{soalList.length}</strong> soal · Total bobot:{' '}
-            <strong className="text-slate-900">{totalBobot}</strong>
+        <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            <strong className="text-slate-900 dark:text-slate-100">{soalList.length}</strong> soal · Total bobot:{' '}
+            <strong className="text-slate-900 dark:text-slate-100">{totalBobot}</strong>
           </p>
           {(tryout.status === 'draft' || tryout.status === 'rejected') && (
             <>
@@ -633,20 +633,20 @@ export default function KelolaSoalPage() {
           onClick={() => setConfirmDelete(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up"
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mx-auto mb-3">
+            <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 mx-auto mb-3">
               <AlertTriangle size={22} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 text-center">Hapus soal ini?</h3>
-            <p className="text-sm text-slate-500 text-center mt-1.5">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 text-center">Hapus soal ini?</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mt-1.5">
               Soal yang dihapus tidak dapat dikembalikan.
             </p>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors"
+                className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors"
               >
                 Batal
               </button>
@@ -700,8 +700,8 @@ function SoalEditor({
 
   return (
     <div className="max-w-3xl mx-auto p-3 sm:p-5 md:p-8 pb-28 sm:pb-32">
-      <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors ${
-        hasWarning ? 'border-amber-200' : 'border-slate-100'
+      <div className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm overflow-hidden transition-colors ${
+        hasWarning ? 'border-amber-200 dark:border-amber-700' : 'border-slate-100 dark:border-slate-700'
       }`}>
 
         {/* Validation warning banner */}
@@ -717,7 +717,7 @@ function SoalEditor({
         )}
 
         {/* ── Card header: tipe + bobot + meta ─────────── */}
-        <div className="px-4 sm:px-6 md:px-8 py-4 border-b border-slate-100 flex items-center gap-3 flex-wrap">
+        <div className="px-4 sm:px-6 md:px-8 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 flex-wrap">
           <div>
             <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
               Tipe Soal
@@ -725,7 +725,7 @@ function SoalEditor({
             <select
               value={draft.tipe}
               onChange={(e) => updateDraft('tipe', e.target.value as SoalTipe)}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+              className="rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white dark:bg-slate-700"
             >
               <option value="pilihan_ganda">Pilihan Ganda</option>
               <option value="essay">Essay</option>

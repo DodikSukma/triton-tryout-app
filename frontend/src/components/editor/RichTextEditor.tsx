@@ -346,7 +346,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(fun
     accent?: 'violet' | 'blue'
   }) => {
     const base = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all'
-    const idle = 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-slate-900'
+    const idle = 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm hover:text-slate-900 dark:hover:text-slate-100'
     const activeCls = 'bg-blue-500 text-white shadow-sm'
     const accentCls =
       accent === 'violet'
@@ -372,7 +372,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(fun
   return (
     <div className={`relative ${className}`}>
       {/* Toolbar */}
-      <div className="bg-slate-50 rounded-t-xl border border-slate-200 border-b-slate-100 p-2 flex flex-wrap items-center gap-0.5">
+      <div className="bg-slate-50 dark:bg-slate-700/50 rounded-t-xl border border-slate-200 dark:border-slate-600 border-b-slate-100 dark:border-b-slate-600 p-2 flex flex-wrap items-center gap-0.5">
         <ToolBtn onClick={() => exec('bold')} active={active.bold} title="Tebal (Ctrl+B)"><Bold size={14} /></ToolBtn>
         <ToolBtn onClick={() => exec('italic')} active={active.italic} title="Miring (Ctrl+I)"><Italic size={14} /></ToolBtn>
         <ToolBtn onClick={() => exec('underline')} active={active.underline} title="Garis Bawah (Ctrl+U)"><Underline size={14} /></ToolBtn>
@@ -411,7 +411,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(fun
         onMouseUp={() => { updateActive(); checkSelection() }}
         onFocus={updateActive}
         style={{ minHeight }}
-        className="question-content border border-slate-200 border-t-0 rounded-b-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 text-base leading-relaxed bg-white transition-colors"
+        className="question-content border border-slate-200 dark:border-slate-600 border-t-0 rounded-b-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-base leading-relaxed bg-white dark:bg-slate-800 transition-colors"
       />
 
       {/* Floating "convert selection to equation" button */}

@@ -108,13 +108,13 @@ export default function AIGeneratorModal({ tryoutId, onClose, onSaved }: AIGener
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-violet-50 to-blue-50 border-b border-slate-100 flex items-start justify-between rounded-t-3xl sm:rounded-t-2xl">
+        <div className="px-6 py-5 bg-gradient-to-r from-violet-50 to-blue-50 dark:from-violet-900/20 dark:to-blue-900/20 border-b border-slate-100 dark:border-slate-700 flex items-start justify-between rounded-t-3xl sm:rounded-t-2xl">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Sparkles size={18} className="text-violet-500" />
               Generate Soal dengan AI ✨
             </h2>
