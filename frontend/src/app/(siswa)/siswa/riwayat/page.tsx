@@ -30,7 +30,6 @@ export default function RiwayatPage() {
     let cancelled = false
     async function load() {
       try {
-        // Riwayat doesn't include tryout names, so we cross-join with /tryouts/available
         const [rRes, tRes] = await Promise.all([
           api.get<ApiResponse<RiwayatRow[]>>('/riwayat'),
           api.get<ApiResponse<{ id: string; nama_tryout: string; mata_pelajaran: string }[]>>('/tryouts/available'),
@@ -38,6 +37,24 @@ export default function RiwayatPage() {
         if (cancelled) return
         const riwayat = rRes.data.data ?? []
         const tMap = new Map((tRes.data.data ?? []).map((t) => [t.id, t]))
+
+        // Collect tryout_ids not covered by the available list (unpublished, class-filtered, etc.)
+        const missingIds = [...new Set(riwayat.map((r) => r.tryout_id).filter((id) => !tMap.has(id)))]
+
+        // Fetch missing tryouts individually — gateway allows siswa GET /tryouts/:id
+        if (missingIds.length > 0) {
+          const results = await Promise.allSettled(
+            missingIds.map((id) =>
+              api.get<ApiResponse<{ id: string; nama_tryout: string; mata_pelajaran: string }>>(`/tryouts/${id}`)
+            )
+          )
+          results.forEach((r, i) => {
+            if (r.status === 'fulfilled' && r.value.data.data) {
+              tMap.set(missingIds[i], r.value.data.data)
+            }
+          })
+        }
+
         const enriched = riwayat.map((r) => ({
           ...r,
           nama_tryout: tMap.get(r.tryout_id)?.nama_tryout,
