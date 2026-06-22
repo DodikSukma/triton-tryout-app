@@ -101,6 +101,11 @@ seed:
 	@echo "🌱 Seeding database..."
 	@(cd scripts && npx ts-node seed.ts)
 
+db-clear:
+	@echo "🧹 Clearing active tryout records..."
+	@(cd scripts && npx ts-node db-clear.ts)
+
+
 # ─────────────────────────────────────────────────────────────
 #  FRONTEND
 # ─────────────────────────────────────────────────────────────

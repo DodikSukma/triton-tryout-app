@@ -51,6 +51,13 @@
                             500: '#f43f5e',
                             600: '#e11d48',
                             700: '#be123c',
+                        },
+                        adminsoal: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         }
                     }
                 },
@@ -131,6 +138,9 @@
                     class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Guru</button>
                 <button onclick="filterRole('admin')" id="role-btn-admin"
                     class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Admin</button>
+                <button onclick="filterRole('adminsoal')" id="role-btn-adminsoal"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all duration-200">Admin
+                    Soal</button>
             </div>
         </div>
     </header>
@@ -266,9 +276,27 @@
                     </button>
                 </div>
 
+                <!-- Group 3.5: Admin Soal -->
+                <div class="space-y-1 nav-group" data-role="adminsoal">
+                    <div
+                        class="text-[10px] font-bold tracking-wider text-blue-700 uppercase px-3 py-1 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 5. PANDUAN ADMIN SOAL
+                    </div>
+                    <button onclick="showContent('adminsoal-dashboard')" id="btn-adminsoal-dashboard"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="layout" class="w-4 h-4"></i>
+                        <span>Dashboard &amp; Persetujuan</span>
+                    </button>
+                    <button onclick="showContent('adminsoal-super')" id="btn-adminsoal-super"
+                        class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
+                        <i data-lucide="layers" class="w-4 h-4"></i>
+                        <span>Kelola Super Try Out</span>
+                    </button>
+                </div>
+
                 <!-- Group 4: FAQ -->
                 <div class="space-y-1 nav-group" data-role="all">
-                    <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 py-1">5. BANTUAN
+                    <div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 py-1">6. BANTUAN
                     </div>
                     <button onclick="showContent('faq')" id="btn-faq"
                         class="nav-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-all">
@@ -407,6 +435,11 @@
                                             <td class="p-3 font-semibold text-admin-600">Admin</td>
                                             <td class="p-3 font-mono">admin@triton.id</td>
                                             <td class="p-3 font-mono">admin123</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-100">
+                                            <td class="p-3 font-semibold text-blue-600">Admin Soal</td>
+                                            <td class="p-3 font-mono">adminsoal1@triton.id</td>
+                                            <td class="p-3 font-mono">adminsoal123</td>
                                         </tr>
                                         <tr class="border-b border-slate-100">
                                             <td class="p-3 font-semibold text-triton-600">Guru</td>
@@ -1171,6 +1204,186 @@
                                 <p class="text-xs font-bold text-slate-600">fitur-admin-logs.png</p>
                                 <p class="text-[10px] text-slate-400 mt-1">Ganti file ini dengan screenshot halaman
                                     audit log platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+
+                <!-- ==================== SECTION: ADMINSOAL DASHBOARD ==================== -->
+                <section id="content-adminsoal-dashboard" class="section-content hidden space-y-8 animate-fade-in">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Admin Soal / Dasbor
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dasbor Admin Soal &amp;
+                            Persetujuan Ujian</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan bagi Admin Soal untuk meninjau status persetujuan draf ujian guru, memberikan umpan
+                            balik revisi, dan mengelola bank soal.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-blue-50/50 rounded-xl border border-blue-100 p-5 space-y-2">
+                            <span class="font-bold text-blue-700 px-2 py-0.5 rounded bg-blue-100">Metrik Dasbor
+                                Utama</span>
+                            <p class="text-slate-500 leading-relaxed">Menampilkan ringkasan jumlah <strong>Total Super
+                                    Try Out</strong> yang telah dibuat serta jumlah <strong>Tryout Guru Menunggu
+                                    Persetujuan</strong> secara aktual dari seluruh jenjang (SD, SMP, SMA).</p>
+                        </div>
+                        <div class="bg-amber-50/50 rounded-xl border border-amber-100 p-5 space-y-2">
+                            <span class="font-bold text-amber-700 px-2 py-0.5 rounded bg-amber-100">Daftar Pengajuan
+                                Guru</span>
+                            <p class="text-slate-500 leading-relaxed">Menampilkan kartu-kartu tryout yang diajukan oleh
+                                guru dengan status <code>pending_approval</code>. Kartu menyertakan detail nama guru
+                                pembuat, jenjang, mata pelajaran, dan jumlah soal.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-5 h-5 text-blue-600"></i> Alur Persetujuan &amp;
+                            Revisi Tryout
+                        </h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Setiap tryout yang disusun oleh guru tidak akan langsung terbit ke siswa sebelum divalidasi
+                            oleh Admin Soal. Berikut alur kerjanya:
+                        </p>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Menyetujui &amp; Publikasi</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Klik tombol hijau <strong>Setujui &amp; Publikasi</strong> pada kartu tryout yang
+                                    bersangkutan. Status tryout akan otomatis berubah menjadi <code>published</code>
+                                    (Aktif) dan siswa di jenjang/kelas terkait dapat langsung melihat dan mengerjakan
+                                    ujian tersebut.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Menolak / Mengembalikan untuk Revisi</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Apabila soal dirasa kurang sesuai atau ada kesalahan penulisan, klik tombol
+                                    <strong>Tolak / Revisi</strong>. Kolom catatan revisi akan terbuka otomatis.
+                                    Masukkan alasan penolakan secara rinci (contoh: "Soal nomor 3 rumus LaTeX tidak
+                                    merender, harap perbaiki delimeter").
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Kirim Catatan ke Guru</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Klik <strong>Kirim Revisi</strong>. Status tryout berubah menjadi
+                                    <code>rejected</code> (Revisi) dan guru pembuat akan menerima notifikasi beserta
+                                    catatan revisi Anda di halaman edit soal mereka.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== SECTION: ADMINSOAL SUPER ==================== -->
+                <section id="content-adminsoal-super" class="section-content hidden space-y-8 animate-fade-in">
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Admin Soal / Super
+                            Try Out</div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Penyusunan &amp; Manajemen Super
+                            Try Out</h2>
+                        <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+                            Panduan menyusun kompilasi soal ujian tingkat tinggi (Super Try Out) lintas jenjang dan guru
+                            di platform Triton.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Apa itu Super Try Out?</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            <strong>Super Try Out</strong> adalah paket ujian khusus yang dibuat langsung oleh Admin
+                            Soal. Fitur ini memungkinkan pembuatan lembar ujian kompilasi berbobot tinggi untuk
+                            persiapan UTBK, ujian nasional, atau simulasi akbar.
+                        </p>
+
+                        <div
+                            class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 text-xs text-amber-800">
+                            <i data-lucide="info" class="w-5 h-5 shrink-0 text-amber-500"></i>
+                            <div>
+                                <span class="font-bold">Keistimewaan Super Try Out:</span>
+                                <ul class="list-disc pl-4 mt-1 space-y-1">
+                                    <li>Dapat disusun menggunakan bank soal kompilasi dari berbagai guru.</li>
+                                    <li>Mendukung setelan pengacakan soal (<code>randomize_questions</code>) dan opsi
+                                        jawaban (<code>randomize_options</code>) untuk meminimalkan kecurangan siswa.
+                                    </li>
+                                    <li>Diberi label badge khusus <code>Super Try Out</code> di halaman dasbor siswa.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h3 class="text-base font-bold text-slate-900">Langkah Membuat Super Try Out</h3>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Klik "Buat Super Try Out"</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Pada dasbor kanan atas, klik tombol <strong>Buat Super Try Out</strong>. Sebuah
+                                    jendela modal form akan muncul.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Pilih Jenjang, Kelas, dan Mapel</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Tentukan jenjang sekolah (SD, SMP, atau SMA). Sistem akan otomatis memperbarui
+                                    daftar pilihan kelas dan mata pelajaran yang tersedia sesuai jenjang tersebut
+                                    (mengambil dari tabel data master).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Isi Detail Judul &amp; Durasi</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Masukkan judul Super Try Out (contoh:
+                                    <code>Tryout Akbar UTBK 2026 Gelombang I</code>) beserta batas waktu pengerjaan
+                                    dalam satuan menit. Klik <strong>Buat &amp; Kelola Soal</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <span
+                                class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-sm">Isi Bank Soal &amp; Hapus</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Anda akan dialihkan ke editor bank soal khusus Super Try Out. Anda dapat menambahkan
+                                    soal pilihan ganda maupun esai secara manual lengkap dengan LaTeX. Jika ujian sudah
+                                    selesai digunakan, Anda dapat menghapusnya secara permanen dengan mengeklik ikon
+                                    tempat sampah pada dasbor.
+                                </p>
                             </div>
                         </div>
                     </div>
