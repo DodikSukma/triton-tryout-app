@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-04 - Approval Workflows, Configurable Randomization, and Direct Share Links
+# 🤖 AI Task: Execute Task TRN-04 - Approval Workflows, Configurable Randomization, and Direct Share Links
 
 Your task is to execute **Task TRN-04: Alur Approval & Validasi Admin, Engine Pengacakan Soal & Pilihan Ganda, dan Manajemen Jenjang User**. You will implement tryout review/publishing workflows, build a CBT randomization engine controlled by tryout-level toggles, configure user level firewalls, and create direct-start exam share links.
 

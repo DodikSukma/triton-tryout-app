@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Project Onboarding & Understanding
+# 🤖 AI Task: Project Onboarding & Understanding
 
 You are an expert AI software engineer. Your task is to onboard yourself into the **Triton Denpasar Tryout Platform** project, analyze its architecture, directory structure, databases, and operational mechanisms, and verify that you have a comprehensive understanding of the codebase.
 

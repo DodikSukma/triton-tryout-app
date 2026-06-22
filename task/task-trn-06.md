@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-06 - Audit Logging System & Superuser Activity Dashboard
+# 🤖 AI Task: Execute Task TRN-06 - Audit Logging System & Superuser Activity Dashboard
 
 Your task is to execute **Task TRN-06: Sistem Pencatatan Aktivitas (Audit Logging & Superuser Dashboard)**. You will design and implement a platform-wide user activity audit log database, expose internal logging endpoints for microservices, and build a real-time filterable log viewer in the Admin dashboard.
 

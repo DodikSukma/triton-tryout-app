@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import RichTextEditor, { RichTextEditorHandle } from '@/components/editor/RichTextEditor'
+import TritonLoader from '@/components/common/TritonLoader'
 // AI question generator hidden per client request (TRN-09 Feature 2).
 import ImportSoalModal from '@/components/editor/ImportSoalModal'
 import WordImportModal from '@/components/editor/WordImportModal'
@@ -31,6 +32,9 @@ interface DraftSoal {
   bobot: number
   pertanyaan_html: string
   panduan_essay: string
+  kode_soal: string
+  penyelesaian: string
+  penyelesaian_html: string
   opsi: DraftOpsi[]
 }
 
@@ -39,12 +43,20 @@ const NEW_SOAL_DEFAULT: DraftSoal = {
   bobot: 1,
   pertanyaan_html: '',
   panduan_essay: '',
+  kode_soal: '',
+  penyelesaian: '',
+  penyelesaian_html: '',
   opsi: [
     { huruf: 'A', teks_html: '', is_benar: false },
     { huruf: 'B', teks_html: '', is_benar: false },
     { huruf: 'C', teks_html: '', is_benar: false },
     { huruf: 'D', teks_html: '', is_benar: false },
   ],
+}
+
+// Auto-generate a question code when the teacher leaves it blank.
+function generateKodeSoal(): string {
+  return `SOAL-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -57,6 +69,9 @@ function soalToDraft(s: Soal): DraftSoal {
     bobot: s.bobot,
     pertanyaan_html: s.pertanyaan_html || s.pertanyaan || '',
     panduan_essay: s.panduan_essay ?? '',
+    kode_soal: s.kode_soal ?? '',
+    penyelesaian: s.penyelesaian ?? '',
+    penyelesaian_html: s.penyelesaian_html ?? '',
     opsi: (s.opsi ?? []).map((o) => ({
       id: o.id,
       huruf: o.huruf,
@@ -127,8 +142,9 @@ export default function KelolaSoalPage() {
   // Mobile navigation: 'list' = sidebar visible, 'editor' = editor visible.
   const [mobileView,    setMobileView]    = useState<'list' | 'editor'>('list')
 
-  const editorRef   = useRef<RichTextEditorHandle>(null)
-  const opsiHtmlRef = useRef<string[]>([])
+  const editorRef       = useRef<RichTextEditorHandle>(null)
+  const penyelesaianRef = useRef<RichTextEditorHandle>(null)
+  const opsiHtmlRef     = useRef<string[]>([])
 
   // ─── Data fetching ───────────────────────────────────────────────
 
@@ -158,7 +174,10 @@ export default function KelolaSoalPage() {
     opsiHtmlRef.current = NEW_SOAL_DEFAULT.opsi.map((o) => o.teks_html)
     setEditorKey((k) => k + 1)
     setMobileView('editor')
-    setTimeout(() => editorRef.current?.setHtml(''), 50)
+    setTimeout(() => {
+      editorRef.current?.setHtml('')
+      penyelesaianRef.current?.setHtml('')
+    }, 50)
   }
 
   function selectSoal(s: Soal) {
@@ -167,7 +186,10 @@ export default function KelolaSoalPage() {
     opsiHtmlRef.current = d.opsi.map((o) => o.teks_html)
     setEditorKey((k) => k + 1)
     setMobileView('editor')
-    setTimeout(() => editorRef.current?.setHtml(d.pertanyaan_html), 50)
+    setTimeout(() => {
+      editorRef.current?.setHtml(d.pertanyaan_html)
+      penyelesaianRef.current?.setHtml(d.penyelesaian_html)
+    }, 50)
   }
 
   function backToList() {
@@ -225,6 +247,11 @@ export default function KelolaSoalPage() {
     const text = editorRef.current?.getText() ?? ''
     if (!text.trim()) { toast.error('Pertanyaan tidak boleh kosong.'); return }
 
+    // TRN-10: solution editor + question code (auto-generated when blank).
+    const penyelesaianHtml = penyelesaianRef.current?.getHtml() ?? draft.penyelesaian_html
+    const penyelesaianText = (penyelesaianRef.current?.getText() ?? draft.penyelesaian).trim()
+    const kodeSoal = draft.kode_soal.trim() || generateKodeSoal()
+
     let opsiPayload: { huruf: string; teks: string; teks_html: string; is_benar: boolean }[] | undefined
     if (draft.tipe === 'pilihan_ganda') {
       if (draft.opsi.length < 2) { toast.error('Pilihan ganda butuh minimal 2 opsi.'); return }
@@ -248,6 +275,9 @@ export default function KelolaSoalPage() {
         pertanyaan: text.trim(),
         pertanyaan_html: html,
         panduan_essay: draft.tipe === 'essay' ? draft.panduan_essay : '',
+        kode_soal: kodeSoal,
+        penyelesaian: penyelesaianText || null,
+        penyelesaian_html: penyelesaianHtml || null,
         opsi: opsiPayload,
       }
       let savedSoal: Soal | undefined
@@ -310,11 +340,7 @@ export default function KelolaSoalPage() {
   // ─── Loading / error states ──────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-      </div>
-    )
+    return <TritonLoader fullScreen={false} />
   }
 
   if (!tryout) {
@@ -560,6 +586,7 @@ export default function KelolaSoalPage() {
               key={editorKey}
               draft={draft}
               editorRef={editorRef}
+              penyelesaianRef={penyelesaianRef}
               opsiHtmlRef={opsiHtmlRef}
               saving={saving}
               soalCount={soalList.length}
@@ -642,6 +669,7 @@ export default function KelolaSoalPage() {
 interface SoalEditorProps {
   draft: DraftSoal
   editorRef: React.RefObject<RichTextEditorHandle>
+  penyelesaianRef: React.RefObject<RichTextEditorHandle>
   opsiHtmlRef: React.MutableRefObject<string[]>
   saving: boolean
   soalCount: number
@@ -659,7 +687,7 @@ interface SoalEditorProps {
 }
 
 function SoalEditor({
-  draft, editorRef, opsiHtmlRef, saving, soalCount, soalIndex,
+  draft, editorRef, penyelesaianRef, opsiHtmlRef, saving, soalCount, soalIndex,
   updateDraft, updateOpsi, markCorrect, addOpsi, removeOpsi,
   onSave, onCancel, onRequestDelete, onPrev, onNext,
 }: SoalEditorProps) {
@@ -715,6 +743,19 @@ function SoalEditor({
               value={draft.bobot}
               onChange={(e) => updateDraft('bobot', Math.max(1, Number(e.target.value) || 1))}
               className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-16 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Kode Soal
+            </label>
+            <input
+              type="text"
+              value={draft.kode_soal}
+              onChange={(e) => updateDraft('kode_soal', e.target.value)}
+              placeholder="Otomatis bila kosong"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 w-40 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
@@ -837,6 +878,20 @@ function SoalEditor({
             />
           </div>
         )}
+
+        {/* ── Penyelesaian / Pembahasan (TRN-10) ────────── */}
+        <div className="px-4 sm:px-6 md:px-8 py-5 border-b border-slate-100">
+          <label className="block text-sm font-semibold text-slate-700">Penyelesaian / Pembahasan</label>
+          <p className="text-xs text-slate-400 mt-0.5 mb-3">
+            Opsional — ditampilkan ke siswa setelah ujian selesai. Mendukung rumus matematika &amp; gambar.
+          </p>
+          <RichTextEditor
+            ref={penyelesaianRef}
+            initialHtml={draft.penyelesaian_html}
+            placeholder="Tulis langkah penyelesaian di sini. Klik Σ untuk persamaan matematika."
+            minHeight="120px"
+          />
+        </div>
 
         {/* ── Sticky save bar ───────────────────────────── */}
         <div className="sticky bottom-0 bg-white border-t border-slate-100 px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">

@@ -68,6 +68,8 @@ const levelPools = {
 
 const users = [
   { email: 'admin@triton.id', password: 'admin123', role: 'admin', nama: 'Administrator' },
+  // TRN-10: Question Bank administrator / Super Try Out builder.
+  { email: 'adminsoal1@triton.id', password: 'adminsoal123', role: 'admin-soal', nama: 'Admin Soal' },
   { email: 'guru1@triton.id', password: 'guru123', role: 'guru', nama: 'Bapak Agus' },
   { email: 'guru2@triton.id', password: 'guru123', role: 'guru', nama: 'Ibu Dewi' },
   { email: 'siswa1@triton.id', password: 'siswa123', role: 'siswa', nama: 'Budi Santoso', kelas: 'XII IPA 1' },
@@ -98,6 +100,8 @@ const guruEmailByLevel: Record<'sd' | 'smp' | 'sma', string> = {
 interface SeedSoal {
   pertanyaan: string
   bobot: number
+  kode: string                // TRN-10: unique question code
+  penyelesaian_html: string   // TRN-10: solution/explanation (KaTeX via $…$)
   opsi: { huruf: string; teks: string; is_benar: boolean }[]
 }
 
@@ -118,6 +122,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Berapakah hasil dari 7 + 8?',
         bobot: 1,
+        kode: 'MTK-SD-001',
+        penyelesaian_html: '<p>Jumlahkan kedua bilangan: $7 + 8 = 15$.</p>',
         opsi: [
           { huruf: 'A', teks: '13', is_benar: false },
           { huruf: 'B', teks: '14', is_benar: false },
@@ -128,6 +134,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Hasil dari 9 × 6 adalah ...',
         bobot: 1,
+        kode: 'MTK-SD-002',
+        penyelesaian_html: '<p>Perkalian: $9 \\times 6 = 54$.</p>',
         opsi: [
           { huruf: 'A', teks: '54', is_benar: true },
           { huruf: 'B', teks: '45', is_benar: false },
@@ -138,6 +146,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Bilangan genap di bawah ini adalah ...',
         bobot: 1,
+        kode: 'MTK-SD-003',
+        penyelesaian_html: '<p>Bilangan genap habis dibagi 2. Contoh: $\\frac{12}{2} = 6$ (bulat), jadi 12 adalah bilangan genap.</p>',
         opsi: [
           { huruf: 'A', teks: '7', is_benar: false },
           { huruf: 'B', teks: '12', is_benar: true },
@@ -155,6 +165,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Satuan Internasional (SI) untuk besaran gaya adalah ...',
         bobot: 1,
+        kode: 'IPA-SMP-001',
+        penyelesaian_html: '<p>Satuan SI untuk gaya adalah Newton (N), diturunkan dari $F = m \\cdot a$.</p>',
         opsi: [
           { huruf: 'A', teks: 'Joule', is_benar: false },
           { huruf: 'B', teks: 'Newton', is_benar: true },
@@ -165,6 +177,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Proses tumbuhan membuat makanannya sendiri disebut ...',
         bobot: 1,
+        kode: 'IPA-SMP-002',
+        penyelesaian_html: '<p>Tumbuhan membuat makanan melalui fotosintesis: $6CO_2 + 6H_2O \\rightarrow C_6H_{12}O_6 + 6O_2$.</p>',
         opsi: [
           { huruf: 'A', teks: 'Respirasi', is_benar: false },
           { huruf: 'B', teks: 'Transpirasi', is_benar: false },
@@ -175,6 +189,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Zat yang memiliki pH lebih kecil dari 7 bersifat ...',
         bobot: 2,
+        kode: 'IPA-SMP-003',
+        penyelesaian_html: '<p>Larutan dengan $pH < 7$ bersifat asam, $pH = 7$ netral, dan $pH > 7$ basa.</p>',
         opsi: [
           { huruf: 'A', teks: 'Basa', is_benar: false },
           { huruf: 'B', teks: 'Netral', is_benar: false },
@@ -192,6 +208,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Sebuah benda bergerak dengan kecepatan tetap 20 m/s selama 5 sekon. Jarak yang ditempuh adalah ...',
         bobot: 1,
+        kode: 'FIS-SMA-001',
+        penyelesaian_html: '<p>Gerak lurus beraturan: $s = v \\cdot t = 20 \\times 5 = 100$ m.</p>',
         opsi: [
           { huruf: 'A', teks: '4 m', is_benar: false },
           { huruf: 'B', teks: '25 m', is_benar: false },
@@ -202,6 +220,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Hukum Newton II dinyatakan dengan persamaan ...',
         bobot: 1,
+        kode: 'FIS-SMA-002',
+        penyelesaian_html: '<p>Hukum Newton II: percepatan sebanding dengan gaya, $F = m \\cdot a$.</p>',
         opsi: [
           { huruf: 'A', teks: 'F = m·a', is_benar: true },
           { huruf: 'B', teks: 'F = m/a', is_benar: false },
@@ -212,6 +232,8 @@ const levelTryouts: Record<'sd' | 'smp' | 'sma', SeedTryout> = {
       {
         pertanyaan: 'Besaran yang merupakan besaran vektor adalah ...',
         bobot: 2,
+        kode: 'FIS-SMA-003',
+        penyelesaian_html: '<p>Besaran vektor memiliki nilai dan arah, misalnya kecepatan $\\vec{v}$. Massa, waktu, dan suhu adalah besaran skalar.</p>',
         opsi: [
           { huruf: 'A', teks: 'Massa', is_benar: false },
           { huruf: 'B', teks: 'Waktu', is_benar: false },
@@ -261,12 +283,24 @@ async function seedLevel(level: 'sd' | 'smp' | 'sma', guruId: string) {
   const pool = levelPools[level]
   const t = levelTryouts[level]
 
-  // Idempotent: if this tryout already exists, just make sure it is attributed
-  // to this level's dedicated guru, then skip re-inserting the questions.
+  // Idempotent: if this tryout already exists, attribute it to this level's guru
+  // and backfill TRN-10 question codes + solutions onto the existing questions.
   const existing = await pool.query('SELECT id FROM tryouts WHERE nama_tryout = $1', [t.nama_tryout])
   if (existing.rows[0]) {
-    await pool.query('UPDATE tryouts SET dibuat_oleh = $1 WHERE id = $2', [guruId, existing.rows[0].id])
-    console.log(`  • [${level}] "${t.nama_tryout}" already seeded — author set to ${guruEmailByLevel[level]}`)
+    const tryoutId = existing.rows[0].id
+    await pool.query('UPDATE tryouts SET dibuat_oleh = $1 WHERE id = $2', [guruId, tryoutId])
+    for (let i = 0; i < t.soal.length; i++) {
+      const s = t.soal[i]
+      await pool.query(
+        `UPDATE soal
+            SET kode_soal         = COALESCE(kode_soal, $1),
+                penyelesaian      = COALESCE(penyelesaian, $2),
+                penyelesaian_html = COALESCE(penyelesaian_html, $3)
+          WHERE tryout_id = $4 AND nomor_soal = $5`,
+        [s.kode, s.penyelesaian_html.replace(/<[^>]*>/g, ''), s.penyelesaian_html, tryoutId, i + 1]
+      )
+    }
+    console.log(`  • [${level}] "${t.nama_tryout}" already seeded — author + codes/solutions ensured`)
     return
   }
 
@@ -283,9 +317,9 @@ async function seedLevel(level: 'sd' | 'smp' | 'sma', guruId: string) {
     let nomor = 1
     for (const s of t.soal) {
       const soalRes = await client.query(
-        `INSERT INTO soal (tryout_id, nomor_soal, tipe, pertanyaan, bobot)
-         VALUES ($1,$2,'pilihan_ganda',$3,$4) RETURNING id`,
-        [tryoutId, nomor++, s.pertanyaan, s.bobot]
+        `INSERT INTO soal (tryout_id, nomor_soal, tipe, pertanyaan, bobot, kode_soal, penyelesaian, penyelesaian_html)
+         VALUES ($1,$2,'pilihan_ganda',$3,$4,$5,$6,$7) RETURNING id`,
+        [tryoutId, nomor++, s.pertanyaan, s.bobot, s.kode, s.penyelesaian_html.replace(/<[^>]*>/g, ''), s.penyelesaian_html]
       )
       const soalId = soalRes.rows[0].id
       for (const o of s.opsi) {

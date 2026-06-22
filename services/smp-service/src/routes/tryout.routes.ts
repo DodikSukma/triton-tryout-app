@@ -20,6 +20,7 @@ const TryoutSchema = z.object({
   durasi_menit: z.number().int().positive().default(90),
   randomize_questions: z.boolean().optional(),
   randomize_options: z.boolean().optional(),
+  is_super_tryout: z.boolean().optional(), // TRN-10: compiled by admin-soal
 })
 
 const OpsiSchema = z.object({
@@ -40,18 +41,28 @@ const SoalSchema = z.object({
   equation_latex: z.string().optional(),
   panduan_essay: z.string().optional(),
   bobot: z.number().int().positive().default(1),
+  // TRN-10: question code + solution/explanation
+  kode_soal: z.string().optional().nullable(),
+  penyelesaian: z.string().optional().nullable(),
+  penyelesaian_html: z.string().optional().nullable(),
+  penyelesaian_gambar_url: z.string().optional().nullable(),
+  penyelesaian_gambar_base64: z.string().optional().nullable(),
   opsi: z.array(OpsiSchema).optional(),
 })
+
+// TRN-10: admins and question-bank admins see/manage every tryout.
+const ADMIN_ROLES = new Set(['admin', 'admin-soal'])
 
 // GET /tryouts — list tryouts (guru sees own, admin sees all)
 router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.headers['x-user-id'] as string
     const role = req.headers['x-user-role'] as string
-    const query = role === 'admin'
+    const seesAll = ADMIN_ROLES.has(role)
+    const query = seesAll
       ? 'SELECT * FROM tryouts ORDER BY created_at DESC'
       : 'SELECT * FROM tryouts WHERE dibuat_oleh = $1 ORDER BY created_at DESC'
-    const result = role === 'admin'
+    const result = seesAll
       ? await pool.query(query)
       : await pool.query(query, [userId])
 
@@ -114,15 +125,20 @@ router.get('/available', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
   try {
     const guruId = req.headers['x-user-id'] as string
+    const role = req.headers['x-user-role'] as string
     const body = TryoutSchema.parse(req.body)
+    // TRN-14: Super Tryouts (or anything created by admin-soal) skip the teacher
+    // approval workflow and go live immediately.
+    const defaultStatus = (body.is_super_tryout || role === 'admin-soal') ? 'published' : 'draft'
     const result = await pool.query(
       `INSERT INTO tryouts
          (nama_tryout, mata_pelajaran, sub_mata_pelajaran, kelas, durasi_menit, dibuat_oleh,
-          randomize_questions, randomize_options)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+          randomize_questions, randomize_options, is_super_tryout, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [
         body.nama_tryout, body.mata_pelajaran, body.sub_mata_pelajaran ?? null, body.kelas ?? null,
         body.durasi_menit, guruId, body.randomize_questions ?? true, body.randomize_options ?? true,
+        body.is_super_tryout ?? false, defaultStatus,
       ]
     )
     auditLog(req, {
@@ -171,9 +187,14 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     let soal = soalList.rows
     if (role === 'siswa') {
+      // Hide answer keys, grading guides, and solutions while taking the exam.
       soal = soal.map((s) => ({
         ...s,
         panduan_essay: null,
+        penyelesaian: null,
+        penyelesaian_html: null,
+        penyelesaian_gambar_url: null,
+        penyelesaian_gambar_base64: null,
         opsi: (s.opsi as { is_benar: boolean }[]).map(({ is_benar: _ignore, ...rest }) => rest),
       }))
     }
@@ -309,14 +330,17 @@ router.post('/:id/soal', async (req: Request, res: Response) => {
     const soalResult = await client.query(
       `INSERT INTO soal
          (tryout_id, nomor_soal, tipe, pertanyaan, pertanyaan_html,
-          gambar_url, gambar_base64, equation, equation_latex, panduan_essay, bobot)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          gambar_url, gambar_base64, equation, equation_latex, panduan_essay, bobot,
+          kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING *`,
       [
         req.params.id, nomor, body.tipe, body.pertanyaan, body.pertanyaan_html ?? null,
         body.gambar_url ?? null, body.gambar_base64 ?? null,
         body.equation ?? null, body.equation_latex ?? null,
         body.panduan_essay ?? null, body.bobot,
+        body.kode_soal ?? null, body.penyelesaian ?? null, body.penyelesaian_html ?? null,
+        body.penyelesaian_gambar_url ?? null, body.penyelesaian_gambar_base64 ?? null,
       ]
     )
     const soal = soalResult.rows[0]
@@ -435,6 +459,97 @@ router.post('/:id/upload-docx', upload.single('file'), async (req: Request, res:
   } catch (err) {
     logger.error('[tryouts/:id/upload-docx]', { error: err })
     res.status(500).json({ success: false, error: 'Gagal memproses dokumen Word.' })
+  }
+})
+
+// POST /tryouts/:id/import-questions — TRN-10: Super Try Out compilation.
+// Clones the selected bank questions (with fresh ids) into this tryout so that
+// editing/deleting the original teacher's question never affects the Super Tryout.
+const ImportSchema = z.object({ questionIds: z.array(z.string().uuid()).min(1) })
+
+router.post('/:id/import-questions', async (req: Request, res: Response) => {
+  const client = await pool.connect()
+  try {
+    const { questionIds } = ImportSchema.parse(req.body)
+    const targetId = req.params.id
+
+    const target = await client.query('SELECT id FROM tryouts WHERE id = $1', [targetId])
+    if (!target.rows[0]) return res.status(404).json({ success: false, error: 'Tryout tujuan tidak ditemukan' })
+
+    const sourceRes = await client.query(
+      `SELECT s.*,
+              COALESCE(
+                json_agg(json_build_object(
+                  'huruf', o.huruf, 'teks', o.teks, 'teks_html', o.teks_html, 'is_benar', o.is_benar
+                ) ORDER BY o.huruf) FILTER (WHERE o.id IS NOT NULL),
+                '[]'::json
+              ) AS opsi
+         FROM soal s
+         LEFT JOIN opsi_jawaban o ON o.soal_id = s.id
+        WHERE s.id = ANY($1::uuid[])
+        GROUP BY s.id`,
+      [questionIds]
+    )
+    if (sourceRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Soal sumber tidak ditemukan' })
+    }
+
+    // Preserve the caller's selection order.
+    const orderIndex = new Map(questionIds.map((id, i) => [id, i]))
+    const sources = sourceRes.rows.sort(
+      (a, b) => (orderIndex.get(a.id) ?? 0) - (orderIndex.get(b.id) ?? 0)
+    )
+
+    await client.query('BEGIN')
+    const maxRes = await client.query(
+      'SELECT COALESCE(MAX(nomor_soal),0) AS max FROM soal WHERE tryout_id = $1',
+      [targetId]
+    )
+    let nomor = maxRes.rows[0].max as number
+    let imported = 0
+
+    for (const s of sources) {
+      nomor += 1
+      const ins = await client.query(
+        `INSERT INTO soal
+           (tryout_id, nomor_soal, tipe, pertanyaan, pertanyaan_html,
+            gambar_url, gambar_base64, equation, equation_latex, panduan_essay, bobot,
+            kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         RETURNING id`,
+        [
+          targetId, nomor, s.tipe, s.pertanyaan, s.pertanyaan_html,
+          s.gambar_url, s.gambar_base64, s.equation, s.equation_latex, s.panduan_essay, s.bobot,
+          s.kode_soal, s.penyelesaian, s.penyelesaian_html, s.penyelesaian_gambar_url, s.penyelesaian_gambar_base64,
+        ]
+      )
+      const newId = ins.rows[0].id
+      for (const o of s.opsi as { huruf: string; teks: string; teks_html: string | null; is_benar: boolean }[]) {
+        await client.query(
+          'INSERT INTO opsi_jawaban (soal_id, huruf, teks, teks_html, is_benar) VALUES ($1,$2,$3,$4,$5)',
+          [newId, o.huruf, o.teks, o.teks_html ?? null, o.is_benar]
+        )
+      }
+      imported += 1
+    }
+    await client.query('COMMIT')
+
+    auditLog(req, {
+      action: 'TRYOUT_IMPORT_QUESTIONS',
+      target_id: targetId,
+      description: `Imported ${imported} question(s) from Bank Soal into a Super Tryout`,
+    })
+
+    res.json({ success: true, data: { imported }, message: `${imported} soal diimpor.` })
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => null)
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ success: false, error: err.errors[0].message, code: 'VALIDATION_ERROR' })
+    }
+    logger.error('[tryouts/:id/import-questions]', { error: err })
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  } finally {
+    client.release()
   }
 })
 

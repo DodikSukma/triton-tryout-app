@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-07 - Student Level Access, CBT Proctoring System, and Results Contrast
+# 🤖 AI Task: Execute Task TRN-07 - Student Level Access, CBT Proctoring System, and Results Contrast
 
 Your task is to execute **Task TRN-07: Akses Try Out Berdasarkan Role Siswa, Sistem Proteksi Kecurangan (Anti-Cheating), dan Peningkatan Kontras Hasil Try Out**. You will implement class-level exam filters, build a comprehensive browser-based proctoring/anti-cheating guard, and fix color contrast legibility on the tryout results screen.
 

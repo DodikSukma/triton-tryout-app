@@ -1,4 +1,4 @@
-# 🎨 Image Prompts for Triton Denpasar Landing Page
+# 🎨 Image Tasks for Triton Denpasar Landing Page
 
 Dokumen ini berisi panduan prompt AI untuk menghasilkan gambar ilustrasi modern yang digunakan pada halaman landing Bimbel Triton Denpasar. Anda dapat menggunakan DALL-E, Midjourney, Stable Diffusion, atau generator gambar lainnya dengan prompt di bawah ini. Semua gambar dispesifikasikan agar memiliki background putih polos (solid white background).
 

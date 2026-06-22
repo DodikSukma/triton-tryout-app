@@ -92,3 +92,13 @@ ALTER TABLE tryouts ADD COLUMN IF NOT EXISTS randomize_options   BOOLEAN NOT NUL
 -- Per-session randomized layout (kept stable across reloads).
 ALTER TABLE sesi_tryout ADD COLUMN IF NOT EXISTS question_order UUID[];  -- ordered soal ids
 ALTER TABLE sesi_tryout ADD COLUMN IF NOT EXISTS option_order   JSONB;   -- { soal_id: ["C","A","D","B"] }
+
+-- ─── TRN-10: question codes, solutions/explanations, and Super Try Out flag ──
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS kode_soal                  VARCHAR(100);
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS penyelesaian               TEXT;  -- raw markdown/plain text
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS penyelesaian_html          TEXT;  -- rendered HTML (with equations)
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS penyelesaian_gambar_url    TEXT;  -- optional solution image URL
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS penyelesaian_gambar_base64 TEXT;  -- optional solution image (base64)
+
+-- Marks tryouts compiled by an 'admin-soal' from questions across teachers/levels.
+ALTER TABLE tryouts ADD COLUMN IF NOT EXISTS is_super_tryout BOOLEAN NOT NULL DEFAULT false;

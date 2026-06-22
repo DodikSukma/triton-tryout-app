@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'guru' | 'siswa'
+export type Role = 'admin' | 'guru' | 'siswa' | 'admin-soal'
 
 export interface SessionUser {
   userId: string
@@ -57,6 +57,7 @@ export interface Tryout {
   revision_notes?: string | null
   randomize_questions?: boolean
   randomize_options?: boolean
+  is_super_tryout?: boolean
   soal_count?: number
   total_bobot?: number
   jumlah_peserta?: number
@@ -95,6 +96,12 @@ export interface Soal {
   equation_latex?: string | null
   panduan_essay?: string | null
   bobot: number
+  // TRN-10: question code + solution/explanation
+  kode_soal?: string | null
+  penyelesaian?: string | null
+  penyelesaian_html?: string | null
+  penyelesaian_gambar_url?: string | null
+  penyelesaian_gambar_base64?: string | null
   opsi?: OpsiJawaban[]
   created_at: string
 }

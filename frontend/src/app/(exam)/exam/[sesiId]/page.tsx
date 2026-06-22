@@ -7,17 +7,49 @@ import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Flag, AlertTriangle, Loader2, Send, ChevronLeft, ChevronRight, Save,
-  Maximize2, ShieldAlert, Ban, Sigma, Eye, EyeOff,
+  Maximize2, ShieldAlert, Ban, Sigma, Eye, EyeOff, Wifi, WifiOff, RefreshCw,
 } from 'lucide-react'
 import katex from 'katex'
 import api, { getErrorMessage } from '@/lib/api'
 import { ApiResponse, SesiTryout, Soal, TryoutDetail } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
+import TritonLoader from '@/components/common/TritonLoader'
 import { useLevelTheme } from '@/components/shared/LevelTheme'
 
 interface SesiWithAnswers {
   sesi: SesiTryout
   answers: Record<string, { opsi_id: string | null; jawaban_teks: string | null }>
+}
+
+// ─── Offline-first answer backup (TRN-13) ──────────────────────────────────────
+type LocalAnswer = {
+  opsi_id: string | null
+  jawaban_teks: string | null
+  synced: boolean
+  timestamp: number
+}
+type ExamBackup = Record<string, LocalAnswer> // keyed by soalId
+
+function readBackup(key: string): ExamBackup {
+  if (typeof window === 'undefined') return {}
+  try {
+    return JSON.parse(window.localStorage.getItem(key) || '{}') as ExamBackup
+  } catch {
+    return {}
+  }
+}
+
+function writeBackup(key: string, data: ExamBackup): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(key, JSON.stringify(data))
+  } catch {
+    /* storage quota / private mode — best effort */
+  }
+}
+
+function countPending(backup: ExamBackup): number {
+  return Object.values(backup).filter((a) => !a.synced).length
 }
 
 // Common equation templates offered in the student essay helper (TRN-09 Feature 3).
@@ -74,6 +106,60 @@ export default function ExamPage() {
   const [customLatex, setCustomLatex] = useState('')
   const [showPreview, setShowPreview] = useState(false)
 
+  // ─── Offline-first auto-save + sync (TRN-13) ─────────────
+  const backupKey = `triton-exam-backup-${sesiId}`
+  const [isOnline, setIsOnline] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
+  // 'idle' = normal; 'syncing' = flushing before submit; 'error' = sync/submit failed.
+  const [submitState, setSubmitState] = useState<'idle' | 'syncing' | 'error'>('idle')
+
+  // Write an answer to the local backup immediately (primary, offline-safe store).
+  const writeLocalAnswer = useCallback(
+    (soalId: string, payload: { opsi_id?: string | null; jawaban_teks?: string | null }, synced: boolean) => {
+      const backup = readBackup(backupKey)
+      backup[soalId] = {
+        opsi_id: payload.opsi_id ?? null,
+        jawaban_teks: payload.jawaban_teks ?? null,
+        synced,
+        timestamp: Date.now(),
+      }
+      writeBackup(backupKey, backup)
+      setPendingCount(countPending(backup))
+    },
+    [backupKey]
+  )
+
+  const markSynced = useCallback((soalId: string) => {
+    const backup = readBackup(backupKey)
+    if (backup[soalId]) {
+      backup[soalId].synced = true
+      writeBackup(backupKey, backup)
+      setPendingCount(countPending(backup))
+    }
+  }, [backupKey])
+
+  // Push every locally-unsynced answer to the server. Returns true if all succeeded.
+  const syncPending = useCallback(async (): Promise<boolean> => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return false
+    const backup = readBackup(backupKey)
+    const pending = Object.entries(backup).filter(([, a]) => !a.synced)
+    if (pending.length === 0) return true
+    let allOk = true
+    for (const [soalId, a] of pending) {
+      try {
+        await api.post(`/sesi/${sesiId}/jawab`, {
+          soal_id: soalId,
+          opsi_id: a.opsi_id ?? undefined,
+          jawaban_teks: a.jawaban_teks ?? undefined,
+        })
+        markSynced(soalId)
+      } catch {
+        allOk = false
+      }
+    }
+    return allOk
+  }, [sesiId, backupKey, markSynced])
+
   // ─── Load sesi + tryout ──────────────────────────────────
   useEffect(() => {
     let cancelled = false
@@ -91,7 +177,16 @@ export default function ExamPage() {
         }
 
         setSesi(s.sesi)
-        setAnswers(s.answers ?? {})
+
+        // Merge backend answers with any unsynced local backup (offline recovery).
+        const merged: Record<string, { opsi_id?: string | null; jawaban_teks?: string | null }> = { ...(s.answers ?? {}) }
+        const backup = readBackup(backupKey)
+        for (const [soalId, la] of Object.entries(backup)) {
+          // Unsynced local edits are the student's latest intent (newer / not on server yet).
+          if (!la.synced) merged[soalId] = { opsi_id: la.opsi_id, jawaban_teks: la.jawaban_teks }
+        }
+        setAnswers(merged)
+        setPendingCount(countPending(backup))
 
         const tRes = await api.get<ApiResponse<TryoutDetail>>(`/tryouts/${s.sesi.tryout_id}`)
         if (cancelled) return
@@ -114,7 +209,7 @@ export default function ExamPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [sesiId, router])
+  }, [sesiId, router, backupKey])
 
   // ─── Persist flagged ─────────────────────────────────────
   useEffect(() => {
@@ -122,6 +217,24 @@ export default function ExamPage() {
       window.sessionStorage.setItem(`triton-flagged-${sesiId}`, JSON.stringify(Array.from(flagged)))
     }
   }, [flagged, sesiId])
+
+  // ─── Network status + background sync (TRN-13) ───────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setIsOnline(navigator.onLine)
+    const onOnline = () => { setIsOnline(true); syncPending() }
+    const onOffline = () => setIsOnline(false)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    // Flush leftovers shortly after mount, then poll every 8s while online.
+    if (navigator.onLine) syncPending()
+    const id = setInterval(() => { if (navigator.onLine) syncPending() }, 8000)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+      clearInterval(id)
+    }
+  }, [syncPending])
 
   // ─── Timer ───────────────────────────────────────────────
   useEffect(() => {
@@ -180,16 +293,29 @@ export default function ExamPage() {
 
   // ─── Save one answer ─────────────────────────────────────
   const saveAnswer = useCallback(async (soalId: string, payload: { opsi_id?: string; jawaban_teks?: string }) => {
+    // 1. Primary backup: write to localStorage immediately (unsynced).
+    writeLocalAnswer(soalId, payload, false)
     setSavingIndicator('saving')
-    try {
-      await api.post(`/sesi/${sesiId}/jawab`, { soal_id: soalId, ...payload })
+
+    // 2. Offline → keep local only; the background sync will upload later.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
       setSavingIndicator('saved')
       setTimeout(() => setSavingIndicator('idle'), 1200)
-    } catch (err) {
-      setSavingIndicator('idle')
-      toast.error(getErrorMessage(err, 'Gagal menyimpan jawaban.'))
+      return
     }
-  }, [sesiId])
+
+    // 3. Online → push to the server; mark synced on success, stay silent on failure.
+    try {
+      await api.post(`/sesi/${sesiId}/jawab`, { soal_id: soalId, ...payload })
+      markSynced(soalId)
+      setSavingIndicator('saved')
+      setTimeout(() => setSavingIndicator('idle'), 1200)
+    } catch {
+      // Network error/timeout — answer is safe locally; no disruptive popup.
+      setSavingIndicator('saved')
+      setTimeout(() => setSavingIndicator('idle'), 1200)
+    }
+  }, [sesiId, writeLocalAnswer, markSynced])
 
   function pickOpsi(opsiId: string) {
     if (!currentSoal) return
@@ -261,17 +387,35 @@ export default function ExamPage() {
   }
 
   async function doSubmit(opts?: { disqualified?: boolean }) {
-    submittedRef.current = true
     setSubmitting(true)
+
+    // Submission guard: flush unsynced local answers before finishing. A forced
+    // disqualification submits best-effort and skips the blocking sync.
+    if (!opts?.disqualified && countPending(readBackup(backupKey)) > 0) {
+      setSubmitState('syncing')
+      let ok = false
+      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+        ok = await syncPending()
+        if (!ok && attempt < 2) await new Promise((r) => setTimeout(r, 1500))
+      }
+      if (!ok) { setSubmitState('error'); setSubmitting(false); return }
+      setSubmitState('idle')
+    }
+
+    submittedRef.current = true
     try {
       await api.post<ApiResponse<unknown>>(
         `/sesi/${sesiId}/selesai`,
         opts?.disqualified ? { disqualified: true } : undefined
       )
-      if (typeof window !== 'undefined') window.sessionStorage.removeItem(`triton-flagged-${sesiId}`)
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(backupKey)
+        window.sessionStorage.removeItem(`triton-flagged-${sesiId}`)
+      }
       if (typeof document !== 'undefined' && document.fullscreenElement) {
         document.exitFullscreen().catch(() => {})
       }
+      setSubmitState('idle')
       if (opts?.disqualified) {
         setDisqualified(true)
         disqualifiedRef.current = true
@@ -281,8 +425,12 @@ export default function ExamPage() {
       }
     } catch (err) {
       submittedRef.current = false
-      toast.error(getErrorMessage(err, 'Gagal mengumpulkan jawaban. Silakan coba lagi.'))
       setSubmitting(false)
+      if (opts?.disqualified) {
+        toast.error(getErrorMessage(err, 'Gagal mengumpulkan jawaban. Silakan coba lagi.'))
+      } else {
+        setSubmitState('error') // retryable via the sync/submit overlay
+      }
     }
   }
 
@@ -352,11 +500,7 @@ export default function ExamPage() {
 
   // ─── Render ──────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-triton-blue-500 animate-spin" />
-      </div>
-    )
+    return <TritonLoader />
   }
 
   if (!tryout || !currentSoal) {
@@ -373,17 +517,17 @@ export default function ExamPage() {
   const isCritical = timeLeft <= 60 && timeLeft > 0
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 select-none">
+    <div className="min-h-screen bg-slate-50 select-none">
 
       {/* ─── HEADER (fixed) ─── */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-24 h-8 relative shrink-0">
               <Image src="/logo.png" alt="Triton Denpasar" fill className="object-contain" />
             </div>
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-600 hidden md:block" />
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate hidden md:block max-w-[260px]">
+            <div className="w-px h-6 bg-slate-200 hidden md:block" />
+            <p className="font-semibold text-slate-800 text-sm truncate hidden md:block max-w-[260px]">
               {tryout.nama_tryout}
             </p>
           </div>
@@ -395,8 +539,23 @@ export default function ExamPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-sm text-slate-500 dark:text-slate-400 tabular-nums">
-              <strong className="text-slate-900 dark:text-slate-100">{answeredCount}</strong>/{total} dijawab
+            {/* Network status (TRN-13) */}
+            {isOnline ? (
+              <span className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold text-green-600">
+                <Wifi size={13} /> Terkoneksi
+                {pendingCount > 0 && (
+                  <span className="inline-flex items-center gap-1 text-slate-400 font-medium">
+                    · <Loader2 size={10} className="animate-spin" /> {pendingCount}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2.5 py-1.5">
+                <WifiOff size={13} /> <span className="hidden sm:inline">Offline · Tersimpan Lokal</span><span className="sm:hidden">Offline</span>
+              </span>
+            )}
+            <span className="hidden sm:block text-sm text-slate-500 tabular-nums">
+              <strong className="text-slate-900">{answeredCount}</strong>/{total} dijawab
             </span>
             <button
               onClick={() => setShowSubmit(true)}
@@ -412,9 +571,9 @@ export default function ExamPage() {
       <div className="flex pt-16">
 
         {/* ─── Navigation Panel ─── */}
-        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex-col z-30">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-            <h2 className="font-semibold text-slate-700 dark:text-slate-300 text-sm">Navigasi Soal</h2>
+        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-slate-100 flex-col z-30">
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-700 text-sm">Navigasi Soal</h2>
             <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-triton-blue-500 transition-all duration-300"
@@ -470,9 +629,9 @@ export default function ExamPage() {
         <main className="flex-1 lg:ml-64 pb-24 px-4 md:px-8">
           <div className="max-w-3xl mx-auto py-8">
 
-            <article className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+            <article className="bg-white rounded-2xl border border-slate-100 shadow-sm">
 
-              <header className="px-6 md:px-8 pt-7 pb-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center gap-3">
+              <header className="px-6 md:px-8 pt-7 pb-4 border-b border-slate-50 flex flex-wrap items-center gap-3">
                 <span className="bg-triton-blue-500 text-white rounded-full px-3.5 py-1.5 text-xs font-bold">
                   Soal {currentIdx + 1}
                 </span>
@@ -497,7 +656,7 @@ export default function ExamPage() {
               <div className="px-6 md:px-8 py-6">
                 <RenderHTML
                   html={currentSoal.pertanyaan_html || currentSoal.pertanyaan}
-                  className="text-base leading-relaxed text-slate-800 dark:text-slate-100"
+                  className="text-base leading-relaxed text-slate-800"
                 />
               </div>
 
@@ -612,7 +771,7 @@ export default function ExamPage() {
                       onBlur={blurEssay}
                       placeholder="Tuliskan jawaban lengkap Anda di sini..."
                       rows={8}
-                      className="w-full min-h-[200px] border-2 border-slate-200 dark:border-slate-600 rounded-xl p-4 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-700 dark:placeholder:text-slate-500 text-base leading-relaxed resize-y outline-none focus:border-triton-blue-500 focus:ring-4 focus:ring-triton-blue-500/10 transition-all"
+                      className="w-full min-h-[200px] border-2 border-slate-200 rounded-xl p-4 text-slate-800 text-base leading-relaxed resize-y outline-none focus:border-triton-blue-500 focus:ring-4 focus:ring-triton-blue-500/10 transition-all"
                     />
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-slate-400 tabular-nums">
@@ -645,7 +804,7 @@ export default function ExamPage() {
                           {(answers[currentSoal.id]?.jawaban_teks ?? '').trim() ? (
                             <RenderHTML
                               html={escapeForPreview(answers[currentSoal.id]?.jawaban_teks ?? '')}
-                              className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed"
+                              className="text-sm text-slate-800 leading-relaxed"
                             />
                           ) : (
                             <span className="text-sm italic text-slate-400">Belum ada jawaban untuk ditampilkan.</span>
@@ -663,18 +822,18 @@ export default function ExamPage() {
       </div>
 
       {/* ─── Bottom Navigation (fixed) ─── */}
-      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg z-40">
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-slate-100 shadow-lg z-40">
         <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4">
           <button
             onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
             disabled={currentIdx === 0}
-            className="inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-1.5 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft size={16} />
             Sebelumnya
           </button>
 
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+          <span className="text-sm font-semibold text-slate-600 tabular-nums">
             {currentIdx + 1} / {total}
           </span>
 
@@ -718,12 +877,12 @@ export default function ExamPage() {
       {/* ─── Anti-cheat: fullscreen start gate ─── */}
       {!examStarted && !disqualified && (
         <div className="fixed inset-0 z-[300] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
               <Maximize2 size={26} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Mode Ujian Aman</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+            <h2 className="text-xl font-bold text-slate-900">Mode Ujian Aman</h2>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
               Untuk memulai ujian, Anda harus masuk ke mode layar penuh. Berpindah tab,
               keluar dari layar penuh, atau menyalin teks akan tercatat sebagai pelanggaran.
             </p>
@@ -776,6 +935,45 @@ export default function ExamPage() {
           </div>
         </div>
       )}
+
+      {/* ─── Offline sync / submit guard (TRN-13) ─── */}
+      {submitState !== 'idle' && (
+        <div className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 text-center">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            {submitState === 'syncing' ? (
+              <>
+                <Loader2 size={40} className="mx-auto text-triton-blue-500 animate-spin" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900">Menyinkronkan Jawaban</h3>
+                <p className="mt-1.5 text-sm text-slate-500">Menyinkronkan sisa jawaban ke server, mohon tunggu...</p>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+                  <WifiOff size={26} />
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-slate-900">Koneksi Gagal</h3>
+                <p className="mt-1.5 text-sm text-slate-500">
+                  Koneksi gagal. Periksa internet Anda untuk mengumpulkan jawaban.
+                </p>
+                <div className="mt-5 flex gap-3">
+                  <button
+                    onClick={() => { setSubmitState('idle'); setSubmitting(false) }}
+                    className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    onClick={() => doSubmit()}
+                    className="flex-1 bg-triton-blue-500 hover:bg-triton-blue-600 text-white font-semibold rounded-xl py-2.5 text-sm inline-flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <RefreshCw size={14} /> Coba Lagi
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -787,18 +985,18 @@ function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfir
 }) {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={submitting ? undefined : onCancel}>
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500">
+          <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
             <AlertTriangle size={22} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Kumpulkan Jawaban?</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Setelah dikumpulkan, jawaban tidak dapat diubah.</p>
+            <h3 className="text-lg font-bold text-slate-900">Kumpulkan Jawaban?</h3>
+            <p className="text-sm text-slate-500">Setelah dikumpulkan, jawaban tidak dapat diubah.</p>
           </div>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-5 space-y-2.5 text-sm">
+        <div className="bg-slate-50 rounded-xl p-5 space-y-2.5 text-sm">
           <Row label="Total soal" value={total} valueClass="text-slate-900" />
           <Row label="Sudah dijawab" value={answered} valueClass="text-green-600" />
           <Row label="Belum dijawab" value={unanswered} valueClass={unanswered > 0 ? 'text-red-500' : 'text-slate-400'} />
@@ -816,7 +1014,7 @@ function SubmitDialog({ total, answered, unanswered, flagged, onCancel, onConfir
           <button
             onClick={onCancel}
             disabled={submitting}
-            className="flex-1 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
+            className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
           >
             Periksa Lagi
           </button>

@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp, ListChecks,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
+import TritonLoader from '@/components/common/TritonLoader'
 import { ApiResponse, Soal, Tryout, TryoutDetail, TryoutStatus } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
 
@@ -100,7 +101,7 @@ export default function AdminApprovalPage() {
   }
 
   if (loading) {
-    return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 text-blue-500 animate-spin" /></div>
+    return <TritonLoader fullScreen={false} />
   }
 
   const pendingCount = tryouts.filter((t) => t.status === 'pending_approval').length
