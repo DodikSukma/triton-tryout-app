@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Calendar, CheckCircle2, Hourglass, Loader2, TrendingUp, FileText } from 'lucide-react'
+import { Calendar, CheckCircle2, Hourglass, TrendingUp, FileText } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
+import TritonLoader from '@/components/common/TritonLoader'
 import { ApiResponse } from '@/types'
 import { formatTanggal } from '@/lib/utils'
 
@@ -61,11 +62,7 @@ export default function RiwayatPage() {
   }, [rows])
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-triton-blue-500 animate-spin" />
-      </div>
-    )
+    return <TritonLoader fullScreen={false} />
   }
 
   return (

@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-05 - Admin Dashboard Filters, Approvals Navigation, and Builder Back Button
+# 🤖 AI Task: Execute Task TRN-05 - Admin Dashboard Filters, Approvals Navigation, and Builder Back Button
 
 Your task is to execute **Task TRN-05: Admin Dashboard Level Filters, Approvals Redirect, Detailed Admin Question Review, and Guru Back Navigation**. You will refine the admin operational controls, enhance tryout review features, and fix navigation link structures in the teacher workspace.
 

@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
-  Trophy, Star, BookOpen, TrendingUp, CheckCircle2, XCircle, MinusCircle, Loader2, ArrowLeft,
+  Trophy, Star, BookOpen, TrendingUp, CheckCircle2, XCircle, MinusCircle, ArrowLeft, Lightbulb,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import { ApiResponse, Hasil, OpsiJawaban, SesiTryout, Soal, Tryout } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
+import TritonLoader from '@/components/common/TritonLoader'
 
 interface HasilDetailItem {
   soal: Soal
@@ -67,11 +68,7 @@ export default function HasilPage() {
   }, [data])
 
   if (loading) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-triton-blue-500 animate-spin" />
-      </div>
-    )
+    return <TritonLoader fullScreen={false} />
   }
   if (!data) return <div className="text-center py-16 text-slate-500">Hasil tidak ditemukan.</div>
 
@@ -235,6 +232,19 @@ function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
           <p className="text-xs text-amber-600 mt-3 inline-flex items-center gap-1">
             <MinusCircle size={11} /> Essay dinilai secara manual oleh guru
           </p>
+        </div>
+      )}
+
+      {/* ─── Penyelesaian / Pembahasan (TRN-10) ─── */}
+      {item.soal.penyelesaian_html && item.soal.penyelesaian_html.trim() && (
+        <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+          <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-600">
+            <Lightbulb size={13} /> Penyelesaian / Pembahasan Soal
+          </p>
+          <RenderHTML
+            html={item.soal.penyelesaian_html}
+            className="text-sm leading-relaxed text-slate-700"
+          />
         </div>
       )}
     </div>

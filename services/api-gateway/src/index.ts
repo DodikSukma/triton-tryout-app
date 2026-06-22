@@ -53,14 +53,20 @@ const forbidden = (res: express.Response) =>
   res.status(403).json({ success: false, error: 'Forbidden' })
 
 // ─── Master data (user-service) ─────────────────────────────────────────────
-// Reads: guru + admin (gurus need the dropdowns). Writes: admin only.
+// Reads: guru + admin + admin-soal (all need the subject/class dropdowns).
+// Writes: admin only.
 app.use('/master', requireAuth, (req, res, next) => {
   const role = req.headers['x-user-role'] as string
   if (req.method === 'GET') {
-    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
+    return role === 'guru' || role === 'admin' || role === 'admin-soal' ? next() : forbidden(res)
   }
   return role === 'admin' ? next() : forbidden(res)
 }, createProxyMiddleware({ target: USER_SERVICE_URL, changeOrigin: true, xfwd: true }))
+
+// Roles that manage tryouts/soal. admin-soal (TRN-10) compiles Super Tryouts and
+// approves teacher submissions, so it has the same level-service reach as admin.
+const MANAGER_ROLES = new Set(['guru', 'admin', 'admin-soal'])
+const BANK_ROLES = new Set(['admin', 'admin-soal'])
 
 // RBAC for level routes. `req.path` here is relative to the /sd|/smp|/sma mount.
 function levelAccessGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -78,16 +84,21 @@ function levelAccessGuard(req: express.Request, res: express.Response, next: exp
     if (method === 'GET') {
       // Single tryout detail (uuid) — siswa needs it to take the exam
       if (role === 'siswa' && /^\/tryouts\/[a-f0-9-]+$/.test(p)) return next()
-      if (role === 'guru' || role === 'admin') return next()
+      if (MANAGER_ROLES.has(role)) return next()
       return forbidden(res)
     }
-    // Create / update / delete / publish / add-soal — guru or admin
-    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
+    // Create / update / delete / publish / add-soal / import-questions — manager roles
+    return MANAGER_ROLES.has(role) ? next() : forbidden(res)
   }
 
-  // Soal edits — guru or admin
+  // Question Bank search — admin or admin-soal only (TRN-10)
+  if (p === '/soal/bank') {
+    return BANK_ROLES.has(role) ? next() : forbidden(res)
+  }
+
+  // Soal edits — manager roles
   if (p === '/soal' || p.startsWith('/soal/')) {
-    return role === 'guru' || role === 'admin' ? next() : forbidden(res)
+    return MANAGER_ROLES.has(role) ? next() : forbidden(res)
   }
 
   // Exam session runner + history — siswa

@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Documentation Complete Task - Triton Docs Portal
+# 🤖 AI Task: Execute Documentation Complete Task - Triton Docs Portal
 
 Your task is to build a modern, high-contrast, interactive, and comprehensive Documentation Portal inside the **`docs/index.html`** file of the Triton project. This portal will replace the legacy overview redirect and compile all project specifications, operational guides, debugging/maintenance sheets, and deployment manuals into a single premium interface.
 

@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-02 - Level-Specific UI Themes and Dummy Users
+# 🤖 AI Task: Execute Task TRN-02 - Level-Specific UI Themes and Dummy Users
 
 Your task is to execute **Task TRN-02: Level-Specific UI Gradients and Dummy Users**. You will implement dynamic visual layouts in the student portal depending on their education level (SD, SMP, SMA) and provision level-scoped dummy accounts in the database seeder to verify this behavior.
 

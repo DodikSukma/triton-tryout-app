@@ -34,6 +34,11 @@ interface SoalDetail {
   pertanyaan: string
   pertanyaan_html: string | null
   gambar_base64: string | null
+  kode_soal: string | null
+  penyelesaian: string | null
+  penyelesaian_html: string | null
+  penyelesaian_gambar_url: string | null
+  penyelesaian_gambar_base64: string | null
   opsi: { id: string; huruf: string; teks: string; teks_html: string | null; is_benar: boolean }[]
 }
 
@@ -358,6 +363,8 @@ router.get('/hasil/:sesiId', async (req: Request, res: Response) => {
     const soalRes = await pool.query(
       `SELECT s.id, s.tipe, s.bobot, s.nomor_soal, s.pertanyaan, s.pertanyaan_html,
               s.gambar_url, s.gambar_base64, s.equation, s.equation_latex, s.panduan_essay,
+              s.kode_soal, s.penyelesaian, s.penyelesaian_html,
+              s.penyelesaian_gambar_url, s.penyelesaian_gambar_base64,
               COALESCE(
                 json_agg(json_build_object(
                   'id', o.id,

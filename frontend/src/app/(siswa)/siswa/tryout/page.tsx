@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Search, Clock, FileText, BookOpen, GraduationCap, CheckCircle2, Hourglass } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
+import TritonLoader from '@/components/common/TritonLoader'
 import { toast } from 'sonner'
 import { ApiResponse, Tryout, Hasil, SesiTryout } from '@/types'
 import { formatDurasi } from '@/lib/utils'
@@ -136,7 +137,7 @@ export default function SiswaTryoutListPage() {
 
       {/* List */}
       {loading ? (
-        <div className="text-slate-400 text-center py-16">Memuat data...</div>
+        <TritonLoader fullScreen={false} />
       ) : filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center">
           <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />

@@ -1,4 +1,4 @@
-# 🤖 AI Prompt: Execute Task TRN-03 - Upload Bank Soal via MS Word (.docx)
+# 🤖 AI Task: Execute Task TRN-03 - Upload Bank Soal via MS Word (.docx)
 
 Your task is to execute **Task TRN-03: Create or Upload Bank Soal via MS Word Format**. You will implement an administrative master data system for subjects, sub-subjects, and classes, update the tryout creation flow to restrict levels dynamically, and build an automated parser for Microsoft Word (.docx) documents so teachers can batch upload questions.
 

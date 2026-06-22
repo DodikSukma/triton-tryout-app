@@ -46,7 +46,19 @@ const siswaNav: NavItem[] = [
   { type: 'link', label: 'Profil Saya',     href: '/siswa/profil',    icon: <User size={18} /> },
 ]
 
-const navByRole: Record<Role, NavItem[]> = { admin: adminNav, guru: guruNav, siswa: siswaNav }
+// TRN-10: Question Bank administrator / Super Try Out builder.
+const adminSoalNav: NavItem[] = [
+  { type: 'link', label: 'Dashboard',   href: '/admin-soal/dashboard', icon: <LayoutDashboard size={18} /> },
+  { type: 'divider' },
+  { type: 'link', label: 'Profil Saya', href: '/admin-soal/profil',    icon: <User size={18} /> },
+]
+
+const navByRole: Record<Role, NavItem[]> = {
+  admin: adminNav,
+  guru: guruNav,
+  siswa: siswaNav,
+  'admin-soal': adminSoalNav,
+}
 
 interface SidebarProps {
   role: Role
