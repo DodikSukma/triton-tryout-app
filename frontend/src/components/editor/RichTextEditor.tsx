@@ -20,6 +20,36 @@ function smartFractions(input: string): string {
   })
 }
 
+// Auto-parse raw $…$ / $$…$$ LaTeX delimiters into editable .katex-equation spans
+// (TRN-16). Runs on imported/pasted content so equations become visual blocks.
+function convertDelimitersToSpans(html: string): string {
+  if (!html) return ''
+  // 1. Display mode: $$latex$$ ([\s\S] matches across newlines without the /s flag)
+  let result = html.replace(/\$\$([\s\S]*?)\$\$/g, (_match, latex: string) => {
+    const cleanLatex = latex.trim()
+    if (!cleanLatex) return _match
+    try {
+      const rendered = katex.renderToString(cleanLatex, { throwOnError: false, displayMode: true })
+      return `<span class="katex-equation" contenteditable="false" data-latex="${cleanLatex.replace(/"/g, '&quot;')}" data-display="true">${rendered}</span>`
+    } catch {
+      return _match
+    }
+  })
+  // 2. Inline mode: $latex$ (skip fragments that look like HTML, not math)
+  result = result.replace(/\$(.+?)\$/g, (_match, latex: string) => {
+    if (latex.includes('<') || latex.includes('>') || latex.includes('\n')) return _match
+    const cleanLatex = latex.trim()
+    if (!cleanLatex) return _match
+    try {
+      const rendered = katex.renderToString(cleanLatex, { throwOnError: false, displayMode: false })
+      return `<span class="katex-equation" contenteditable="false" data-latex="${cleanLatex.replace(/"/g, '&quot;')}" data-display="false">${rendered}</span>`
+    } catch {
+      return _match
+    }
+  })
+  return result
+}
+
 export interface RichTextEditorHandle {
   /** Returns current HTML content of the editor */
   getHtml: () => string
@@ -66,8 +96,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(fun
   // ─── Initialize content ───
   useEffect(() => {
     if (editorRef.current && initialHtml && editorRef.current.innerHTML === '') {
-      editorRef.current.innerHTML = initialHtml
-      // Re-render any katex equations that were saved
+      // Auto-parse raw $…$ delimiters, then render saved .katex-equation spans.
+      editorRef.current.innerHTML = convertDelimitersToSpans(initialHtml)
       rerenderEquations(editorRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -319,7 +349,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(fun
     getText: () => editorRef.current?.innerText ?? '',
     setHtml: (html: string) => {
       if (!editorRef.current) return
-      editorRef.current.innerHTML = html
+      editorRef.current.innerHTML = convertDelimitersToSpans(html)
       rerenderEquations(editorRef.current)
       // Re-attach delete listeners on images
       editorRef.current.querySelectorAll<HTMLElement>('figure[contenteditable="false"]').forEach((fig) => {
