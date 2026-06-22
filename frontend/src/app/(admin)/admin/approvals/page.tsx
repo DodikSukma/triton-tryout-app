@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Loader2, CheckCircle2, Send, XCircle, Link2, Undo2, Clock, FileText, X, AlertTriangle,
-  ChevronDown, ChevronUp, ListChecks,
+  ChevronDown, ChevronUp, ListChecks, Search, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import TritonLoader from '@/components/common/TritonLoader'
@@ -34,6 +34,10 @@ export default function AdminApprovalPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [detailCache, setDetailCache] = useState<Record<string, TryoutDetail>>({})
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
+  // Search + pagination (TRN-18)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
 
   const load = useCallback(async () => {
     try {
@@ -106,6 +110,17 @@ export default function AdminApprovalPage() {
 
   const pendingCount = tryouts.filter((t) => t.status === 'pending_approval').length
 
+  const q = searchQuery.trim().toLowerCase()
+  const filtered = tryouts.filter((t) =>
+    !q ||
+    t.nama_tryout.toLowerCase().includes(q) ||
+    t.mata_pelajaran.toLowerCase().includes(q) ||
+    (!!t.kelas && t.kelas.toLowerCase().includes(q))
+  )
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+  const page = Math.min(currentPage, totalPages)
+  const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+
   return (
     <div className="p-4 md:p-6 lg:p-10 max-w-5xl mx-auto">
       <header className="mb-6">
@@ -121,13 +136,25 @@ export default function AdminApprovalPage() {
         )}
       </header>
 
-      {tryouts.length === 0 ? (
+      {/* Search */}
+      <div className="relative mb-5 max-w-md">
+        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Cari Persetujuan Ujian..."
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+        />
+      </div>
+
+      {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
-          Belum ada tryout pada jenjang ini.
+          {tryouts.length === 0 ? 'Belum ada tryout pada jenjang ini.' : 'Tidak ada tryout yang cocok dengan pencarian.'}
         </div>
       ) : (
         <div className="space-y-4">
-          {tryouts.map((t) => {
+          {paginated.map((t) => {
             const meta = STATUS_META[t.status] ?? STATUS_META.draft
             const busy = busyId === t.id
             return (
@@ -219,6 +246,10 @@ export default function AdminApprovalPage() {
         </div>
       )}
 
+      {totalPages > 1 && (
+        <Pagination page={page} totalPages={totalPages} onPage={setCurrentPage} />
+      )}
+
       {rejectTarget && (
         <RejectDialog
           tryout={rejectTarget}
@@ -226,6 +257,40 @@ export default function AdminApprovalPage() {
           onConfirm={async (notes) => { await setStatus(rejectTarget, 'rejected', notes); setRejectTarget(null) }}
         />
       )}
+    </div>
+  )
+}
+
+function Pagination({ page, totalPages, onPage }: { page: number; totalPages: number; onPage: (p: number) => void }) {
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+      <button
+        onClick={() => onPage(Math.max(1, page - 1))}
+        disabled={page <= 1}
+        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft size={15} /> Sebelumnya
+      </button>
+      <div className="flex items-center gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            onClick={() => onPage(p)}
+            className={`w-8 h-8 rounded-lg text-sm font-semibold transition-colors ${
+              p === page ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => onPage(Math.min(totalPages, page + 1))}
+        disabled={page >= totalPages}
+        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        Berikutnya <ChevronRight size={15} />
+      </button>
     </div>
   )
 }

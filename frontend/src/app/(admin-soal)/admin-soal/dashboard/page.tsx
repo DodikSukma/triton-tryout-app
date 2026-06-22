@@ -4,18 +4,31 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
-  Layers, ClipboardCheck, Plus, Loader2, CheckCircle2, X, ChevronRight,
-  AlertTriangle, BookOpenCheck, Trash2,
+  Layers, ClipboardCheck, Plus, Loader2, CheckCircle2, X, ChevronRight, ChevronLeft,
+  AlertTriangle, BookOpenCheck, Trash2, Search, ChevronDown, ChevronUp, ListChecks,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import { LEVELS, LEVEL_LABELS, levelPath, type Level } from '@/lib/level'
-import { ApiResponse, MasterKelas, MasterMataPelajaran, Tryout } from '@/types'
+import { ApiResponse, MasterKelas, MasterMataPelajaran, Soal, Tryout, TryoutDetail } from '@/types'
+import RenderHTML from '@/components/shared/RenderHTML'
 
 type TryoutWithLevel = Tryout & { level: Level }
 
 const STATUS_LABEL: Record<string, string> = {
   draft: 'Draft', pending_approval: 'Menunggu', approved: 'Disetujui',
   rejected: 'Revisi', published: 'Aktif', closed: 'Selesai',
+}
+
+const ITEMS_PER_PAGE = 5
+
+function matchesQuery(t: Tryout, q: string): boolean {
+  const s = q.trim().toLowerCase()
+  if (!s) return true
+  return (
+    t.nama_tryout.toLowerCase().includes(s) ||
+    t.mata_pelajaran.toLowerCase().includes(s) ||
+    (!!t.kelas && t.kelas.toLowerCase().includes(s))
+  )
 }
 
 export default function AdminSoalDashboard() {
@@ -27,6 +40,15 @@ export default function AdminSoalDashboard() {
   const [rejectNotes, setRejectNotes] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TryoutWithLevel | null>(null)
+  // Question inspection (TRN-18)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [detailCache, setDetailCache] = useState<Record<string, TryoutDetail>>({})
+  const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
+  // Search + pagination (TRN-18)
+  const [pendingSearch, setPendingSearch] = useState('')
+  const [pendingPage, setPendingPage] = useState(1)
+  const [superSearch, setSuperSearch] = useState('')
+  const [superPage, setSuperPage] = useState(1)
 
   const load = useCallback(async () => {
     try {
@@ -99,6 +121,34 @@ export default function AdminSoalDashboard() {
     }
   }
 
+  async function toggleDetail(t: TryoutWithLevel) {
+    if (expandedId === t.id) { setExpandedId(null); return }
+    setExpandedId(t.id)
+    if (!detailCache[t.id]) {
+      setDetailLoadingId(t.id)
+      try {
+        const res = await api.get<ApiResponse<TryoutDetail>>(levelPath(`/tryouts/${t.id}`, t.level))
+        if (res.data.data) setDetailCache((prev) => ({ ...prev, [t.id]: res.data.data as TryoutDetail }))
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Gagal memuat detail soal.'))
+        setExpandedId(null)
+      } finally {
+        setDetailLoadingId(null)
+      }
+    }
+  }
+
+  // ─── Search + pagination derived lists (TRN-18) ───
+  const pendingFiltered = pending.filter((t) => matchesQuery(t, pendingSearch))
+  const pendingTotalPages = Math.max(1, Math.ceil(pendingFiltered.length / ITEMS_PER_PAGE))
+  const pendingP = Math.min(pendingPage, pendingTotalPages)
+  const pendingPaged = pendingFiltered.slice((pendingP - 1) * ITEMS_PER_PAGE, pendingP * ITEMS_PER_PAGE)
+
+  const superFiltered = supers.filter((t) => matchesQuery(t, superSearch))
+  const superTotalPages = Math.max(1, Math.ceil(superFiltered.length / ITEMS_PER_PAGE))
+  const superP = Math.min(superPage, superTotalPages)
+  const superPaged = superFiltered.slice((superP - 1) * ITEMS_PER_PAGE, superP * ITEMS_PER_PAGE)
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -129,11 +179,23 @@ export default function AdminSoalDashboard() {
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
               <ClipboardCheck size={18} className="text-amber-500" /> Tryout Guru Menunggu Persetujuan
             </h2>
-            {pending.length === 0 ? (
-              <EmptyCard text="Tidak ada tryout yang menunggu persetujuan." />
+
+            <div className="relative mb-3 max-w-md">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Cari tryout (nama / mapel / kelas)..."
+                value={pendingSearch}
+                onChange={(e) => { setPendingSearch(e.target.value); setPendingPage(1) }}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
+            </div>
+
+            {pendingFiltered.length === 0 ? (
+              <EmptyCard text={pending.length === 0 ? 'Tidak ada tryout yang menunggu persetujuan.' : 'Tidak ada tryout yang cocok dengan pencarian.'} />
             ) : (
               <div className="space-y-3">
-                {pending.map((t) => (
+                {pendingPaged.map((t) => (
                   <div key={t.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="text-[11px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 rounded px-2 py-0.5">{LEVEL_LABELS[t.level]}</span>
@@ -141,7 +203,13 @@ export default function AdminSoalDashboard() {
                         <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{t.nama_tryout}</p>
                         <p className="text-xs text-slate-500">{t.mata_pelajaran}{t.kelas ? ` · ${t.kelas}` : ''} · {t.soal_count ?? 0} soal</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => toggleDetail(t)}
+                          className="inline-flex items-center gap-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-lg px-3 py-2 transition-colors"
+                        >
+                          {expandedId === t.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />} Lihat Soal ({t.soal_count ?? 0})
+                        </button>
                         <button
                           onClick={() => approve(t)}
                           disabled={busyId === t.id}
@@ -178,10 +246,23 @@ export default function AdminSoalDashboard() {
                         </div>
                       </div>
                     )}
+                    {expandedId === t.id && (
+                      <div className="mt-3 border-t border-slate-100 pt-3">
+                        {detailLoadingId === t.id ? (
+                          <div className="flex items-center gap-2 text-sm text-slate-400 py-4">
+                            <Loader2 size={16} className="animate-spin" /> Memuat detail soal...
+                          </div>
+                        ) : (
+                          <SoalReview soal={detailCache[t.id]?.soal ?? []} />
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
+
+            {pendingTotalPages > 1 && <Pagination page={pendingP} totalPages={pendingTotalPages} onPage={setPendingPage} />}
           </section>
 
           {/* Super tryouts */}
@@ -189,11 +270,23 @@ export default function AdminSoalDashboard() {
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
               <Layers size={18} className="text-blue-500" /> Super Try Out Saya
             </h2>
-            {supers.length === 0 ? (
-              <EmptyCard text="Belum ada Super Try Out. Klik 'Buat Super Try Out' untuk memulai." />
+
+            <div className="relative mb-3 max-w-md">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Cari Super Try Out (nama / mapel / kelas)..."
+                value={superSearch}
+                onChange={(e) => { setSuperSearch(e.target.value); setSuperPage(1) }}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
+            </div>
+
+            {superFiltered.length === 0 ? (
+              <EmptyCard text={supers.length === 0 ? "Belum ada Super Try Out. Klik 'Buat Super Try Out' untuk memulai." : 'Tidak ada Super Try Out yang cocok dengan pencarian.'} />
             ) : (
               <div className="space-y-3">
-                {supers.map((t) => (
+                {superPaged.map((t) => (
                   <div
                     key={t.id}
                     className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm hover:border-blue-200 transition-colors flex items-center gap-3"
@@ -221,6 +314,8 @@ export default function AdminSoalDashboard() {
                 ))}
               </div>
             )}
+
+            {superTotalPages > 1 && <Pagination page={superP} totalPages={superTotalPages} onPage={setSuperPage} />}
           </section>
         </>
       )}
@@ -283,6 +378,101 @@ function EmptyCard({ text }: { text: string }) {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-sm text-slate-400">
       {text}
+    </div>
+  )
+}
+
+function Pagination({ page, totalPages, onPage }: { page: number; totalPages: number; onPage: (p: number) => void }) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      <button
+        onClick={() => onPage(Math.max(1, page - 1))}
+        disabled={page <= 1}
+        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft size={15} /> Sebelumnya
+      </button>
+      <div className="flex items-center gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            onClick={() => onPage(p)}
+            className={`w-8 h-8 rounded-lg text-sm font-semibold transition-colors ${
+              p === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => onPage(Math.min(totalPages, page + 1))}
+        disabled={page >= totalPages}
+        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        Berikutnya <ChevronRight size={15} />
+      </button>
+    </div>
+  )
+}
+
+// Detailed question review (mirrors the admin approvals inspector).
+function SoalReview({ soal }: { soal: Soal[] }) {
+  if (soal.length === 0) {
+    return <p className="text-sm text-slate-400 py-2">Tryout ini belum memiliki soal.</p>
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+        <ListChecks size={13} /> {soal.length} Soal
+      </p>
+      {soal.map((s, i) => (
+        <div key={s.id} className="rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/50 p-4">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center">{i + 1}</span>
+            <span className={`text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${s.tipe === 'pilihan_ganda' ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'}`}>
+              {s.tipe === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Essay'}
+            </span>
+            {s.kode_soal && <span className="text-[10px] font-mono bg-slate-100 text-slate-500 rounded px-1.5 py-0.5">{s.kode_soal}</span>}
+            <span className="text-xs text-slate-400">Bobot {s.bobot}</span>
+          </div>
+
+          <RenderHTML html={s.pertanyaan_html || s.pertanyaan || ''} className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed" />
+
+          {s.gambar_base64 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.gambar_base64} alt={`Gambar soal ${i + 1}`} className="mt-2 max-h-52 rounded-lg border border-slate-200" />
+          )}
+
+          {s.tipe === 'pilihan_ganda' ? (
+            <div className="mt-3 space-y-1.5">
+              {(s.opsi ?? []).map((o) => (
+                <div
+                  key={o.id}
+                  className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${o.is_benar ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}
+                >
+                  <span className={`font-bold ${o.is_benar ? 'text-green-700' : 'text-slate-500'}`}>{o.is_benar ? '*' : ''}{o.huruf}.</span>
+                  <div className="flex-1 min-w-0"><RenderHTML html={o.teks_html || o.teks} className="text-slate-700 dark:text-slate-300" /></div>
+                  {o.is_benar && <CheckCircle2 size={15} className="text-green-600 shrink-0 mt-0.5" />}
+                </div>
+              ))}
+            </div>
+          ) : (
+            s.panduan_essay && (
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                <span className="font-semibold">Rubrik / Panduan Jawaban:</span> {s.panduan_essay}
+              </div>
+            )
+          )}
+
+          {s.penyelesaian_html && (
+            <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-1">Pembahasan</p>
+              <RenderHTML html={s.penyelesaian_html} className="text-sm text-slate-700 leading-relaxed" />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import RichTextEditor, { RichTextEditorHandle } from '@/components/editor/RichTextEditor'
+import RenderHTML from '@/components/shared/RenderHTML'
 import TritonLoader from '@/components/common/TritonLoader'
 // AI question generator hidden per client request (TRN-09 Feature 2).
 import ImportSoalModal from '@/components/editor/ImportSoalModal'
@@ -108,19 +109,6 @@ function htmlToText(html: string): string {
     el.textContent = latex ? `[${latex}]` : '[equation]'
   })
   return tmp.innerText || tmp.textContent || ''
-}
-
-function stripHtmlForPreview(html: string | null | undefined): string {
-  if (!html) return ''
-  if (typeof window === 'undefined') return html.replace(/<[^>]*>/g, '')
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  tmp.querySelectorAll('.katex-equation').forEach((el) => {
-    const l = el.getAttribute('data-latex')
-    el.textContent = l ? ` [${l}] ` : ' [eq] '
-  })
-  tmp.querySelectorAll('figure').forEach((el) => el.replaceWith('[gambar]'))
-  return (tmp.innerText || '').trim().replace(/\s+/g, ' ')
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -458,11 +446,13 @@ export default function KelolaSoalPage() {
                           />
                         )}
                       </div>
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-snug">
-                        {stripHtmlForPreview(s.pertanyaan_html || s.pertanyaan) || (
-                          <span className="italic text-slate-400">(kosong)</span>
-                        )}
-                      </p>
+                      {(s.pertanyaan_html || s.pertanyaan) ? (
+                        <div className="text-xs text-slate-600 line-clamp-2 leading-snug max-h-12 overflow-hidden pointer-events-none">
+                          <RenderHTML html={s.pertanyaan_html || s.pertanyaan || ''} className="text-xs text-slate-600" />
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic line-clamp-2 leading-snug">(kosong)</p>
+                      )}
                     </div>
 
                     <button

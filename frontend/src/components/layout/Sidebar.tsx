@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -10,9 +11,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
-import { Role } from '@/types'
+import { ApiResponse, Role, Tryout } from '@/types'
 import { useProfile } from '@/hooks/useAuth'
-import { getEducationLevel, LEVEL_THEME } from '@/lib/level'
+import { getEducationLevel, LEVELS, LEVEL_THEME, levelPath } from '@/lib/level'
 import LevelSwitcher from './LevelSwitcher'
 import { useDarkMode } from '@/contexts/ThemeContext'
 
@@ -74,6 +75,36 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
   const { profile } = useProfile()
   const { theme, toggleTheme } = useDarkMode()
   const navItems = navByRole[role]
+
+  // ─── Pending-approval badge (TRN-17) — admin & admin-soal ───
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+
+  const fetchPendingCounts = useCallback(async () => {
+    if (role !== 'admin' && role !== 'admin-soal') return
+    try {
+      // Count teacher tryouts awaiting approval across all education levels.
+      const results = await Promise.all(
+        LEVELS.map(async (lv) => {
+          try {
+            const res = await api.get<ApiResponse<Tryout[]>>(levelPath('/tryouts', lv))
+            const list = res.data.data ?? []
+            return list.filter((t) => t.status === 'pending_approval' && !t.is_super_tryout).length
+          } catch {
+            return 0
+          }
+        })
+      )
+      setPendingCount(results.reduce((sum, c) => sum + c, 0))
+    } catch {
+      /* fail silently — badge just won't show */
+    }
+  }, [role])
+
+  useEffect(() => {
+    fetchPendingCounts()
+    const interval = setInterval(fetchPendingCounts, 30000) // refresh every 30s
+    return () => clearInterval(interval)
+  }, [fetchPendingCounts])
 
   const displayName = profile?.nama_lengkap || fallbackName || 'User'
   const initial = displayName.charAt(0).toUpperCase()
@@ -147,6 +178,13 @@ export default function Sidebar({ role, fallbackName, mobileOpen = false, onMobi
                 {item.icon}
               </span>
               {item.label}
+              {/* Pending-approval notification badge (TRN-17) */}
+              {(item.label === 'Persetujuan' || (role === 'admin-soal' && item.label === 'Dashboard')) &&
+                pendingCount !== null && pendingCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center justify-center min-w-[20px] h-5 shadow-sm animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
           )
         })}
