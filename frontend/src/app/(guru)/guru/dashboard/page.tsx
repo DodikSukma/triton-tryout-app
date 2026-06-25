@@ -14,6 +14,7 @@ import {
   MasterSubMataPelajaran, RekapStudent, Tryout,
 } from '@/types'
 import { getLevel, setLevel, type Level } from '@/lib/level'
+import { useAuth } from '@/hooks/useAuth'
 
 const LEVELS: EducationLevel[] = ['SD', 'SMP', 'SMA']
 
@@ -45,9 +46,12 @@ interface TryoutFormState {
 
 export default function GuruDashboard() {
   const router = useRouter()
+  const { user } = useAuth()
+  const myId = user?.userId
   const [tryouts, setTryouts] = useState<Tryout[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'closed'>('all')
+  const [yearFilter, setYearFilter] = useState<string>('all')
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Tryout | null>(null)
@@ -81,12 +85,21 @@ export default function GuruDashboard() {
 
   useEffect(() => { fetchTryouts() }, [fetchTryouts])
 
-  const filtered = tryouts.filter((t) => filter === 'all' || t.status === filter)
+  // Tahun (year) options derived from each bank soal's created_at.
+  const years = Array.from(new Set(tryouts.map((t) => new Date(t.created_at).getFullYear().toString())))
+    .sort((a, b) => Number(b) - Number(a))
 
+  const filtered = tryouts.filter((t) =>
+    (filter === 'all' || t.status === filter) &&
+    (yearFilter === 'all' || new Date(t.created_at).getFullYear().toString() === yearFilter)
+  )
+
+  // Stats count only the teacher's OWN bank soal (same-subject peers excluded).
+  const mine = tryouts.filter((t) => t.dibuat_oleh === myId)
   const stats = {
-    total: tryouts.length,
-    soal: tryouts.reduce((s, t) => s + (t.soal_count ?? 0), 0),
-    siswa: tryouts.reduce((s, t) => s + (t.jumlah_peserta ?? 0), 0),
+    total: mine.length,
+    soal: mine.reduce((s, t) => s + (t.soal_count ?? 0), 0),
+    siswa: mine.reduce((s, t) => s + (t.jumlah_peserta ?? 0), 0),
   }
 
   function payload(form: TryoutFormState) {
@@ -136,40 +149,51 @@ export default function GuruDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100">Dashboard Guru</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Kelola dan pantau tryout yang Anda buat.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Kelola dan pantau bank soal yang Anda buat.</p>
         </div>
         <button
           onClick={() => setCreateOpen(true)}
           className="flex items-center justify-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:-translate-y-0.5 whitespace-nowrap self-start sm:self-auto"
         >
           <Plus size={16} />
-          Buat Tryout Baru
+          Buat Bank Soal
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Tryout Dibuat" value={stats.total} Icon={BookOpen} color="text-blue-500 bg-blue-50" />
+        <StatCard label="Bank Soal Dibuat" value={stats.total} Icon={BookOpen} color="text-blue-500 bg-blue-50" />
         <StatCard label="Total Soal" value={stats.soal} Icon={FileText} color="text-violet-500 bg-violet-50" />
         <StatCard label="Siswa Mengerjakan" value={stats.siswa} Icon={Users} color="text-green-500 bg-green-50" />
       </div>
 
       {/* Filter tabs */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Tryout Saya</h2>
-        <div className="flex gap-1.5 flex-wrap">
-          {(['all', 'published', 'draft', 'closed'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`text-sm px-4 py-1.5 rounded-xl font-medium transition-colors ${filter === f
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-semibold'
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-            >
-              {f === 'all' ? 'Semua' : f === 'published' ? 'Aktif' : f === 'draft' ? 'Draft' : 'Selesai'}
-            </button>
-          ))}
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Bank Soal Saya</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Tahun (year) filter */}
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="text-sm px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">Semua Tahun</option>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <div className="flex gap-1.5 flex-wrap">
+            {(['all', 'published', 'draft', 'closed'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-sm px-4 py-1.5 rounded-xl font-medium transition-colors ${filter === f
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+              >
+                {f === 'all' ? 'Semua' : f === 'published' ? 'Aktif' : f === 'draft' ? 'Draft' : 'Selesai'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -181,9 +205,9 @@ export default function GuruDashboard() {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
           <BookOpen className="w-16 h-16 text-slate-200 dark:text-slate-700 mb-4" />
-          <p className="font-semibold text-slate-400 dark:text-slate-500">Belum ada tryout</p>
+          <p className="font-semibold text-slate-400 dark:text-slate-500">Belum ada bank soal</p>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-            {filter === 'all' ? "Klik '+ Buat Tryout Baru' untuk mulai" : `Tidak ada tryout dengan status "${filter}"`}
+            {filter === 'all' && yearFilter === 'all' ? "Klik '+ Buat Bank Soal' untuk mulai" : 'Tidak ada bank soal dengan filter ini'}
           </p>
         </div>
       ) : (
@@ -192,6 +216,7 @@ export default function GuruDashboard() {
             <TryoutCard
               key={t.id}
               tryout={t}
+              isMine={t.dibuat_oleh === myId}
               onEdit={() => setEditTarget(t)}
               onDelete={() => setDeleteTarget(t)}
             />
@@ -228,8 +253,9 @@ export default function GuruDashboard() {
 }
 
 // ─── TryoutCard ────────────────────────────────────────────────
-function TryoutCard({ tryout: t, onEdit, onDelete }: {
+function TryoutCard({ tryout: t, isMine, onEdit, onDelete }: {
   tryout: Tryout
+  isMine: boolean
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -287,13 +313,19 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
       <div className="p-6 flex flex-col flex-1">
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
-          <span className={`text-xs font-semibold rounded-full px-3 py-1 ${colors.bg} ${colors.text}`}>
-            {t.mata_pelajaran}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-xs font-semibold rounded-full px-3 py-1 ${colors.bg} ${colors.text}`}>
+              {t.mata_pelajaran}
+            </span>
+            <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${isMine ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+              {isMine ? 'Saya' : 'Guru Lain'}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <span className={`text-xs font-semibold rounded-full px-2.5 py-1 ${status.cls}`}>
               {status.label}
             </span>
+            {isMine && (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
@@ -337,6 +369,7 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
 
@@ -353,8 +386,8 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
           </span>
         </div>
 
-        {/* Revision feedback from admin */}
-        {t.status === 'rejected' && t.revision_notes && (
+        {/* Revision feedback from admin (only for the author) */}
+        {isMine && t.status === 'rejected' && t.revision_notes && (
           <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
             <AlertTriangle size={13} className="text-red-500 shrink-0 mt-0.5" />
             <p className="text-xs text-red-600"><span className="font-semibold">Catatan revisi:</span> {t.revision_notes}</p>
@@ -363,53 +396,62 @@ function TryoutCard({ tryout: t, onEdit, onDelete }: {
 
         {/* Primary action */}
         <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
-          <Link
-            href={`/guru/tryout/${t.id}/soal`}
-            className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 font-semibold rounded-xl py-2 text-sm transition-colors"
-          >
-            Kelola Soal <span className="group-hover:translate-x-0.5 transition-transform inline-block">→</span>
-          </Link>
-        </div>
-
-        {/* ── Peserta toggle row ── */}
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-          <span className={`flex items-center gap-1.5 text-sm ${peserta === 0 ? 'text-slate-300 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
-            <Users size={14} className={peserta === 0 ? 'text-slate-200' : 'text-slate-400'} />
-            {peserta === 0 ? 'Belum ada siswa mengerjakan' : `${peserta} siswa selesai`}
-          </span>
-          {peserta > 0 && (
-            <button
-              onClick={handleToggle}
-              className="flex items-center gap-1 text-blue-500 hover:text-blue-700 text-sm font-medium transition-colors shrink-0 ml-2"
+          {isMine ? (
+            <Link
+              href={`/guru/tryout/${t.id}/soal`}
+              className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 font-semibold rounded-xl py-2 text-sm transition-colors"
             >
-              {expanded ? <><span>Tutup</span><ChevronUp size={14} /></> : <><span>Lihat</span><ChevronDown size={14} /></>}
-            </button>
+              Kelola Soal <span className="group-hover:translate-x-0.5 transition-transform inline-block">→</span>
+            </Link>
+          ) : (
+            <span className="flex items-center justify-center gap-1.5 w-full bg-slate-50 dark:bg-slate-700/40 text-slate-400 dark:text-slate-500 font-medium rounded-xl py-2 text-sm">
+              Hanya lihat — bank soal guru lain
+            </span>
           )}
         </div>
 
-        {/* ── Collapsible student list ── */}
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${expanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
-            }`}
-        >
-          {loadingStudents ? (
-            <StudentSkeleton />
-          ) : (
-            <div className="space-y-0.5 pt-1">
-              {visibleRows.map((s, i) => (
-                <StudentRow key={i} student={s} />
-              ))}
-              {hiddenCount > 0 && (
-                <Link
-                  href={`/guru/tryout/${t.id}/hasil`}
-                  className="block text-center text-xs text-blue-500 hover:text-blue-700 font-medium pt-2 pb-0.5 transition-colors"
+        {/* ── Peserta toggle row (author only) ── */}
+        {isMine && (
+          <>
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+              <span className={`flex items-center gap-1.5 text-sm ${peserta === 0 ? 'text-slate-300 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
+                <Users size={14} className={peserta === 0 ? 'text-slate-200' : 'text-slate-400'} />
+                {peserta === 0 ? 'Belum ada siswa mengerjakan' : `${peserta} siswa selesai`}
+              </span>
+              {peserta > 0 && (
+                <button
+                  onClick={handleToggle}
+                  className="flex items-center gap-1 text-blue-500 hover:text-blue-700 text-sm font-medium transition-colors shrink-0 ml-2"
                 >
-                  + {hiddenCount} siswa lainnya → Lihat semua
-                </Link>
+                  {expanded ? <><span>Tutup</span><ChevronUp size={14} /></> : <><span>Lihat</span><ChevronDown size={14} /></>}
+                </button>
               )}
             </div>
-          )}
-        </div>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${expanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
+                }`}
+            >
+              {loadingStudents ? (
+                <StudentSkeleton />
+              ) : (
+                <div className="space-y-0.5 pt-1">
+                  {visibleRows.map((s, i) => (
+                    <StudentRow key={i} student={s} />
+                  ))}
+                  {hiddenCount > 0 && (
+                    <Link
+                      href={`/guru/tryout/${t.id}/hasil`}
+                      className="block text-center text-xs text-blue-500 hover:text-blue-700 font-medium pt-2 pb-0.5 transition-colors"
+                    >
+                      + {hiddenCount} siswa lainnya → Lihat semua
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -530,7 +572,7 @@ function TryoutFormDialog({ mode, initial, onClose, onSubmit }: {
       <div className="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            {mode === 'create' ? 'Buat Tryout Baru' : 'Edit Tryout'}
+            {mode === 'create' ? 'Buat Bank Soal' : 'Edit Bank Soal'}
           </h2>
           <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
             <X size={18} />

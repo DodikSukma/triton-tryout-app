@@ -5,16 +5,32 @@ import logger from '../lib/logger'
 
 const router = Router()
 
+// TRN-19: a guru may only edit/delete soal belonging to their OWN bank soal.
+async function guruOwnsSoal(req: Request, soalId: string): Promise<boolean> {
+  if (req.headers['x-user-role'] !== 'guru') return true
+  const r = await pool.query(
+    'SELECT t.dibuat_oleh FROM soal s JOIN tryouts t ON t.id = s.tryout_id WHERE s.id = $1',
+    [soalId]
+  )
+  return !!r.rows[0] && r.rows[0].dibuat_oleh === (req.headers['x-user-id'] as string)
+}
+const NOT_OWNER = { success: false, error: 'Anda hanya dapat mengubah bank soal milik sendiri.', code: 'NOT_OWNER' }
+
 const OpsiSchema = z.object({
   huruf: z.string().length(1),
-  teks: z.string().min(1),
+  // TRN-22: allow empty plain text when the option is an image (image lives in teks_html).
+  teks: z.string().default(''),
   teks_html: z.string().optional(),
   is_benar: z.boolean().default(false),
 })
 
+// TRN-22: AKM question types.
+const MatchingPairsSchema = z.object({ left: z.array(z.string()), right: z.array(z.string()) })
+const SOAL_TIPES = ['pilihan_ganda', 'essay', 'pg_kompleks', 'menjodohkan', 'isian_singkat'] as const
+
 const UpdateSoalSchema = z.object({
   nomor_soal: z.number().int().positive().optional(),
-  tipe: z.enum(['pilihan_ganda', 'essay']).optional(),
+  tipe: z.enum(SOAL_TIPES).optional(),
   pertanyaan: z.string().min(1).optional(),
   pertanyaan_html: z.string().optional(),
   gambar_url: z.string().url().optional().nullable(),
@@ -29,6 +45,9 @@ const UpdateSoalSchema = z.object({
   penyelesaian_html: z.string().optional().nullable(),
   penyelesaian_gambar_url: z.string().optional().nullable(),
   penyelesaian_gambar_base64: z.string().optional().nullable(),
+  time_limit_seconds: z.number().int().positive().optional().nullable(), // TRN-20
+  jawaban_benar: z.string().optional().nullable(),                       // TRN-22 isian_singkat
+  matching_pairs: MatchingPairsSchema.optional().nullable(),             // TRN-22 menjodohkan
   opsi: z.array(OpsiSchema).optional(),
 })
 
@@ -89,6 +108,7 @@ router.get('/bank', async (req: Request, res: Response) => {
 router.put('/:soalId', async (req: Request, res: Response) => {
   const client = await pool.connect()
   try {
+    if (!(await guruOwnsSoal(req, req.params.soalId))) return res.status(403).json(NOT_OWNER)
     const body = UpdateSoalSchema.parse(req.body)
 
     await client.query('BEGIN')
@@ -109,7 +129,10 @@ router.put('/:soalId', async (req: Request, res: Response) => {
         penyelesaian               = COALESCE($13, penyelesaian),
         penyelesaian_html          = COALESCE($14, penyelesaian_html),
         penyelesaian_gambar_url    = COALESCE($15, penyelesaian_gambar_url),
-        penyelesaian_gambar_base64 = COALESCE($16, penyelesaian_gambar_base64)
+        penyelesaian_gambar_base64 = COALESCE($16, penyelesaian_gambar_base64),
+        time_limit_seconds         = COALESCE($17, time_limit_seconds),
+        jawaban_benar              = COALESCE($18, jawaban_benar),
+        matching_pairs             = COALESCE($19::jsonb, matching_pairs)
        WHERE id = $11 RETURNING *`,
       [
         body.nomor_soal, body.tipe, body.pertanyaan, body.pertanyaan_html,
@@ -117,6 +140,9 @@ router.put('/:soalId', async (req: Request, res: Response) => {
         body.panduan_essay, body.bobot, req.params.soalId,
         body.kode_soal ?? null, body.penyelesaian ?? null, body.penyelesaian_html ?? null,
         body.penyelesaian_gambar_url ?? null, body.penyelesaian_gambar_base64 ?? null,
+        body.time_limit_seconds ?? null,
+        body.jawaban_benar ?? null,
+        body.matching_pairs ? JSON.stringify(body.matching_pairs) : null,
       ]
     )
     if (!result.rows[0]) {
@@ -171,6 +197,7 @@ router.put('/:soalId', async (req: Request, res: Response) => {
 // DELETE /soal/:soalId
 router.delete('/:soalId', async (req: Request, res: Response) => {
   try {
+    if (!(await guruOwnsSoal(req, req.params.soalId))) return res.status(403).json(NOT_OWNER)
     await pool.query('DELETE FROM soal WHERE id = $1', [req.params.soalId])
     res.json({ success: true, data: null, message: 'Soal dihapus' })
   } catch (err) {

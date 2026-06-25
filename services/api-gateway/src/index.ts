@@ -119,29 +119,40 @@ function levelAccessGuard(req: express.Request, res: express.Response, next: exp
 // A student may only reach their own education level's service (firewall), and
 // their assigned class is forwarded as x-user-class so level services can scope
 // the available-tryout list. Admin + guru bypass. Cached briefly.
-const profileCache = new Map<string, { level: string | null; kelas: string | null; exp: number }>()
+// Cache holds the student's level/class and the teacher's subject(s) (TRN-19).
+const profileCache = new Map<string, { level: string | null; kelas: string | null; subject: string | null; exp: number }>()
 
-async function getStudentProfile(userId: string): Promise<{ level: string | null; kelas: string | null }> {
+async function getUserProfile(userId: string): Promise<{ level: string | null; kelas: string | null; subject: string | null }> {
   const cached = profileCache.get(userId)
   if (cached && cached.exp > Date.now()) return cached
   try {
     const r = await fetch(`${USER_SERVICE_URL}/users/${userId}`)
-    const j = (await r.json()) as { success: boolean; data?: { education_level?: string | null; kelas?: string | null } }
+    const j = (await r.json()) as { success: boolean; data?: { education_level?: string | null; kelas?: string | null; mata_pelajaran?: string | null } }
     const level = j.success && j.data ? (j.data.education_level ?? null) : null
     const kelas = j.success && j.data ? (j.data.kelas ?? null) : null
-    const entry = { level, kelas, exp: Date.now() + 60_000 }
+    const subject = j.success && j.data ? (j.data.mata_pelajaran ?? null) : null
+    const entry = { level, kelas, subject, exp: Date.now() + 60_000 }
     profileCache.set(userId, entry)
     return entry
   } catch {
-    return { level: null, kelas: null }
+    return { level: null, kelas: null, subject: null }
   }
 }
 
 function makeLevelFirewall(prefix: 'sd' | 'smp' | 'sma') {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if ((req.headers['x-user-role'] as string) !== 'siswa') return next() // admin + guru bypass
-    const { level, kelas } = await getStudentProfile(req.headers['x-user-id'] as string)
-    // Enforce only when the student's level is set; mismatch → blocked.
+    const role = req.headers['x-user-role'] as string
+    if (role !== 'siswa' && role !== 'guru') return next() // admin + admin-soal bypass
+    const { level, kelas, subject } = await getUserProfile(req.headers['x-user-id'] as string)
+
+    // Teachers: forward their subject(s) so the level service can crosscheck
+    // bank soal across same-subject teachers (TRN-19). No level firewall for guru.
+    if (role === 'guru') {
+      if (subject) req.headers['x-user-subject'] = subject
+      return next()
+    }
+
+    // Students: enforce the level firewall when their level is set.
     if (level && level.toLowerCase() !== prefix) {
       return res.status(403).json({
         success: false,

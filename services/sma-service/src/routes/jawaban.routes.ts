@@ -20,11 +20,59 @@ const JawabSchema = z.object({
   opsi_id: z.string().uuid().optional(),
 })
 
+type MatchingPairs = { left: string[]; right: string[] }
+
 interface ScoringSoalRow {
   id: string
-  tipe: 'pilihan_ganda' | 'essay'
+  tipe: string
   bobot: number
+  jawaban_benar: string | null
+  matching_pairs: MatchingPairs | null
   opsi: { id: string; is_benar: boolean }[]
+}
+
+function normalizeText(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+// Centralized auto-grading for every question type (TRN-22). Returns the
+// fraction earned (0..1). Essay returns 0 (graded manually by the teacher).
+function gradeAnswer(
+  soal: { tipe: string; jawaban_benar?: string | null; matching_pairs?: MatchingPairs | null; opsi: { id: string; is_benar: boolean }[] },
+  ans: { opsi_id: string | null; jawaban_teks: string | null } | null | undefined
+): number {
+  switch (soal.tipe) {
+    case 'pilihan_ganda': {
+      const correct = soal.opsi.find((o) => o.is_benar)
+      return correct && ans?.opsi_id === correct.id ? 1 : 0
+    }
+    case 'pg_kompleks': {
+      let selected: string[] = []
+      try { selected = JSON.parse(ans?.jawaban_teks ?? '[]') } catch { selected = [] }
+      const correct = soal.opsi.filter((o) => o.is_benar).map((o) => o.id).sort()
+      const sel = [...new Set(selected)].sort()
+      if (correct.length === 0) return 0
+      return correct.length === sel.length && correct.every((id, i) => id === sel[i]) ? 1 : 0
+    }
+    case 'isian_singkat': {
+      const accepted = (soal.jawaban_benar ?? '').split('\n').map(normalizeText).filter(Boolean)
+      const studentText = normalizeText(ans?.jawaban_teks ?? '')
+      return studentText !== '' && accepted.includes(studentText) ? 1 : 0
+    }
+    case 'menjodohkan': {
+      const right = soal.matching_pairs?.right ?? []
+      if (right.length === 0) return 0
+      let chosen: string[] = []
+      try { chosen = JSON.parse(ans?.jawaban_teks ?? '[]') } catch { chosen = [] }
+      let ok = 0
+      for (let i = 0; i < right.length; i++) {
+        if (normalizeText(chosen[i] ?? '') === normalizeText(right[i])) ok++
+      }
+      return ok / right.length
+    }
+    default:
+      return 0 // essay — manual grading
+  }
 }
 
 interface SoalDetail {
@@ -39,6 +87,8 @@ interface SoalDetail {
   penyelesaian_html: string | null
   penyelesaian_gambar_url: string | null
   penyelesaian_gambar_base64: string | null
+  jawaban_benar: string | null
+  matching_pairs: MatchingPairs | null
   opsi: { id: string; huruf: string; teks: string; teks_html: string | null; is_benar: boolean }[]
 }
 
@@ -93,7 +143,7 @@ async function buildSessionLayout(tryoutId: string): Promise<{
 // during scoring. Returns each soal with its full opsi set (including is_benar).
 async function loadSoalForScoring(tryoutId: string, db: { query: typeof pool.query } | PoolClient): Promise<ScoringSoalRow[]> {
   const result = await db.query(
-    `SELECT s.id, s.tipe, s.bobot,
+    `SELECT s.id, s.tipe, s.bobot, s.jawaban_benar, s.matching_pairs,
             COALESCE(
               json_agg(json_build_object('id', o.id, 'is_benar', o.is_benar)) FILTER (WHERE o.id IS NOT NULL),
               '[]'::json
@@ -253,24 +303,21 @@ router.post('/sesi/:sesiId/selesai', async (req: Request, res: Response) => {
     const soalList = await loadSoalForScoring(tryoutId, client)
 
     const answersRes = await client.query(
-      'SELECT soal_id, opsi_id FROM jawaban WHERE sesi_id = $1',
+      'SELECT soal_id, opsi_id, jawaban_teks FROM jawaban WHERE sesi_id = $1',
       [req.params.sesiId]
     )
-    const answersMap = new Map<string, string | null>()
-    for (const a of answersRes.rows) answersMap.set(a.soal_id, a.opsi_id)
+    const answersMap = new Map<string, { opsi_id: string | null; jawaban_teks: string | null }>()
+    for (const a of answersRes.rows) answersMap.set(a.soal_id, { opsi_id: a.opsi_id, jawaban_teks: a.jawaban_teks })
 
     let totalBobot = 0
     let bobotBenar = 0
     let totalBenar = 0
     for (const s of soalList) {
       totalBobot += s.bobot
-      if (s.tipe !== 'pilihan_ganda') continue
-      const correctOpsi = s.opsi.find((o) => o.is_benar)
-      const studentOpsi = answersMap.get(s.id)
-      if (correctOpsi && studentOpsi === correctOpsi.id) {
-        bobotBenar += s.bobot
-        totalBenar += 1
-      }
+      if (s.tipe === 'essay') continue // graded manually
+      const fraction = gradeAnswer(s, answersMap.get(s.id) ?? null) // TRN-22: all auto-gradable types
+      bobotBenar += s.bobot * fraction
+      if (fraction === 1) totalBenar += 1
     }
 
     const nilai = totalBobot > 0 ? (bobotBenar / totalBobot) * 100 : 0
@@ -365,6 +412,7 @@ router.get('/hasil/:sesiId', async (req: Request, res: Response) => {
               s.gambar_url, s.gambar_base64, s.equation, s.equation_latex, s.panduan_essay,
               s.kode_soal, s.penyelesaian, s.penyelesaian_html,
               s.penyelesaian_gambar_url, s.penyelesaian_gambar_base64,
+              s.jawaban_benar, s.matching_pairs,
               COALESCE(
                 json_agg(json_build_object(
                   'id', o.id,
@@ -397,8 +445,8 @@ router.get('/hasil/:sesiId', async (req: Request, res: Response) => {
       const studentAns = ansMap.get(s.id) ?? null
       const correctOpsi = s.opsi.find((o) => o.is_benar) ?? null
       const studentOpsi = studentAns?.opsi_id ? s.opsi.find((o) => o.id === studentAns.opsi_id) : null
-      const isCorrect =
-        s.tipe === 'pilihan_ganda' && !!correctOpsi && studentAns?.opsi_id === correctOpsi.id
+      // TRN-22: correctness via centralized grader (covers all auto-gradable types).
+      const isCorrect = s.tipe !== 'essay' && gradeAnswer(s, studentAns) === 1
       const isSkipped = !studentAns?.opsi_id && !studentAns?.jawaban_teks
       return {
         soal: s,
@@ -453,12 +501,14 @@ router.get('/hasil/rekap/:tryoutId', async (req: Request, res: Response) => {
   try {
     const role = req.headers['x-user-role'] as string
 
-    if (role !== 'guru' && role !== 'admin') {
+    // TRN-21: admin-soal also reads recaps (Super Tryout reporting / monitoring).
+    if (role !== 'guru' && role !== 'admin' && role !== 'admin-soal') {
       return res.status(403).json({ success: false, error: 'Forbidden' })
     }
 
-    // 1. Fetch hasil rows joined with sesi for timing info
+    // 1. Fetch hasil rows joined with sesi for timing info (+ sesi_id for drill-down)
     const hasilRows = await pool.query<{
+      sesi_id: string
       siswa_id: string
       nilai: string
       total_benar: number
@@ -467,7 +517,7 @@ router.get('/hasil/rekap/:tryoutId', async (req: Request, res: Response) => {
       selesai_at: string | null
       durasi_menit: number | null
     }>(
-      `SELECT h.siswa_id, h.nilai, h.total_benar, h.total_soal,
+      `SELECT s.id AS sesi_id, h.siswa_id, h.nilai, h.total_benar, h.total_soal,
               s.mulai_at, s.selesai_at,
               ROUND(EXTRACT(EPOCH FROM (s.selesai_at - s.mulai_at)) / 60)::int AS durasi_menit
          FROM hasil h
@@ -514,6 +564,7 @@ router.get('/hasil/rekap/:tryoutId', async (req: Request, res: Response) => {
     const hasil = hasilRows.rows.map((r) => {
       const profile = profileMap.get(r.siswa_id)
       return {
+        sesi_id:      r.sesi_id,
         siswa_id:     r.siswa_id,
         nama_siswa:   profile?.nama_lengkap ?? 'Siswa',
         kelas:        profile?.kelas        ?? '—',

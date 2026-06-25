@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .PHONY: install build start run dev stop restart health logs logs-error logs-clean \
-        seed db-create db-init clean frontend
+        seed db-create db-init db-clear db-clean clean frontend
 
 # ─────────────────────────────────────────────────────────────
 #  INSTALL
@@ -105,6 +105,11 @@ db-clear:
 	@echo "🧹 Clearing active tryout records..."
 	@(cd scripts && npx ts-node db-clear.ts)
 
+db-clean:
+	@echo "🧹 Cleaning local database (Preserving Users)..."
+	@bash ./scripts/clean_local_db.sh
+	@echo "✅ Database cleaned successfully!"
+
 
 # ─────────────────────────────────────────────────────────────
 #  FRONTEND
@@ -145,6 +150,8 @@ help:
 	@echo "  make logs-clean    Delete all log files"
 	@echo "  make db-create     Create databases (db_auth/user/sd/smp/sma) in Docker"
 	@echo "  make db-init       Apply SQL schemas to all databases"
+	@echo "  make db-clear      Clear tryout records only (db_sd/smp/sma)"
+	@echo "  make db-clean      Wipe all data except users/profiles (local only)"
 	@echo "  make seed          Seed users + per-level tryouts (SD/SMP/SMA)"
 	@echo "  make frontend      Start Next.js dev server"
 	@echo "  make clean         Remove all dist/ build artifacts"

@@ -116,8 +116,8 @@ export default function BuatTryoutPage() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Buat Tryout Baru</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">Isi detail tryout di bawah ini untuk mulai menambahkan soal.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Buat Bank Soal</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">Isi detail bank soal di bawah ini untuk mulai menambahkan soal.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-5">

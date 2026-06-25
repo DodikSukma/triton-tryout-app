@@ -33,10 +33,11 @@ const adminNav: NavItem[] = [
 ]
 
 const guruNav: NavItem[] = [
-  { type: 'link', label: 'Dashboard',   href: '/guru/dashboard', icon: <LayoutDashboard size={18} /> },
-  { type: 'link', label: 'Tryout Saya', href: '/guru/tryout',    icon: <BookOpen size={18} /> },
+  { type: 'link', label: 'Dashboard',   href: '/guru/dashboard',          icon: <LayoutDashboard size={18} /> },
+  { type: 'link', label: 'Bank Soal',   href: '/guru/tryout',             icon: <BookOpen size={18} /> },
+  { type: 'link', label: 'Monitoring',  href: '/guru/tryout-monitoring',  icon: <BarChart2 size={18} /> },
   { type: 'divider' },
-  { type: 'link', label: 'Profil Saya', href: '/guru/profil',    icon: <User size={18} /> },
+  { type: 'link', label: 'Profil Saya', href: '/guru/profil',             icon: <User size={18} /> },
 ]
 
 const siswaNav: NavItem[] = [
@@ -50,6 +51,7 @@ const siswaNav: NavItem[] = [
 // TRN-10: Question Bank administrator / Super Try Out builder.
 const adminSoalNav: NavItem[] = [
   { type: 'link', label: 'Dashboard',   href: '/admin-soal/dashboard', icon: <LayoutDashboard size={18} /> },
+  { type: 'link', label: 'Laporan',     href: '/admin-soal/report',    icon: <BarChart2 size={18} /> },
   { type: 'divider' },
   { type: 'link', label: 'Profil Saya', href: '/admin-soal/profil',    icon: <User size={18} /> },
 ]

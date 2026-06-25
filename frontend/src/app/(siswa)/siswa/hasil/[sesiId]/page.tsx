@@ -8,7 +8,7 @@ import {
   Trophy, Star, BookOpen, TrendingUp, CheckCircle2, XCircle, MinusCircle, ArrowLeft, Lightbulb,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
-import { ApiResponse, Hasil, OpsiJawaban, SesiTryout, Soal, Tryout } from '@/types'
+import { ApiResponse, Hasil, OpsiJawaban, SesiTryout, Soal, SOAL_TIPE_LABELS, Tryout } from '@/types'
 import RenderHTML from '@/components/shared/RenderHTML'
 import TritonLoader from '@/components/common/TritonLoader'
 
@@ -161,19 +161,33 @@ function Stat({ label, value, color, Icon }: { label: string; value: number; col
   )
 }
 
+// Loose text compare for short-answer / matching feedback.
+function eqText(a: string, b: string): boolean {
+  return a.trim().toLowerCase().replace(/\s+/g, ' ') === b.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+function safeArray(json: string | null | undefined): string[] {
+  try {
+    const v = JSON.parse(json ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+
 function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
-  const isPG = item.soal.tipe === 'pilihan_ganda'
+  const tipe = item.soal.tipe
+  const isAutoGraded = tipe !== 'essay' // everything except essay is machine-scored
   const status = item.is_skipped
     ? { Icon: MinusCircle, color: 'text-slate-400', bg: 'bg-slate-50', label: 'Tidak Dijawab' }
     : item.is_correct
       ? { Icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'Benar' }
-      : { Icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', label: isPG ? 'Salah' : 'Perlu Penilaian' }
+      : { Icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', label: isAutoGraded ? 'Salah' : 'Perlu Penilaian' }
 
   return (
     <div className="px-6 py-5">
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <span className="bg-triton-blue-500 text-white rounded-full px-3 py-1 text-xs font-bold">Soal {idx + 1}</span>
-        <span className="bg-slate-100 text-slate-500 rounded-md px-2 py-0.5 text-xs">{isPG ? 'PG' : 'Essay'}</span>
+        <span className="bg-slate-100 text-slate-500 rounded-md px-2 py-0.5 text-xs">{SOAL_TIPE_LABELS[tipe] ?? 'Soal'}</span>
         <span className="text-xs text-slate-400">Bobot: {item.soal.bobot}</span>
         <span className={`ml-auto inline-flex items-center gap-1.5 text-sm font-semibold ${status.color}`}>
           <status.Icon size={16} />
@@ -186,7 +200,7 @@ function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
         className="text-sm text-slate-700 leading-relaxed mb-4"
       />
 
-      {isPG && (
+      {tipe === 'pilihan_ganda' && (
         <div className="space-y-2">
           {/* Student answer */}
           {item.student_opsi && (
@@ -218,7 +232,79 @@ function DetailItem({ item, idx }: { item: HasilDetailItem; idx: number }) {
         </div>
       )}
 
-      {!isPG && (
+      {/* ─── Pilihan Ganda Kompleks (TRN-22): mark each option ─── */}
+      {tipe === 'pg_kompleks' && (() => {
+        const selected = safeArray(item.student_answer?.jawaban_teks)
+        return (
+          <div className="space-y-2">
+            {(item.soal.opsi ?? []).map((o) => {
+              const chosen = selected.includes(o.id)
+              const correct = !!o.is_benar
+              const cls = correct
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : chosen
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-white border-slate-200 text-slate-600'
+              return (
+                <div key={o.id} className={`flex items-start gap-3 rounded-xl px-4 py-2.5 border ${cls}`}>
+                  <strong className="text-sm shrink-0">{o.huruf}.</strong>
+                  <div className="flex-1 text-sm"><RenderHTML className="inline" html={o.teks_html || o.teks} /></div>
+                  {chosen && <span className="text-[10px] font-bold uppercase tracking-wider bg-white/70 rounded px-1.5 py-0.5 shrink-0">Dipilih</span>}
+                  {correct && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-600 text-white rounded px-1.5 py-0.5 shrink-0">Kunci</span>}
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
+      {/* ─── Isian Singkat (TRN-22) ─── */}
+      {tipe === 'isian_singkat' && (
+        <div className="space-y-2">
+          <div className={`rounded-xl px-4 py-3 border ${item.is_correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${item.is_correct ? 'text-green-600' : 'text-red-500'}`}>Jawaban Anda</p>
+            <p className="text-sm text-slate-700">{item.student_answer?.jawaban_teks?.trim() || <span className="italic text-slate-400">(tidak ada jawaban)</span>}</p>
+          </div>
+          {!item.is_correct && item.soal.jawaban_benar && (
+            <div className="rounded-xl px-4 py-3 border border-green-300 bg-green-50">
+              <p className="text-xs font-bold uppercase tracking-wider text-green-600 mb-1">Kunci Jawaban</p>
+              <p className="text-sm font-semibold text-green-700">
+                {item.soal.jawaban_benar.split('\n').map((k) => k.trim()).filter(Boolean).join('  •  ')}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── Menjodohkan (TRN-22): per-pair comparison ─── */}
+      {tipe === 'menjodohkan' && (() => {
+        const left = item.soal.matching_pairs?.left ?? []
+        const right = item.soal.matching_pairs?.right ?? [] // correct order: left[i] ↔ right[i]
+        const chosen = safeArray(item.student_answer?.jawaban_teks)
+        return (
+          <div className="space-y-2">
+            {left.map((l, i) => {
+              const stu = chosen[i] ?? ''
+              const cor = right[i] ?? ''
+              const ok = stu !== '' && eqText(stu, cor)
+              return (
+                <div key={i} className={`rounded-xl px-4 py-2.5 border ${ok ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                    <span className="font-semibold text-slate-700">{l}</span>
+                    <span className="text-slate-300">→</span>
+                    <span className={ok ? 'text-green-700 font-semibold' : 'text-red-600'}>{stu || '—'}</span>
+                  </div>
+                  {!ok && (
+                    <p className="mt-1 text-xs text-green-700">Jawaban benar: <span className="font-semibold">{cor}</span></p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
+      {tipe === 'essay' && (
         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Jawaban Anda</p>
           {item.student_answer?.jawaban_teks ? (

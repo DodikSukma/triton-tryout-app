@@ -58,6 +58,7 @@ export interface Tryout {
   randomize_questions?: boolean
   randomize_options?: boolean
   is_super_tryout?: boolean
+  is_per_question_timer_enabled?: boolean
   soal_count?: number
   total_bobot?: number
   jumlah_peserta?: number
@@ -81,7 +82,33 @@ export interface OpsiJawaban {
   is_benar?: boolean
 }
 
-export type SoalTipe = 'pilihan_ganda' | 'essay'
+// TRN-22: AKM question types.
+//  pilihan_ganda  — single correct option (radio)
+//  pg_kompleks    — complex MC, one or more correct options (checkbox)
+//  menjodohkan    — matching: pair left[i] ↔ right[i]
+//  isian_singkat  — short answer keyword
+//  essay          — free text, manually graded
+export type SoalTipe =
+  | 'pilihan_ganda'
+  | 'pg_kompleks'
+  | 'menjodohkan'
+  | 'isian_singkat'
+  | 'essay'
+
+// TRN-22: menjodohkan answer key — left[i] is matched to right[i].
+export interface MatchingPairs {
+  left: string[]
+  right: string[]
+}
+
+// Human-readable labels for the question-type dropdowns.
+export const SOAL_TIPE_LABELS: Record<SoalTipe, string> = {
+  pilihan_ganda: 'Pilihan Ganda',
+  pg_kompleks: 'Pilihan Ganda Kompleks',
+  menjodohkan: 'Menjodohkan',
+  isian_singkat: 'Isian Singkat',
+  essay: 'Esai',
+}
 
 export interface Soal {
   id: string
@@ -102,6 +129,10 @@ export interface Soal {
   penyelesaian_html?: string | null
   penyelesaian_gambar_url?: string | null
   penyelesaian_gambar_base64?: string | null
+  time_limit_seconds?: number | null
+  // TRN-22: AKM answer keys
+  jawaban_benar?: string | null     // isian_singkat: accepted keywords (newline-separated)
+  matching_pairs?: MatchingPairs | null // menjodohkan
   opsi?: OpsiJawaban[]
   created_at: string
 }
@@ -141,6 +172,7 @@ export interface Hasil {
 }
 
 export interface HasilRekapItem {
+  sesi_id: string
   siswa_id: string
   nama_siswa: string
   kelas: string

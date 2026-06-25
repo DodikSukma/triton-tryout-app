@@ -102,3 +102,14 @@ ALTER TABLE soal ADD COLUMN IF NOT EXISTS penyelesaian_gambar_base64 TEXT;  -- o
 
 -- Marks tryouts compiled by an 'admin-soal' from questions across teachers/levels.
 ALTER TABLE tryouts ADD COLUMN IF NOT EXISTS is_super_tryout BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── TRN-20: per-question timers ────────────────────────────────────────────
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS time_limit_seconds INTEGER;  -- per-question limit (null = none)
+ALTER TABLE tryouts ADD COLUMN IF NOT EXISTS is_per_question_timer_enabled BOOLEAN NOT NULL DEFAULT false;
+
+-- ─── TRN-22: AKM question types + media options ─────────────────────────────
+ALTER TABLE soal DROP CONSTRAINT IF EXISTS soal_tipe_check;
+ALTER TABLE soal ADD CONSTRAINT soal_tipe_check
+  CHECK (tipe IN ('pilihan_ganda','essay','pg_kompleks','menjodohkan','isian_singkat'));
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS jawaban_benar  TEXT;   -- isian_singkat: accepted keywords (newline-separated)
+ALTER TABLE soal ADD COLUMN IF NOT EXISTS matching_pairs JSONB;  -- menjodohkan: { left: string[], right: string[] } (left[i] ↔ right[i])

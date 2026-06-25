@@ -15,7 +15,24 @@ import TritonLoader from '@/components/common/TritonLoader'
 // AI question generator hidden per client request (TRN-09 Feature 2).
 import ImportSoalModal from '@/components/editor/ImportSoalModal'
 import WordImportModal from '@/components/editor/WordImportModal'
-import { ApiResponse, Soal, SoalTipe, TryoutDetail } from '@/types'
+import { ApiResponse, Soal, SoalTipe, SOAL_TIPE_LABELS, TryoutDetail } from '@/types'
+import { compressImageFile, getImageFromClipboard } from '@/utils/imageHelper'
+
+// Short tags for the compact question list.
+const SOAL_TIPE_SHORT: Record<SoalTipe, string> = {
+  pilihan_ganda: 'PG',
+  pg_kompleks: 'PGK',
+  menjodohkan: 'Jodoh',
+  isian_singkat: 'Isian',
+  essay: 'Esai',
+}
+const SOAL_TIPE_COLOR: Record<SoalTipe, string> = {
+  pilihan_ganda: 'bg-blue-100 text-blue-700',
+  pg_kompleks: 'bg-indigo-100 text-indigo-700',
+  menjodohkan: 'bg-teal-100 text-teal-700',
+  isian_singkat: 'bg-amber-100 text-amber-700',
+  essay: 'bg-violet-100 text-violet-700',
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +53,9 @@ interface DraftSoal {
   kode_soal: string
   penyelesaian: string
   penyelesaian_html: string
+  time_limit_seconds: number | null
+  jawaban_benar: string                          // TRN-22 isian_singkat keywords (newline-separated)
+  matching_pairs: { left: string[]; right: string[] } // TRN-22 menjodohkan
   opsi: DraftOpsi[]
 }
 
@@ -47,6 +67,9 @@ const NEW_SOAL_DEFAULT: DraftSoal = {
   kode_soal: '',
   penyelesaian: '',
   penyelesaian_html: '',
+  time_limit_seconds: null,
+  jawaban_benar: '',
+  matching_pairs: { left: ['', ''], right: ['', ''] },
   opsi: [
     { huruf: 'A', teks_html: '', is_benar: false },
     { huruf: 'B', teks_html: '', is_benar: false },
@@ -73,6 +96,11 @@ function soalToDraft(s: Soal): DraftSoal {
     kode_soal: s.kode_soal ?? '',
     penyelesaian: s.penyelesaian ?? '',
     penyelesaian_html: s.penyelesaian_html ?? '',
+    time_limit_seconds: s.time_limit_seconds ?? null,
+    jawaban_benar: s.jawaban_benar ?? '',
+    matching_pairs: s.matching_pairs && s.matching_pairs.left.length
+      ? { left: [...s.matching_pairs.left], right: [...s.matching_pairs.right] }
+      : { left: ['', ''], right: ['', ''] },
     opsi: (s.opsi ?? []).map((o) => ({
       id: o.id,
       huruf: o.huruf,
@@ -205,6 +233,44 @@ export default function KelolaSoalPage() {
     })
   }
 
+  // TRN-22: PGK allows multiple correct options (toggle instead of single-select).
+  function toggleCorrect(idx: number) {
+    setDraft((d) => {
+      if (!d) return d
+      return { ...d, opsi: d.opsi.map((o, i) => (i === idx ? { ...o, is_benar: !o.is_benar } : o)) }
+    })
+  }
+
+  // TRN-22: menjodohkan pair editor.
+  function updateMatch(side: 'left' | 'right', idx: number, value: string) {
+    setDraft((d) => {
+      if (!d) return d
+      const mp = { left: [...d.matching_pairs.left], right: [...d.matching_pairs.right] }
+      mp[side][idx] = value
+      return { ...d, matching_pairs: mp }
+    })
+  }
+  function addMatchRow() {
+    setDraft((d) => {
+      if (!d) return d
+      if (d.matching_pairs.left.length >= 8) { toast.error('Maksimal 8 pasangan.'); return d }
+      return { ...d, matching_pairs: { left: [...d.matching_pairs.left, ''], right: [...d.matching_pairs.right, ''] } }
+    })
+  }
+  function removeMatchRow(idx: number) {
+    setDraft((d) => {
+      if (!d) return d
+      if (d.matching_pairs.left.length <= 2) { toast.error('Minimal 2 pasangan.'); return d }
+      return {
+        ...d,
+        matching_pairs: {
+          left: d.matching_pairs.left.filter((_, i) => i !== idx),
+          right: d.matching_pairs.right.filter((_, i) => i !== idx),
+        },
+      }
+    })
+  }
+
   function addOpsi() {
     setDraft((d) => {
       if (!d) return d
@@ -241,18 +307,36 @@ export default function KelolaSoalPage() {
     const kodeSoal = draft.kode_soal.trim() || generateKodeSoal()
 
     let opsiPayload: { huruf: string; teks: string; teks_html: string; is_benar: boolean }[] | undefined
-    if (draft.tipe === 'pilihan_ganda') {
-      if (draft.opsi.length < 2) { toast.error('Pilihan ganda butuh minimal 2 opsi.'); return }
+    let jawabanBenar: string | null = null
+    let matchingPairs: { left: string[]; right: string[] } | null = null
+
+    // Pilihan Ganda + Pilihan Ganda Kompleks both use the option list.
+    if (draft.tipe === 'pilihan_ganda' || draft.tipe === 'pg_kompleks') {
+      if (draft.opsi.length < 2) { toast.error('Soal butuh minimal 2 opsi.'); return }
       if (!draft.opsi.some((o) => o.is_benar)) {
-        toast.error('Pilih salah satu opsi sebagai jawaban yang benar.')
+        toast.error(draft.tipe === 'pg_kompleks'
+          ? 'Tandai minimal satu opsi sebagai jawaban benar.'
+          : 'Pilih salah satu opsi sebagai jawaban yang benar.')
         return
       }
       opsiPayload = draft.opsi.map((o, i) => {
         const opsiHtml = opsiHtmlRef.current[i] ?? o.teks_html
         const opsiText = htmlToText(opsiHtml).trim()
-        if (!opsiText) throw new Error(`Opsi ${o.huruf} kosong.`)
+        // An option may be image-only (image lives in teks_html as <img>).
+        const hasImage = /<img/i.test(opsiHtml)
+        if (!opsiText && !hasImage) throw new Error(`Opsi ${o.huruf} kosong.`)
         return { huruf: o.huruf, teks: opsiText, teks_html: opsiHtml, is_benar: o.is_benar }
       })
+    } else if (draft.tipe === 'isian_singkat') {
+      const keys = draft.jawaban_benar.split('\n').map((k) => k.trim()).filter(Boolean)
+      if (keys.length === 0) { toast.error('Isi minimal satu kata kunci jawaban.'); return }
+      jawabanBenar = keys.join('\n')
+    } else if (draft.tipe === 'menjodohkan') {
+      const left = draft.matching_pairs.left.map((s) => s.trim())
+      const right = draft.matching_pairs.right.map((s) => s.trim())
+      const valid = left.every((l, i) => l && right[i])
+      if (left.length < 2 || !valid) { toast.error('Lengkapi semua pasangan kiri & kanan (minimal 2).'); return }
+      matchingPairs = { left, right }
     }
 
     setSaving(true)
@@ -264,8 +348,11 @@ export default function KelolaSoalPage() {
         pertanyaan_html: html,
         panduan_essay: draft.tipe === 'essay' ? draft.panduan_essay : '',
         kode_soal: kodeSoal,
+        time_limit_seconds: draft.time_limit_seconds && draft.time_limit_seconds > 0 ? draft.time_limit_seconds : null,
         penyelesaian: penyelesaianText || null,
         penyelesaian_html: penyelesaianHtml || null,
+        jawaban_benar: jawabanBenar,
+        matching_pairs: matchingPairs,
         opsi: opsiPayload,
       }
       let savedSoal: Soal | undefined
@@ -408,7 +495,6 @@ export default function KelolaSoalPage() {
           ) : (
             soalList.map((s, i) => {
               const isActive = draft?.id === s.id
-              const isPG     = s.tipe === 'pilihan_ganda'
               const hasIssue = hasSoalIssue(s)
 
               return (
@@ -434,10 +520,8 @@ export default function KelolaSoalPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className={`inline-block text-[10px] font-semibold rounded px-1.5 py-0.5 ${
-                          isPG ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'
-                        }`}>
-                          {isPG ? 'PG' : 'Essay'}
+                        <span className={`inline-block text-[10px] font-semibold rounded px-1.5 py-0.5 ${SOAL_TIPE_COLOR[s.tipe] ?? 'bg-slate-100 text-slate-600'}`}>
+                          {SOAL_TIPE_SHORT[s.tipe] ?? 'Soal'}
                         </span>
                         {hasIssue && (
                           <span
@@ -544,10 +628,8 @@ export default function KelolaSoalPage() {
           </button>
           {draft && (
             <div className="ml-auto flex items-center gap-2">
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                draft.tipe === 'pilihan_ganda' ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'
-              }`}>
-                {draft.tipe === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Essay'}
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${SOAL_TIPE_COLOR[draft.tipe] ?? 'bg-slate-100 text-slate-600'}`}>
+                {SOAL_TIPE_LABELS[draft.tipe] ?? 'Soal'}
               </span>
               <span className="text-xs text-slate-400">Bobot {draft.bobot}</span>
             </div>
@@ -584,8 +666,12 @@ export default function KelolaSoalPage() {
               updateDraft={updateDraft}
               updateOpsi={updateOpsi}
               markCorrect={markCorrect}
+              toggleCorrect={toggleCorrect}
               addOpsi={addOpsi}
               removeOpsi={removeOpsi}
+              updateMatch={updateMatch}
+              addMatchRow={addMatchRow}
+              removeMatchRow={removeMatchRow}
               onSave={handleSave}
               onCancel={backToList}
               onRequestDelete={(id) => setConfirmDelete(id)}
@@ -667,8 +753,12 @@ interface SoalEditorProps {
   updateDraft: <K extends keyof DraftSoal>(key: K, value: DraftSoal[K]) => void
   updateOpsi: (idx: number, patch: Partial<DraftOpsi>) => void
   markCorrect: (idx: number) => void
+  toggleCorrect: (idx: number) => void
   addOpsi: () => void
   removeOpsi: (idx: number) => void
+  updateMatch: (side: 'left' | 'right', idx: number, value: string) => void
+  addMatchRow: () => void
+  removeMatchRow: (idx: number) => void
   onSave: () => void
   onCancel: () => void
   onRequestDelete: (id: string) => void
@@ -678,14 +768,16 @@ interface SoalEditorProps {
 
 function SoalEditor({
   draft, editorRef, penyelesaianRef, opsiHtmlRef, saving, soalCount, soalIndex,
-  updateDraft, updateOpsi, markCorrect, addOpsi, removeOpsi,
+  updateDraft, updateOpsi, markCorrect, toggleCorrect, addOpsi, removeOpsi,
+  updateMatch, addMatchRow, removeMatchRow,
   onSave, onCancel, onRequestDelete, onPrev, onNext,
 }: SoalEditorProps) {
   const correctIdx = draft.opsi.findIndex((o) => o.is_benar)
   const isExisting = !!draft.id
+  const isOptionType = draft.tipe === 'pilihan_ganda' || draft.tipe === 'pg_kompleks'
 
-  const pgMissingKey  = draft.tipe === 'pilihan_ganda' && correctIdx < 0
-  const pgMissingOpsi = draft.tipe === 'pilihan_ganda' && draft.opsi.length < 2
+  const pgMissingKey  = isOptionType && correctIdx < 0
+  const pgMissingOpsi = isOptionType && draft.opsi.length < 2
   const hasWarning    = pgMissingKey || pgMissingOpsi
 
   return (
@@ -701,7 +793,7 @@ function SoalEditor({
             <p className="text-xs font-semibold text-amber-700">
               {pgMissingOpsi
                 ? 'Tambahkan minimal 2 opsi jawaban.'
-                : 'Tandai satu opsi sebagai jawaban yang benar.'}
+                : 'Tandai minimal satu opsi sebagai jawaban yang benar.'}
             </p>
           </div>
         )}
@@ -718,7 +810,10 @@ function SoalEditor({
               className="rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white dark:bg-slate-700"
             >
               <option value="pilihan_ganda">Pilihan Ganda</option>
-              <option value="essay">Essay</option>
+              <option value="pg_kompleks">Pilihan Ganda Kompleks</option>
+              <option value="menjodohkan">Menjodohkan</option>
+              <option value="isian_singkat">Isian Singkat</option>
+              <option value="essay">Esai</option>
             </select>
           </div>
 
@@ -733,6 +828,21 @@ function SoalEditor({
               value={draft.bobot}
               onChange={(e) => updateDraft('bobot', Math.max(1, Number(e.target.value) || 1))}
               className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-16 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Waktu (detik)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={draft.time_limit_seconds ?? ''}
+              onChange={(e) => updateDraft('time_limit_seconds', Number(e.target.value) || null)}
+              placeholder="—"
+              title="Batas waktu per soal (detik). Kosong = tanpa batas."
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-20 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
@@ -775,23 +885,29 @@ function SoalEditor({
           />
         </div>
 
-        {/* ── Pilihan Ganda options ─────────────────────── */}
-        {draft.tipe === 'pilihan_ganda' && (
+        {/* ── Pilihan Ganda / PG Kompleks options ──────────── */}
+        {isOptionType && (
           <div className={`px-4 sm:px-6 md:px-8 py-5 border-b transition-colors ${
             hasWarning ? 'border-amber-100 bg-amber-50/10' : 'border-slate-100'
           }`}>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-semibold text-slate-700">Pilihan Jawaban</label>
-              <span className="text-xs text-slate-400 hidden sm:block">Pilih satu jawaban benar</span>
+              <span className="text-xs text-slate-400 hidden sm:block">
+                {draft.tipe === 'pg_kompleks' ? 'Tandai satu atau lebih jawaban benar' : 'Pilih satu jawaban benar'}
+              </span>
             </div>
+            <p className="text-xs text-slate-400 mb-3">💡 Anda dapat menempelkan (paste) gambar langsung ke dalam kolom opsi.</p>
 
             <div className="space-y-2.5">
               {draft.opsi.map((o, idx) => (
                 <div key={idx} className="flex items-start gap-2 sm:gap-3">
                   <button
                     type="button"
-                    onClick={() => markCorrect(idx)}
-                    className={`w-8 h-8 sm:w-9 sm:h-9 mt-1 rounded-full flex items-center justify-center shrink-0 transition-all font-bold text-sm ${
+                    onClick={() => (draft.tipe === 'pg_kompleks' ? toggleCorrect(idx) : markCorrect(idx))}
+                    title={draft.tipe === 'pg_kompleks' ? 'Tandai sebagai jawaban benar' : 'Pilih sebagai kunci jawaban'}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 mt-1 flex items-center justify-center shrink-0 transition-all font-bold text-sm ${
+                      draft.tipe === 'pg_kompleks' ? 'rounded-lg' : 'rounded-full'
+                    } ${
                       o.is_benar
                         ? 'bg-green-500 text-white shadow-md'
                         : 'bg-slate-100 text-slate-500 hover:bg-green-50 hover:text-green-500'
@@ -835,11 +951,11 @@ function SoalEditor({
             )}
 
             <div className="mt-3 text-sm flex items-center gap-2">
-              {correctIdx >= 0 ? (
+              {draft.opsi.some((o) => o.is_benar) ? (
                 <>
                   <CheckCircle2 size={15} className="text-green-500" />
                   <span className="text-green-600 font-medium text-xs sm:text-sm">
-                    Kunci jawaban: Opsi {draft.opsi[correctIdx].huruf}
+                    Kunci jawaban: {draft.opsi.filter((o) => o.is_benar).map((o) => o.huruf).join(', ')}
                   </span>
                 </>
               ) : (
@@ -849,6 +965,73 @@ function SoalEditor({
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── Isian Singkat key ─────────────────────────── */}
+        {draft.tipe === 'isian_singkat' && (
+          <div className="px-4 sm:px-6 md:px-8 py-5 border-b border-slate-100">
+            <label className="block text-sm font-semibold text-slate-700">Kunci Jawaban (Kata Kunci)</label>
+            <p className="text-xs text-slate-400 mt-0.5 mb-3">
+              Satu kata kunci per baris. Jawaban siswa dianggap benar jika cocok salah satu (huruf besar/kecil & spasi diabaikan).
+            </p>
+            <textarea
+              value={draft.jawaban_benar}
+              onChange={(e) => updateDraft('jawaban_benar', e.target.value)}
+              rows={3}
+              placeholder={'Contoh:\nProklamasi\n17 Agustus 1945'}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 sm:p-4 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-all resize-none"
+            />
+          </div>
+        )}
+
+        {/* ── Menjodohkan pairs ─────────────────────────── */}
+        {draft.tipe === 'menjodohkan' && (
+          <div className="px-4 sm:px-6 md:px-8 py-5 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-semibold text-slate-700">Pasangan Jawaban</label>
+              <span className="text-xs text-slate-400 hidden sm:block">Kolom Kiri ↔ Kolom Kanan</span>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">
+              Kolom kanan akan diacak saat dikerjakan siswa. Pasangkan baris kiri[i] dengan kanan[i].
+            </p>
+            <div className="space-y-2.5">
+              {draft.matching_pairs.left.map((leftVal, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="w-6 text-center text-xs font-bold text-slate-400 shrink-0">{idx + 1}</span>
+                  <input
+                    value={leftVal}
+                    onChange={(e) => updateMatch('left', idx, e.target.value)}
+                    placeholder={`Kiri ${idx + 1}`}
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 transition-all"
+                  />
+                  <span className="text-slate-300 shrink-0">↔</span>
+                  <input
+                    value={draft.matching_pairs.right[idx] ?? ''}
+                    onChange={(e) => updateMatch('right', idx, e.target.value)}
+                    placeholder={`Kanan ${idx + 1}`}
+                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-green-400/20 focus:border-green-400 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeMatchRow(idx)}
+                    disabled={draft.matching_pairs.left.length <= 2}
+                    className="text-slate-300 hover:text-red-500 transition-colors shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {draft.matching_pairs.left.length < 8 && (
+              <button
+                type="button"
+                onClick={addMatchRow}
+                className="mt-3 inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                <Plus size={14} /> Tambah Pasangan
+              </button>
+            )}
           </div>
         )}
 
@@ -952,6 +1135,25 @@ function OpsiEditor({ initialHtml, placeholder, correct, onChange }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // TRN-22: paste an image straight into the option — compress, then insert <img>.
+  async function handlePaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    const file = getImageFromClipboard(e)
+    if (!file) return // not an image → allow normal text paste
+    e.preventDefault()
+    const sel = window.getSelection()
+    const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null
+    try {
+      const dataUrl = await compressImageFile(file)
+      if (range && sel) { sel.removeAllRanges(); sel.addRange(range) }
+      const imgHtml = `<img src="${dataUrl}" alt="opsi" style="max-width:100%;max-height:160px;border-radius:6px;display:block;" />`
+      document.execCommand('insertHTML', false, imgHtml)
+      if (ref.current) onChange(ref.current.innerHTML)
+      toast.success('Gambar ditempel & dikompres.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal memproses gambar.')
+    }
+  }
+
   return (
     <div
       ref={ref}
@@ -959,6 +1161,7 @@ function OpsiEditor({ initialHtml, placeholder, correct, onChange }: {
       suppressContentEditableWarning
       data-placeholder={placeholder}
       onInput={(e) => onChange((e.target as HTMLDivElement).innerHTML)}
+      onPaste={handlePaste}
       className={`question-content min-h-[40px] border rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm outline-none transition-all leading-relaxed ${
         correct
           ? 'border-green-300 bg-green-50/40 focus:ring-2 focus:ring-green-500/20 focus:border-green-500'

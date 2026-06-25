@@ -487,6 +487,7 @@ function CreateSuperTryoutModal({ onClose, onCreated }: {
   const [mapel, setMapel] = useState('')
   const [kelas, setKelas] = useState('')
   const [durasi, setDurasi] = useState(90)
+  const [perQuestionTimer, setPerQuestionTimer] = useState(false)
   const [saving, setSaving] = useState(false)
   const [mapelList, setMapelList] = useState<MasterMataPelajaran[]>([])
   const [kelasList, setKelasList] = useState<MasterKelas[]>([])
@@ -518,6 +519,7 @@ function CreateSuperTryoutModal({ onClose, onCreated }: {
         kelas: kelas.trim(),
         durasi_menit: durasi,
         is_super_tryout: true,
+        is_per_question_timer_enabled: perQuestionTimer,
       })
       const id = r.data.data?.id
       if (!id) throw new Error('No id returned')
@@ -585,6 +587,22 @@ function CreateSuperTryoutModal({ onClose, onCreated }: {
                 className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
             </div>
           </div>
+
+          {/* TRN-20: per-question timer toggle */}
+          <button
+            type="button"
+            onClick={() => setPerQuestionTimer((v) => !v)}
+            aria-pressed={perQuestionTimer}
+            className="flex items-center justify-between gap-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Aktifkan Waktu Per Soal</p>
+              <p className="text-xs text-slate-400">Setiap soal punya hitung mundur sendiri (selain waktu total).</p>
+            </div>
+            <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${perQuestionTimer ? 'bg-blue-500' : 'bg-slate-300'}`}>
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${perQuestionTimer ? 'translate-x-5' : 'translate-x-0'}`} />
+            </span>
+          </button>
         </div>
 
         <div className="flex gap-3 mt-6">
