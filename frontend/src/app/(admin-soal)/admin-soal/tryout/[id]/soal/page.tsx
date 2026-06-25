@@ -12,8 +12,28 @@ import { levelPath, LEVEL_LABELS, LEVELS, type Level } from '@/lib/level'
 import RichTextEditor, { RichTextEditorHandle } from '@/components/editor/RichTextEditor'
 import RenderHTML from '@/components/shared/RenderHTML'
 import {
-  ApiResponse, MasterKelas, MasterMataPelajaran, Soal, SoalTipe, TryoutDetail,
+  ApiResponse, MasterKelas, MasterMataPelajaran, Soal, SoalTipe, SOAL_TIPE_LABELS, TryoutDetail,
 } from '@/types'
+import { compressImageFile, getImageFromClipboard } from '@/utils/imageHelper'
+
+// Short type tags for the compact question list.
+const SOAL_TIPE_SHORT: Record<SoalTipe, string> = {
+  pilihan_ganda: 'PG', pg_kompleks: 'PGK', menjodohkan: 'Jodoh', isian_singkat: 'Isian', essay: 'Esai',
+}
+const SOAL_TIPE_COLOR: Record<SoalTipe, string> = {
+  pilihan_ganda: 'bg-blue-100 text-blue-700',
+  pg_kompleks: 'bg-indigo-100 text-indigo-700',
+  menjodohkan: 'bg-teal-100 text-teal-700',
+  isian_singkat: 'bg-amber-100 text-amber-700',
+  essay: 'bg-violet-100 text-violet-700',
+}
+
+// Pull the <img src> out of stored option HTML (image-only options).
+function extractImageSrc(html: string | null | undefined): string {
+  if (!html) return ''
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i)
+  return m ? m[1] : ''
+}
 
 export default function SuperTryoutBuilderPage() {
   return (
@@ -143,8 +163,8 @@ function SuperTryoutBuilder() {
                 <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${s.tipe === 'pilihan_ganda' ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'}`}>
-                      {s.tipe === 'pilihan_ganda' ? 'PG' : 'Essay'}
+                    <span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${SOAL_TIPE_COLOR[s.tipe] ?? 'bg-slate-100 text-slate-600'}`}>
+                      {SOAL_TIPE_SHORT[s.tipe] ?? 'Soal'}
                     </span>
                     {s.kode_soal && <span className="text-[10px] font-mono bg-slate-100 text-slate-500 rounded px-1.5 py-0.5">{s.kode_soal}</span>}
                     <span className="text-[10px] text-slate-400">Bobot {s.bobot}</span>
@@ -365,7 +385,7 @@ function BankModal({ level, tryoutId, onClose, onImported }: {
 }
 
 // ─── Question editor modal (manual add / edit) ─────────────────────────────────
-interface DraftOpsi { huruf: string; teks: string; is_benar: boolean }
+interface DraftOpsi { huruf: string; teks: string; image: string; is_benar: boolean }
 
 function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
   level: Level; tryoutId: string; soal: Soal | null; onClose: () => void; onSaved: () => void
@@ -376,30 +396,76 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
   const [tipe, setTipe] = useState<SoalTipe>(soal?.tipe ?? 'pilihan_ganda')
   const [bobot, setBobot] = useState(soal?.bobot ?? 1)
   const [kode, setKode] = useState(soal?.kode_soal ?? '')
+  const [waktu, setWaktu] = useState<string>(soal?.time_limit_seconds ? String(soal.time_limit_seconds) : '')
   const [panduan, setPanduan] = useState(soal?.panduan_essay ?? '')
+  const [jawabanBenar, setJawabanBenar] = useState(soal?.jawaban_benar ?? '') // TRN-22 isian_singkat
+  const [matching, setMatching] = useState<{ left: string[]; right: string[] }>( // TRN-22 menjodohkan
+    soal?.matching_pairs && soal.matching_pairs.left.length
+      ? { left: [...soal.matching_pairs.left], right: [...soal.matching_pairs.right] }
+      : { left: ['', ''], right: ['', ''] }
+  )
   const [opsi, setOpsi] = useState<DraftOpsi[]>(
     soal?.opsi && soal.opsi.length > 0
-      ? soal.opsi.map((o) => ({ huruf: o.huruf, teks: o.teks, is_benar: !!o.is_benar }))
+      ? soal.opsi.map((o) => {
+          const img = extractImageSrc(o.teks_html)
+          return { huruf: o.huruf, teks: img ? '' : o.teks, image: img, is_benar: !!o.is_benar }
+        })
       : [
-          { huruf: 'A', teks: '', is_benar: false },
-          { huruf: 'B', teks: '', is_benar: false },
-          { huruf: 'C', teks: '', is_benar: false },
-          { huruf: 'D', teks: '', is_benar: false },
+          { huruf: 'A', teks: '', image: '', is_benar: false },
+          { huruf: 'B', teks: '', image: '', is_benar: false },
+          { huruf: 'C', teks: '', image: '', is_benar: false },
+          { huruf: 'D', teks: '', image: '', is_benar: false },
         ]
   )
   const [saving, setSaving] = useState(false)
 
+  const isOptionType = tipe === 'pilihan_ganda' || tipe === 'pg_kompleks'
+
   function setCorrect(idx: number) {
     setOpsi((prev) => prev.map((o, i) => ({ ...o, is_benar: i === idx })))
+  }
+  function toggleCorrect(idx: number) { // PGK: multiple correct
+    setOpsi((prev) => prev.map((o, i) => (i === idx ? { ...o, is_benar: !o.is_benar } : o)))
   }
   function setOpsiTeks(idx: number, teks: string) {
     setOpsi((prev) => prev.map((o, i) => (i === idx ? { ...o, teks } : o)))
   }
   function addOpsi() {
-    setOpsi((prev) => prev.length >= 5 ? prev : [...prev, { huruf: String.fromCharCode(65 + prev.length), teks: '', is_benar: false }])
+    setOpsi((prev) => prev.length >= 5 ? prev : [...prev, { huruf: String.fromCharCode(65 + prev.length), teks: '', image: '', is_benar: false }])
   }
   function removeOpsi(idx: number) {
     setOpsi((prev) => prev.length <= 2 ? prev : prev.filter((_, i) => i !== idx).map((o, i) => ({ ...o, huruf: String.fromCharCode(65 + i) })))
+  }
+  // TRN-22: paste image into an option, compress, store as data URL.
+  async function pasteOpsiImage(idx: number, e: React.ClipboardEvent<HTMLInputElement>) {
+    const file = getImageFromClipboard(e)
+    if (!file) return
+    e.preventDefault()
+    try {
+      const dataUrl = await compressImageFile(file)
+      setOpsi((prev) => prev.map((o, i) => (i === idx ? { ...o, image: dataUrl, teks: '' } : o)))
+      toast.success('Gambar ditempel & dikompres.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal memproses gambar.')
+    }
+  }
+  function removeOpsiImage(idx: number) {
+    setOpsi((prev) => prev.map((o, i) => (i === idx ? { ...o, image: '' } : o)))
+  }
+
+  // TRN-22: menjodohkan pair editor
+  function updateMatch(side: 'left' | 'right', idx: number, value: string) {
+    setMatching((m) => {
+      const next = { left: [...m.left], right: [...m.right] }
+      next[side][idx] = value
+      return next
+    })
+  }
+  function addMatchRow() {
+    setMatching((m) => m.left.length >= 8 ? m : { left: [...m.left, ''], right: [...m.right, ''] })
+  }
+  function removeMatchRow(idx: number) {
+    setMatching((m) => m.left.length <= 2 ? m : { left: m.left.filter((_, i) => i !== idx), right: m.right.filter((_, i) => i !== idx) })
   }
 
   async function save() {
@@ -408,11 +474,29 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
     if (!pertanyaanText) { toast.error('Pertanyaan tidak boleh kosong.'); return }
 
     let opsiPayload: { huruf: string; teks: string; teks_html: string; is_benar: boolean }[] | undefined
-    if (tipe === 'pilihan_ganda') {
+    let jawabanBenarPayload: string | null = null
+    let matchingPayload: { left: string[]; right: string[] } | null = null
+
+    if (isOptionType) {
       if (opsi.length < 2) { toast.error('Minimal 2 opsi.'); return }
-      if (!opsi.some((o) => o.is_benar)) { toast.error('Tandai satu jawaban benar.'); return }
-      if (opsi.some((o) => !o.teks.trim())) { toast.error('Semua opsi harus diisi.'); return }
-      opsiPayload = opsi.map((o) => ({ huruf: o.huruf, teks: o.teks.trim(), teks_html: o.teks.trim(), is_benar: o.is_benar }))
+      if (!opsi.some((o) => o.is_benar)) {
+        toast.error(tipe === 'pg_kompleks' ? 'Tandai minimal satu jawaban benar.' : 'Tandai satu jawaban benar.')
+        return
+      }
+      if (opsi.some((o) => !o.teks.trim() && !o.image)) { toast.error('Semua opsi harus diisi (teks atau gambar).'); return }
+      opsiPayload = opsi.map((o) => {
+        const teks_html = o.image ? `<img src="${o.image}" alt="opsi" style="max-width:100%;max-height:160px;border-radius:6px;display:block;" />` : o.teks.trim()
+        return { huruf: o.huruf, teks: o.image ? '' : o.teks.trim(), teks_html, is_benar: o.is_benar }
+      })
+    } else if (tipe === 'isian_singkat') {
+      const keys = jawabanBenar.split('\n').map((k) => k.trim()).filter(Boolean)
+      if (keys.length === 0) { toast.error('Isi minimal satu kata kunci jawaban.'); return }
+      jawabanBenarPayload = keys.join('\n')
+    } else if (tipe === 'menjodohkan') {
+      const left = matching.left.map((s) => s.trim())
+      const right = matching.right.map((s) => s.trim())
+      if (left.length < 2 || !left.every((l, i) => l && right[i])) { toast.error('Lengkapi semua pasangan (minimal 2).'); return }
+      matchingPayload = { left, right }
     }
 
     const penyelesaianHtml = solRef.current?.getHtml() ?? ''
@@ -425,8 +509,11 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
       pertanyaan_html: pertanyaanHtml,
       panduan_essay: tipe === 'essay' ? panduan : '',
       kode_soal: kode.trim() || randomKode(),
+      time_limit_seconds: Number(waktu) > 0 ? Number(waktu) : null,
       penyelesaian: penyelesaianText || null,
       penyelesaian_html: penyelesaianHtml || null,
+      jawaban_benar: jawabanBenarPayload,
+      matching_pairs: matchingPayload,
       opsi: opsiPayload,
     }
 
@@ -461,13 +548,22 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
               <select value={tipe} onChange={(e) => setTipe(e.target.value as SoalTipe)}
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 <option value="pilihan_ganda">Pilihan Ganda</option>
-                <option value="essay">Essay</option>
+                <option value="pg_kompleks">Pilihan Ganda Kompleks</option>
+                <option value="menjodohkan">Menjodohkan</option>
+                <option value="isian_singkat">Isian Singkat</option>
+                <option value="essay">Esai</option>
               </select>
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Bobot</label>
               <input type="number" min={1} value={bobot} onChange={(e) => setBobot(Math.max(1, Number(e.target.value) || 1))}
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-16 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Waktu (detik)</label>
+              <input type="number" min={0} value={waktu} onChange={(e) => setWaktu(e.target.value)} placeholder="—"
+                title="Batas waktu per soal (detik). Kosong = tanpa batas."
+                className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold w-20 text-center outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
             </div>
             <div className="flex-1 min-w-[140px]">
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Kode Soal</label>
@@ -482,18 +578,35 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
               placeholder="Tulis pertanyaan. Klik Σ untuk persamaan matematika." />
           </div>
 
-          {tipe === 'pilihan_ganda' ? (
+          {isOptionType && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Pilihan Jawaban</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-slate-700">Pilihan Jawaban</label>
+                <span className="text-xs text-slate-400">{tipe === 'pg_kompleks' ? 'Boleh lebih dari satu' : 'Satu jawaban benar'}</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-2">💡 Tempel (paste) gambar langsung ke kolom opsi untuk opsi bergambar.</p>
               <div className="space-y-2">
                 {opsi.map((o, idx) => (
                   <div key={idx} className="flex items-center gap-2">
-                    <button type="button" onClick={() => setCorrect(idx)}
-                      className={`w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0 transition-colors ${o.is_benar ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-green-50'}`}>
+                    <button type="button" onClick={() => (tipe === 'pg_kompleks' ? toggleCorrect(idx) : setCorrect(idx))}
+                      title={tipe === 'pg_kompleks' ? 'Tandai jawaban benar' : 'Pilih kunci jawaban'}
+                      className={`w-8 h-8 ${tipe === 'pg_kompleks' ? 'rounded-lg' : 'rounded-full'} text-sm font-bold flex items-center justify-center shrink-0 transition-colors ${o.is_benar ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-green-50'}`}>
                       {o.is_benar ? <CheckCircle2 size={15} /> : o.huruf}
                     </button>
-                    <input value={o.teks} onChange={(e) => setOpsiTeks(idx, e.target.value)} placeholder={`Opsi ${o.huruf}`}
-                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    {o.image ? (
+                      <div className="flex-1 flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={o.image} alt={`Opsi ${o.huruf}`} className="max-h-16 rounded-md border border-slate-200" />
+                        <span className="text-xs text-slate-400">Opsi bergambar</span>
+                        <button type="button" onClick={() => removeOpsiImage(idx)}
+                          className="ml-auto text-xs font-semibold text-red-500 hover:text-red-600 inline-flex items-center gap-1">
+                          <X size={13} /> Hapus Gambar
+                        </button>
+                      </div>
+                    ) : (
+                      <input value={o.teks} onChange={(e) => setOpsiTeks(idx, e.target.value)} onPaste={(e) => pasteOpsiImage(idx, e)} placeholder={`Opsi ${o.huruf} (ketik atau tempel gambar)`}
+                        className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    )}
                     <button type="button" onClick={() => removeOpsi(idx)} disabled={opsi.length <= 2}
                       className="text-slate-300 hover:text-red-500 disabled:opacity-30 p-1"><Trash2 size={15} /></button>
                   </div>
@@ -505,7 +618,48 @@ function QuestionEditorModal({ level, tryoutId, soal, onClose, onSaved }: {
                 </button>
               )}
             </div>
-          ) : (
+          )}
+
+          {tipe === 'isian_singkat' && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Kunci Jawaban (Kata Kunci)</label>
+              <p className="text-xs text-slate-400 mb-2">Satu kata kunci per baris. Huruf besar/kecil & spasi diabaikan.</p>
+              <textarea value={jawabanBenar} onChange={(e) => setJawabanBenar(e.target.value)} rows={3}
+                placeholder={'Contoh:\nProklamasi\n17 Agustus 1945'}
+                className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 resize-none" />
+            </div>
+          )}
+
+          {tipe === 'menjodohkan' && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-slate-700">Pasangan Jawaban</label>
+                <span className="text-xs text-slate-400">Kiri ↔ Kanan</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-2">Kolom kanan diacak saat dikerjakan siswa.</p>
+              <div className="space-y-2">
+                {matching.left.map((leftVal, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="w-5 text-center text-xs font-bold text-slate-400 shrink-0">{idx + 1}</span>
+                    <input value={leftVal} onChange={(e) => updateMatch('left', idx, e.target.value)} placeholder={`Kiri ${idx + 1}`}
+                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400" />
+                    <span className="text-slate-300 shrink-0">↔</span>
+                    <input value={matching.right[idx] ?? ''} onChange={(e) => updateMatch('right', idx, e.target.value)} placeholder={`Kanan ${idx + 1}`}
+                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-400/20 focus:border-green-400" />
+                    <button type="button" onClick={() => removeMatchRow(idx)} disabled={matching.left.length <= 2}
+                      className="text-slate-300 hover:text-red-500 disabled:opacity-30 p-1"><Trash2 size={15} /></button>
+                  </div>
+                ))}
+              </div>
+              {matching.left.length < 8 && (
+                <button type="button" onClick={addMatchRow} className="mt-2 inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-medium">
+                  <Plus size={14} /> Tambah Pasangan
+                </button>
+              )}
+            </div>
+          )}
+
+          {tipe === 'essay' && (
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Panduan Jawaban (guru)</label>
               <textarea value={panduan} onChange={(e) => setPanduan(e.target.value)} rows={3}

@@ -178,6 +178,12 @@ export default function SiswaTryoutListPage() {
                     </span>
                   </div>
 
+                  {t.is_super_tryout && (
+                    <span className="self-start mb-2 inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 text-[11px] font-bold">
+                      ⭐ Tryout Resmi · Admin Soal
+                    </span>
+                  )}
+
                   <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 leading-snug mb-3">{t.nama_tryout}</h3>
 
                   <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">

@@ -9,6 +9,16 @@ import { auditLog } from '../lib/audit'
 
 const router = Router()
 
+// Fisher-Yates shuffle (returns a new array) — used to scramble matching options.
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 // In-memory upload for .docx batch import (mammoth reads the buffer directly).
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } })
 
@@ -21,18 +31,27 @@ const TryoutSchema = z.object({
   randomize_questions: z.boolean().optional(),
   randomize_options: z.boolean().optional(),
   is_super_tryout: z.boolean().optional(), // TRN-10: compiled by admin-soal
+  is_per_question_timer_enabled: z.boolean().optional(), // TRN-20
 })
 
 const OpsiSchema = z.object({
   huruf: z.string().length(1),
-  teks: z.string().min(1),
+  // TRN-22: allow empty plain text when the option is an image (image lives in teks_html).
+  teks: z.string().default(''),
   teks_html: z.string().optional(),
   is_benar: z.boolean().default(false),
 })
 
+const MatchingPairsSchema = z.object({
+  left: z.array(z.string()),
+  right: z.array(z.string()),
+})
+
+const SOAL_TIPES = ['pilihan_ganda', 'essay', 'pg_kompleks', 'menjodohkan', 'isian_singkat'] as const
+
 const SoalSchema = z.object({
   nomor_soal: z.number().int().positive().optional(),
-  tipe: z.enum(['pilihan_ganda', 'essay']),
+  tipe: z.enum(SOAL_TIPES),
   pertanyaan: z.string().min(1),
   pertanyaan_html: z.string().optional(),
   gambar_url: z.string().url().optional(),
@@ -47,11 +66,24 @@ const SoalSchema = z.object({
   penyelesaian_html: z.string().optional().nullable(),
   penyelesaian_gambar_url: z.string().optional().nullable(),
   penyelesaian_gambar_base64: z.string().optional().nullable(),
+  time_limit_seconds: z.number().int().positive().optional().nullable(), // TRN-20: per-question timer
+  // TRN-22: AKM types
+  jawaban_benar: z.string().optional().nullable(),        // isian_singkat keywords
+  matching_pairs: MatchingPairsSchema.optional().nullable(), // menjodohkan
   opsi: z.array(OpsiSchema).optional(),
 })
 
 // TRN-10: admins and question-bank admins see/manage every tryout.
 const ADMIN_ROLES = new Set(['admin', 'admin-soal'])
+
+// TRN-19: a guru may only mutate their OWN bank soal. Same-subject peers' bank
+// soal is read-only (crosscheck view). Admin/admin-soal may mutate anything.
+async function guruOwnsTryout(req: Request, tryoutId: string): Promise<boolean> {
+  if (req.headers['x-user-role'] !== 'guru') return true
+  const r = await pool.query('SELECT dibuat_oleh FROM tryouts WHERE id = $1', [tryoutId])
+  return !!r.rows[0] && r.rows[0].dibuat_oleh === (req.headers['x-user-id'] as string)
+}
+const NOT_OWNER = { success: false, error: 'Anda hanya dapat mengubah bank soal milik sendiri.', code: 'NOT_OWNER' }
 
 // GET /tryouts — list tryouts (guru sees own, admin sees all)
 router.get('/', async (req: Request, res: Response) => {
@@ -59,12 +91,21 @@ router.get('/', async (req: Request, res: Response) => {
     const userId = req.headers['x-user-id'] as string
     const role = req.headers['x-user-role'] as string
     const seesAll = ADMIN_ROLES.has(role)
-    const query = seesAll
-      ? 'SELECT * FROM tryouts ORDER BY created_at DESC'
-      : 'SELECT * FROM tryouts WHERE dibuat_oleh = $1 ORDER BY created_at DESC'
-    const result = seesAll
-      ? await pool.query(query)
-      : await pool.query(query, [userId])
+
+    let result
+    if (seesAll) {
+      result = await pool.query('SELECT * FROM tryouts ORDER BY created_at DESC')
+    } else {
+      // Guru: own bank soal + same-subject peers' bank soal (TRN-19 crosscheck).
+      const subjects = ((req.headers['x-user-subject'] as string | undefined) ?? '')
+        .split(',').map((s) => s.trim()).filter(Boolean)
+      result = subjects.length > 0
+        ? await pool.query(
+            'SELECT * FROM tryouts WHERE dibuat_oleh = $1 OR mata_pelajaran = ANY($2::text[]) ORDER BY created_at DESC',
+            [userId, subjects]
+          )
+        : await pool.query('SELECT * FROM tryouts WHERE dibuat_oleh = $1 ORDER BY created_at DESC', [userId])
+    }
 
     const ids = result.rows.map((r) => r.id)
     if (ids.length > 0) {
@@ -133,12 +174,12 @@ router.post('/', async (req: Request, res: Response) => {
     const result = await pool.query(
       `INSERT INTO tryouts
          (nama_tryout, mata_pelajaran, sub_mata_pelajaran, kelas, durasi_menit, dibuat_oleh,
-          randomize_questions, randomize_options, is_super_tryout, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+          randomize_questions, randomize_options, is_super_tryout, is_per_question_timer_enabled, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
       [
         body.nama_tryout, body.mata_pelajaran, body.sub_mata_pelajaran ?? null, body.kelas ?? null,
         body.durasi_menit, guruId, body.randomize_questions ?? true, body.randomize_options ?? true,
-        body.is_super_tryout ?? false, defaultStatus,
+        body.is_super_tryout ?? false, body.is_per_question_timer_enabled ?? false, defaultStatus,
       ]
     )
     auditLog(req, {
@@ -188,15 +229,25 @@ router.get('/:id', async (req: Request, res: Response) => {
     let soal = soalList.rows
     if (role === 'siswa') {
       // Hide answer keys, grading guides, and solutions while taking the exam.
-      soal = soal.map((s) => ({
-        ...s,
-        panduan_essay: null,
-        penyelesaian: null,
-        penyelesaian_html: null,
-        penyelesaian_gambar_url: null,
-        penyelesaian_gambar_base64: null,
-        opsi: (s.opsi as { is_benar: boolean }[]).map(({ is_benar: _ignore, ...rest }) => rest),
-      }))
+      soal = soal.map((s) => {
+        // Matching (TRN-22): keep the items but shuffle the right column so the
+        // correct left[i]↔right[i] correspondence is not revealed by position.
+        const mp = s.matching_pairs as { left: string[]; right: string[] } | null
+        const matching_pairs = mp && Array.isArray(mp.right)
+          ? { left: mp.left, right: shuffle(mp.right) }
+          : mp
+        return {
+          ...s,
+          panduan_essay: null,
+          penyelesaian: null,
+          penyelesaian_html: null,
+          penyelesaian_gambar_url: null,
+          penyelesaian_gambar_base64: null,
+          jawaban_benar: null, // hide isian_singkat keyword
+          matching_pairs,
+          opsi: (s.opsi as { is_benar: boolean }[]).map(({ is_benar: _ignore, ...rest }) => rest),
+        }
+      })
     }
 
     res.json({ success: true, data: { ...tryout.rows[0], soal } })
@@ -209,6 +260,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 // PUT /tryouts/:id
 router.put('/:id', async (req: Request, res: Response) => {
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     const body = TryoutSchema.partial().parse(req.body)
     const result = await pool.query(
       `UPDATE tryouts SET
@@ -219,11 +271,13 @@ router.put('/:id', async (req: Request, res: Response) => {
         durasi_menit        = COALESCE($5, durasi_menit),
         randomize_questions = COALESCE($6, randomize_questions),
         randomize_options   = COALESCE($7, randomize_options),
+        is_per_question_timer_enabled = COALESCE($8, is_per_question_timer_enabled),
         updated_at          = NOW()
-       WHERE id = $8 RETURNING *`,
+       WHERE id = $9 RETURNING *`,
       [
         body.nama_tryout, body.mata_pelajaran, body.sub_mata_pelajaran, body.kelas,
-        body.durasi_menit, body.randomize_questions ?? null, body.randomize_options ?? null, req.params.id,
+        body.durasi_menit, body.randomize_questions ?? null, body.randomize_options ?? null,
+        body.is_per_question_timer_enabled ?? null, req.params.id,
       ]
     )
     if (!result.rows[0]) return res.status(404).json({ success: false, error: 'Tryout tidak ditemukan' })
@@ -249,6 +303,7 @@ const GURU_ALLOWED = new Set(['draft', 'pending_approval'])
 
 async function handleStatusChange(req: Request, res: Response) {
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     const role = req.headers['x-user-role'] as string
     const body = StatusSchema.parse(req.body)
 
@@ -302,6 +357,7 @@ router.patch('/:id/publish', handleStatusChange)
 // DELETE /tryouts/:id
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     await pool.query('DELETE FROM tryouts WHERE id = $1', [req.params.id])
     res.json({ success: true, data: null, message: 'Tryout dihapus' })
   } catch (err) {
@@ -314,6 +370,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.post('/:id/soal', async (req: Request, res: Response) => {
   const client = await pool.connect()
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     const body = SoalSchema.parse(req.body)
 
     let nomor = body.nomor_soal
@@ -331,8 +388,9 @@ router.post('/:id/soal', async (req: Request, res: Response) => {
       `INSERT INTO soal
          (tryout_id, nomor_soal, tipe, pertanyaan, pertanyaan_html,
           gambar_url, gambar_base64, equation, equation_latex, panduan_essay, bobot,
-          kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64,
+          time_limit_seconds, jawaban_benar, matching_pairs)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
        RETURNING *`,
       [
         req.params.id, nomor, body.tipe, body.pertanyaan, body.pertanyaan_html ?? null,
@@ -341,6 +399,8 @@ router.post('/:id/soal', async (req: Request, res: Response) => {
         body.panduan_essay ?? null, body.bobot,
         body.kode_soal ?? null, body.penyelesaian ?? null, body.penyelesaian_html ?? null,
         body.penyelesaian_gambar_url ?? null, body.penyelesaian_gambar_base64 ?? null,
+        body.time_limit_seconds ?? null,
+        body.jawaban_benar ?? null, body.matching_pairs ? JSON.stringify(body.matching_pairs) : null,
       ]
     )
     const soal = soalResult.rows[0]
@@ -375,6 +435,7 @@ router.post('/:id/soal', async (req: Request, res: Response) => {
 // `?preview=true` parses and returns the extracted questions WITHOUT inserting.
 router.post('/:id/upload-docx', upload.single('file'), async (req: Request, res: Response) => {
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'File .docx tidak ditemukan.', code: 'NO_FILE' })
     }
@@ -470,6 +531,7 @@ const ImportSchema = z.object({ questionIds: z.array(z.string().uuid()).min(1) }
 router.post('/:id/import-questions', async (req: Request, res: Response) => {
   const client = await pool.connect()
   try {
+    if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     const { questionIds } = ImportSchema.parse(req.body)
     const targetId = req.params.id
 
@@ -514,13 +576,15 @@ router.post('/:id/import-questions', async (req: Request, res: Response) => {
         `INSERT INTO soal
            (tryout_id, nomor_soal, tipe, pertanyaan, pertanyaan_html,
             gambar_url, gambar_base64, equation, equation_latex, panduan_essay, bobot,
-            kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+            kode_soal, penyelesaian, penyelesaian_html, penyelesaian_gambar_url, penyelesaian_gambar_base64,
+            time_limit_seconds, jawaban_benar, matching_pairs)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
          RETURNING id`,
         [
           targetId, nomor, s.tipe, s.pertanyaan, s.pertanyaan_html,
           s.gambar_url, s.gambar_base64, s.equation, s.equation_latex, s.panduan_essay, s.bobot,
           s.kode_soal, s.penyelesaian, s.penyelesaian_html, s.penyelesaian_gambar_url, s.penyelesaian_gambar_base64,
+          s.time_limit_seconds, s.jawaban_benar, s.matching_pairs ? JSON.stringify(s.matching_pairs) : null,
         ]
       )
       const newId = ins.rows[0].id
