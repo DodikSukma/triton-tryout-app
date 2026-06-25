@@ -62,8 +62,30 @@ echo "  Starting api-gateway (port 4000)..."
   echo $! >> "$PIDS"
 )
 
+# ─── Web apps (TRN-24) — serve the prebuilt Next output ──────
+# `make build` compiles both apps; here we run their production servers.
+# The two apps are fully independent — no shared URLs.
+echo "  Starting frontend (port 3000)..."
+(
+  cd "$ROOT/frontend"
+  NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+  npm run start \
+    >> "$LOGS/frontend.log" 2>&1 &
+  echo $! >> "$PIDS"
+)
+
+echo "  Starting landingpage (port 3001)..."
+(
+  cd "$ROOT/landingpage"
+  npm run start \
+    >> "$LOGS/landingpage.log" 2>&1 &
+  echo $! >> "$PIDS"
+)
+
 sleep 2
 
 echo ""
 echo "✅ All services started. PIDs saved to .pids"
+echo "   • Core app:     http://localhost:3000"
+echo "   • Landing page: http://localhost:3001"
 echo "   Run 'make health' to verify or 'make logs' to tail logs."

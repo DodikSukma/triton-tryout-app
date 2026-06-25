@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import './globals.css'
@@ -8,14 +8,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-jakarta',
-})
-
-// Inter is scoped to the marketing landing page via the `font-inter` utility.
-// It is exposed as a CSS variable only — the app default stays Plus Jakarta Sans.
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
@@ -30,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
       <head>
         {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `

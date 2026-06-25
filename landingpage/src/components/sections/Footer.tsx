@@ -12,7 +12,7 @@ const PLATFORM_LINKS = [
   { label: 'Program', href: '#program' },
   { label: 'Prestasi', href: '#prestasi' },
   { label: 'Testimoni', href: '#testimoni' },
-  { label: 'Tryout Online', href: '/login' },
+  { label: 'Tryout Online', href: '#kontak' },
   { label: 'Kontak', href: '#kontak' },
 ]
 
@@ -20,7 +20,7 @@ const PROGRAM_LINKS = [
   { label: 'Program SD', href: '#program' },
   { label: 'Program SMP', href: '#program' },
   { label: 'Program SMA', href: '#program' },
-  { label: 'Tryout Online', href: '/login' },
+  { label: 'Tryout Online', href: '#kontak' },
   { label: 'Jadwal Belajar', href: '#kontak' },
   { label: 'Pendaftaran', href: '#kontak' },
 ]

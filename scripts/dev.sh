@@ -3,14 +3,17 @@
 # Each service opens in a new terminal tab on macOS, or runs sequentially with & on Linux.
 set -e
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -n "$SCRIPT_DIR" ]; then
+  ROOT="$(dirname "$SCRIPT_DIR")"
+else
+  ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+fi
 LOGS="$ROOT/logs"
 PIDS="$ROOT/.pids"
 
-mkdir -p "$LOGS"
 rm -f "$PIDS"
 
-source "$ROOT/.env"
+source <(tr -d '\r' < "$ROOT/.env")
 
 run_dev() {
   local NAME=$1
@@ -63,8 +66,32 @@ echo "  Starting api-gateway in dev mode (port 4000)..."
   echo $! >> "$PIDS"
 )
 
+# ─── Web apps (TRN-24) ───────────────────────────────────────
+# The core app (frontend, :3000) and the standalone marketing site
+# (landingpage, :3001) boot alongside the services so `make dev` brings up the
+# whole stack. The two apps are fully independent — no shared URLs.
+echo "  Starting frontend in dev mode (port 3000)..."
+(
+  cd "$ROOT/frontend"
+  NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+  npm run dev \
+    >> "$LOGS/frontend.log" 2>&1 &
+  echo $! >> "$PIDS"
+)
+
+echo "  Starting landingpage in dev mode (port 3001)..."
+(
+  cd "$ROOT/landingpage"
+  npm run dev \
+    >> "$LOGS/landingpage.log" 2>&1 &
+  echo $! >> "$PIDS"
+)
+
 sleep 3
 
 echo ""
 echo "✅ All services running in dev mode. PIDs saved to .pids"
+echo "   • Core app:     http://localhost:3000"
+echo "   • Landing page: http://localhost:3001"
+echo "   • API gateway:  http://localhost:4000"
 echo "   Run 'make logs' to tail logs or 'make health' to check status."
