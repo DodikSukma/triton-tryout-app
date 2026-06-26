@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panduan & Dokumentasi Agen Kustom — Triton Denpasar</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            triton: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .agent-card:hover {
+      background-color: #f8fafc;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-700 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header
+    class="h-[72px] sticky top-0 z-40 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-4">
+      <img src="../logo.png" alt="Triton Denpasar" class="h-9 object-contain bg-white rounded p-1" />
+      <div class="h-6 w-px bg-slate-700"></div>
+      <div>
+        <h1 class="text-white font-extrabold text-sm md:text-base tracking-tight">Dokumentasi Agen Kustom (Skills)</h1>
+        <p class="text-[10px] text-slate-400 font-medium">Panduan Otomasi &amp; Konfigurasi Kecerdasan Buatan Proyek</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="../index.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-700 shadow-sm mr-2">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Kembali ke Beranda
+      </a>
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-triton-500/10 text-triton-400 border border-triton-500/20 shadow-sm">
+        Agents V1 (Bahasa Indonesia)
+      </span>
+      <span class="text-xs font-mono text-slate-400 hidden sm:inline">Build v1.0.0</span>
+    </div>
+  </header>
+
+  <div class="flex-1 flex flex-col lg:flex-row">
+    <!-- Left Navigation Sidebar -->
+    <aside
+      class="w-full lg:w-80 bg-slate-950 border-r border-slate-900 flex flex-col shrink-0 lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:overflow-y-auto lg:self-start">
+      <!-- Reading Progress Tracker -->
+      <div class="p-5 border-b border-slate-900 bg-slate-900/30">
+        <div class="flex items-center justify-between text-xs text-slate-400 font-medium mb-1.5">
+          <span>Progress Membaca Panduan:</span>
+          <span id="progress-text" class="font-bold text-blue-400">0%</span>
+        </div>
+        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-blue-500 rounded-full transition-all duration-300 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-5 space-y-4 overflow-y-auto max-h-[calc(100vh-12rem)]" id="sidebar-nav">
+        <div class="space-y-4">
+          <!-- Group 1: Ikhtisar -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">1. Pengenalan &amp; Arsitektur</div>
+            <button onclick="switchTab('tab-overview')" id="btn-tab-overview"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-blue-400 bg-slate-900/80 border border-slate-800">
+              <span class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Ikhtisar Agen &amp; Struktur
+              </span>
+              <span class="nav-check text-[10px] text-blue-500">○</span>
+            </button>
+          </div>
+
+          <!-- Group 2: Daftar Agen -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">2. Daftar Agen (Skills)</div>
+            <button onclick="switchTab('tab-skills-directory')" id="btn-tab-skills-directory"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Katalog 6 Skills Proyek
+              </span>
+              <span class="nav-check text-[10px] text-slate-600 font-medium">○</span>
+            </button>
+          </div>
+
+          <!-- Group 3: Panduan Prompting -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">3. Interaksi &amp; Prompting</div>
+            <button onclick="switchTab('tab-prompting-guide')" id="btn-tab-prompting-guide"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                Cara Memicu Agen
+              </span>
+              <span class="nav-check text-[10px] text-slate-600 font-medium">○</span>
+            </button>
+          </div>
+
+          <!-- Group 4: Kolaborasi Sinkronisasi -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">4. Sinkronisasi Tim</div>
+            <button onclick="switchTab('tab-team-sync')" id="btn-tab-team-sync"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17m0 0V5" />
+                </svg>
+                Alur Sinkronisasi Git &amp; DB
+              </span>
+              <span class="nav-check text-[10px] text-slate-600 font-medium">○</span>
+            </button>
+          </div>
+
+          <!-- Group 5: Pengembangan Agen Baru -->
+          <div class="space-y-1">
+            <div class="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-4 py-1">5. Developer Guide</div>
+            <button onclick="switchTab('tab-developer-guide')" id="btn-tab-developer-guide"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-semibold transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+              <span class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                Membuat Agen Kustom Baru
+              </span>
+              <span class="nav-check text-[10px] text-slate-600 font-medium">○</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+
+      <!-- ==================== TAB: OVERVIEW ==================== -->
+      <section id="tab-overview" class="space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ikhtisar Custom Agents &amp; Workspace Customization</h2>
+          <p class="text-slate-600 leading-relaxed text-sm">
+            Triton CBT App dilengkapi dengan sistem <strong>Workspace Customization</strong> bawaan dari platform pengembang IDE AI (Antigravity/Gemini dan Claude Code). Fitur ini memungkinkan pengembang menulis instruksi kerja, batasan desain, serta kriteria keamanan kustom yang akan dibaca secara otomatis oleh AI sebelum menulis kode.
+          </p>
+          <p class="text-slate-600 leading-relaxed text-sm">
+            Dengan cara ini, Anda tidak perlu melatih ulang kecerdasan buatan atau menyalin panduan teknis yang sama secara terus-menerus setiap kali membuka ruang obrolan (chat room) yang baru. Konfigurasi dideklarasikan secara tertulis di dalam repositori dan langsung dimuat sebagai memori kerja AI.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Card: Struktur Folder -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-blue-100 text-blue-600">📂</span>
+              Struktur Folder Kustomisasi Proyek
+            </h3>
+            <p class="text-xs text-slate-500">Semua agen khusus didefinisikan secara rapi di dalam proyek Anda:</p>
+            <pre class="bg-slate-950 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto">
+tritonapp/
+└── .agents/              <-- Folder root kustomisasi
+    └── skills/           <-- Direktori agen khusus
+        ├── triton-runner/
+        │   └── SKILL.md  <-- Pemicu & petunjuk
+        ├── triton-db-manager/
+        │   └── SKILL.md
+        └── ... (agen lainnya)
+            </pre>
+          </div>
+
+          <!-- Card: Cara Kerja Deteksi Otomatis -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span class="p-1.5 rounded-lg bg-amber-100 text-amber-600">🧠</span>
+              Bagaimana AI Mendeteksi Agen Anda?
+            </h3>
+            <ul class="space-y-2 text-xs text-slate-600 list-disc pl-5 leading-relaxed">
+              <li>Setiap kali Anda membuka chat room baru, IDE memindai folder <code>.agents/skills/</code>.</li>
+              <li>Pencocokan dilakukan berdasarkan nama dan deskripsi YAML Frontmatter di bagian atas berkas <code>SKILL.md</code>.</li>
+              <li>Jika maksud perintah Anda cocok dengan deskripsi agen, AI akan memanggil fungsi <code>view_file</code> untuk membaca seluruh petunjuk sebelum melakukan eksekusi kode.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: SKILLS DIRECTORY ==================== -->
+      <section id="tab-skills-directory" class="hidden space-y-6">
+        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Katalog 6 Agen Kustom (Skills) Proyek</h2>
+        <p class="text-sm text-slate-500">Berikut adalah daftar lengkap agen kustom yang telah dikonfigurasi untuk menangani tugas pengembangan Triton CBT App:</p>
+
+        <div class="space-y-4">
+          <!-- Skill 1 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_task_runner</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-runner/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Pelaksana Tugas TRN</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Secara otomatis membaca berkas spesifikasi di <code>task/task-trn-XX.md</code>, memodifikasi kode sesuai kebutuhan tugas, dan mengeksekusi kompilasi ulang dashboard progres tugas.</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+
+          <!-- Skill 2 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_db_manager</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-db-manager/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Sinkronisasi &amp; Migrasi Database</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Memastikan perubahan database didistribusikan secara seragam di <code>db_sd</code>, <code>db_smp</code>, dan <code>db_sma</code>. Menjalankan <code>make db-init</code> serta <code>make seed</code> pasca perubahan skema, dan mencatat riwayat perubahan.</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+
+          <!-- Skill 3 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_ui_stylist</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-ui-stylist/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Konsistensi UI/UX &amp; Kontras</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Menjaga visual gradien warna tiap jenjang siswa (SD merah, SMP navy, SMA slate), memaksakan penggunaan font Inter, melarang emoji sistem untuk ikon, serta memastikan teks memiliki rasio kontras tinggi.</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+
+          <!-- Skill 4 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_proctoring_guard</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-proctoring-guard/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Keamanan &amp; Anti-Curang CBT</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Mengaudit dan menjaga kestabilan kode di halaman ujian agar listener pendeteksi keluar fullscreen, blur jendela peramban, blokir klik kanan, dan clipboard block (copy-paste) tidak terhapus secara tidak sengaja.</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+
+          <!-- Skill 5 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_gateway_router</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-gateway-router/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Rute API &amp; Firewall Gateway</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Mengamankan integrasi rute gateway microservices pada <code>api-gateway</code>, memastikan path rewrite rute jenjang tepat, dan menguji filter hak akses (firewall role siswa).</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+
+          <!-- Skill 6 -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 agent-card transition-colors duration-200">
+            <div class="space-y-1 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold font-mono text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">triton_code_verifier</span>
+                <span class="text-[10px] text-slate-400">Path: .agents/skills/triton-code-verifier/SKILL.md</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-950">Agen Penguji Kelayakan Kode (Test &amp; Health)</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Menjalankan kompilasi TypeScript untuk seluruh kode (<code>make build</code>), menguji kelayakan respons server (<code>make health</code>), memindai berkas log kesalahan, dan melakukan probing routing endpoints.</p>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-center whitespace-nowrap self-start md:self-auto">Aktif</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: PROMPTING GUIDE ==================== -->
+      <section id="tab-prompting-guide" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Panduan Memicu Agen Kustom</h2>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Untuk memicu agen agar memuat file skill yang diinginkan, gunakan perintah berbahasa Inggris agar proses pencocokan intensi (intent matching) berjalan optimal. Di bawah ini adalah templat perintah siap pakai:
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Prompt Item 1 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              Menjalankan Eksekusi Task TRN
+            </h4>
+            <div class="flex items-center justify-between gap-4 bg-slate-950 p-4 rounded-xl">
+              <code class="text-xs font-mono text-emerald-400 select-all">Please run task-trn-31 using the triton_task_runner skill.</code>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              <strong>Efek</strong>: AI akan membuka berkas spesifikasi tugas <code>task-trn-31.md</code>, menuliskan perubahan kode, dan memicu pembangunan ulang dashboard di akhir proses.
+            </p>
+          </div>
+
+          <!-- Prompt Item 2 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              Menyinkronkan Database &amp; Skema
+            </h4>
+            <div class="flex items-center justify-between gap-4 bg-slate-950 p-4 rounded-xl">
+              <code class="text-xs font-mono text-emerald-400 select-all">Use the triton_db_manager skill to sync our database.</code>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              <strong>Efek</strong>: AI memindai perubahan berkas skema database, menjalankan inisialisasi tabel, mengupdate data seed, dan mencatat ringkasan ke migrasi log.
+            </p>
+          </div>
+
+          <!-- Prompt Item 3 -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              Memverifikasi Kelayakan Kode
+            </h4>
+            <div class="flex items-center justify-between gap-4 bg-slate-950 p-4 rounded-xl">
+              <code class="text-xs font-mono text-emerald-400 select-all">Please trigger the triton_code_verifier to test if everything is healthy.</code>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              <strong>Efek</strong>: AI mengompilasi TypeScript, mengecek kesehatan port layanan lokal, dan memverifikasi ketiadaan log error pada repositori.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: TEAM SYNC ==================== -->
+      <section id="tab-team-sync" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Alur Sinkronisasi Kolaboratif Database Pengembang</h2>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Untuk mencegah kondisi database pengembang tidak sinkron (out-of-sync) akibat perubahan skema lokal yang lupa di-seed ulang oleh rekan tim lain saat melakukan <code>git pull</code>, kita menggunakan alur log terpusat:
+          </p>
+        </div>
+
+        <!-- Flow Visual -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-sm font-bold text-slate-900">Skema Alur Kolaborasi &amp; Git Pull</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center text-xs">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">Langkah 1: Push &amp; Log</div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">Agen AI mengupdate skema, menjalankan <code>make db-init</code> lokal, dan menuliskan catatan perubahan skema di berkas <code>docs/db-migrations-log.md</code>.</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">Langkah 2: Pull &amp; Deteksi</div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">Rekan tim melakukan <code>git pull</code>. Agen AI milik rekan Anda mendeteksi modifikasi pada berkas log atau berkas skema SQL.</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">Langkah 3: Auto-Sync</div>
+              <p class="text-slate-500 text-[11px] leading-relaxed">Agen teman Anda menawarkan secara proaktif untuk mengeksekusi sinkronisasi database lokal rekan Anda agar data ter-update.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: DEVELOPER GUIDE ==================== -->
+      <section id="tab-developer-guide" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Membuat Agen Kustom (Skills) Baru</h2>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            Jika di masa mendatang Anda ingin menambahkan keahlian baru untuk proyek (misalnya agen kustom integrasi Supabase, agen optimasi SEO, dll), ikuti langkah-langkah di bawah ini:
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-sm leading-relaxed text-slate-600">
+          <div class="space-y-2">
+            <h4 class="font-bold text-slate-900">1. Buat Direktori Skill</h4>
+            <p class="text-xs">Di dalam root repositori, buat folder baru di dalam folder <code>.agents/skills/</code>:</p>
+            <pre class="bg-slate-950 p-3 rounded-lg text-xs font-mono text-emerald-400">mkdir -p .agents/skills/triton-supabase-agent</pre>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="font-bold text-slate-900">2. Buat Berkas SKILL.md</h4>
+            <p class="text-xs">Buat file <code>SKILL.md</code> di dalam folder baru tersebut dengan menyisipkan YAML Frontmatter di baris teratas:</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-xs font-mono text-emerald-400 overflow-x-auto">
+---
+name: "triton_supabase_helper"
+description: "Handles Supabase connection pool adjustments and local pg_cron scheduler syncer"
+---
+
+# Supabase Sync Agent Instructions
+Write the step-by-step instructions for the AI agent in English here...
+            </pre>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="font-bold text-slate-900">3. Validasi Keaktifan</h4>
+            <p class="text-xs">Segera setelah berkas dibuat, buka obrolan (chat) baru. Agen AI secara otomatis akan mendeteksi agen tersebut dan memuat instruksinya ke dalam memori kerja sistem saat dipicu.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="mt-auto py-6 border-t border-slate-200 bg-white text-center text-xs text-slate-500">
+    <p>&copy; 2026 Triton Denpasar. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Tab switching logic
+    const tabs = ['tab-overview', 'tab-skills-directory', 'tab-prompting-guide', 'tab-team-sync', 'tab-developer-guide'];
+    const buttonPrefix = 'btn-';
+    
+    // Tracking progress (saved in localStorage)
+    let visitedTabs = JSON.parse(localStorage.getItem('visited_agent_tabs') || '["tab-overview"]');
+
+    function switchTab(targetTabId) {
+      // Hide all tabs
+      tabs.forEach(tabId => {
+        const el = document.getElementById(tabId);
+        if (el) el.classList.add('hidden');
+        
+        const btn = document.getElementById(buttonPrefix + tabId);
+        if (btn) {
+          btn.classList.remove('text-white', 'bg-slate-900/80', 'border-slate-800');
+          btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-900', 'border-transparent');
+        }
+      });
+
+      // Show target tab
+      const targetEl = document.getElementById(targetTabId);
+      if (targetEl) targetEl.classList.remove('hidden');
+
+      const targetBtn = document.getElementById(buttonPrefix + targetTabId);
+      if (targetBtn) {
+        targetBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-900', 'border-transparent');
+        targetBtn.classList.add('text-white', 'bg-slate-900/80', 'border-slate-800');
+      }
+
+      // Add to visited if not exists
+      if (!visitedTabs.includes(targetTabId)) {
+        visitedTabs.push(targetTabId);
+        localStorage.setItem('visited_agent_tabs', JSON.stringify(visitedTabs));
+      }
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const total = tabs.length;
+      const visitedCount = visitedTabs.length;
+      const percentage = Math.round((visitedCount / total) * 100);
+      
+      const progressText = document.getElementById('progress-text');
+      if (progressText) progressText.textContent = percentage + '%';
+
+      const progressBar = document.getElementById('progress-bar');
+      if (progressBar) progressBar.style.width = percentage + '%';
+
+      // Update check icons in sidebar
+      tabs.forEach(tabId => {
+        const btn = document.getElementById(buttonPrefix + tabId);
+        if (btn) {
+          const checkEl = btn.querySelector('.nav-check');
+          if (checkEl) {
+            if (visitedTabs.includes(tabId)) {
+              checkEl.textContent = '●';
+              checkEl.classList.remove('text-slate-600');
+              checkEl.classList.add('text-emerald-500');
+            } else {
+              checkEl.textContent = '○';
+              checkEl.classList.remove('text-emerald-500');
+              checkEl.classList.add('text-slate-600');
+            }
+          }
+        }
+      });
+    }
+
+    // Init page load setup
+    window.addEventListener('DOMContentLoaded', () => {
+      hljs.highlightAll();
+      updateProgress();
+    });
+  </script>
+</body>
+
+</html>
