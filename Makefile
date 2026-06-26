@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 .PHONY: install build start run dev stop stop-frontend stop-landingpage restart \
         health logs logs-error logs-clean \
+        docker-start docker-stop \
         seed db-create db-init db-clear db-clean clean frontend landingpage
 
 # ─────────────────────────────────────────────────────────────
@@ -100,9 +101,24 @@ logs-clean:
 	@echo "✅ Logs cleared"
 
 # ─────────────────────────────────────────────────────────────
+#  DOCKER CONTAINERS
+# ─────────────────────────────────────────────────────────────
+docker-start:
+	@echo "🐳 Starting Docker containers (postgres, redis)..."
+	@docker compose up -d postgres redis
+	@echo "⏳ Waiting for database services to initialize..."
+	@sleep 3
+	@echo "✅ Docker containers started"
+
+docker-stop:
+	@echo "🛑 Stopping Docker containers..."
+	@docker compose down
+	@echo "✅ Docker containers stopped"
+
+# ─────────────────────────────────────────────────────────────
 #  DATABASE
 # ─────────────────────────────────────────────────────────────
-db-create:
+db-create: docker-start
 	@echo "🗄️  Creating databases (idempotent)..."
 	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_auth'"  | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_auth;"
 	@docker exec triton-postgres psql -U triton_user -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='db_user'"  | grep -q 1 || docker exec triton-postgres psql -U triton_user -d postgres -c "CREATE DATABASE db_user;"
@@ -175,6 +191,8 @@ help:
 	@echo "  make logs-auth     Tail auth-service logs only"
 	@echo "  make logs-gateway  Tail api-gateway logs only"
 	@echo "  make logs-clean    Delete all log files"
+	@echo "  make docker-start  Start Docker containers (postgres, redis)"
+	@echo "  make docker-stop   Stop Docker containers"
 	@echo "  make db-create     Create databases (db_auth/user/sd/smp/sma) in Docker"
 	@echo "  make db-init       Apply SQL schemas to all databases"
 	@echo "  make db-clear      Clear tryout records only (db_sd/smp/sma)"
