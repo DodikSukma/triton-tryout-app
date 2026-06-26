@@ -13,7 +13,16 @@ PIDS="$ROOT/.pids"
 
 rm -f "$PIDS"
 
-source <(tr -d '\r' < "$ROOT/.env")
+# Load .env WITHOUT process substitution: macOS /bin/bash is 3.2, where
+# `source <(...)` silently reads nothing → every var ends up empty. Read line by
+# line instead, stripping Windows CRs, skipping comments/blanks. (set -a exports.)
+set -a
+while IFS= read -r _envline || [ -n "$_envline" ]; do
+  _envline="${_envline%$'\r'}"                 # strip trailing CR (Windows .env)
+  case "$_envline" in ''|'#'*) continue ;; esac
+  export "$_envline"
+done < "$ROOT/.env"
+set +a
 
 run_dev() {
   local NAME=$1
