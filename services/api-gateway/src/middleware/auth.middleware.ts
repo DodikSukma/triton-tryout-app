@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL ?? 'http://localhost:4001'
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:4001'
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {

@@ -44,14 +44,14 @@ app.use(
   session({
     store,
     name: 'triton.sid',
-    secret: process.env.SESSION_SECRET ?? 'fallback-secret',
+    secret: process.env.SESSION_SECRET || 'fallback-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: Number(process.env.SESSION_MAX_AGE_MS ?? 28800000),
+      maxAge: Number(process.env.SESSION_MAX_AGE_MS) || 28800000,
     },
   })
 )
