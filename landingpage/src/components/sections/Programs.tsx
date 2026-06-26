@@ -12,7 +12,7 @@ const PROGRAMS: ProgramData[] = [
     grades: 'Kelas 1–6',
     description: 'Membangun fondasi akademik yang kuat dengan metode belajar menyenangkan dan interaktif.',
     subjects: ['Matematika', 'IPA', 'Bahasa Indonesia', 'Bahasa Inggris'],
-    image: 'https://placehold.co/300x300/E8EAFF/0309FF/png?text=Program+SD',
+    image: '/program-sd.png',
     accent: 'sky',
   },
   {
@@ -21,7 +21,7 @@ const PROGRAMS: ProgramData[] = [
     grades: 'Kelas 7–9',
     description: 'Persiapan intensif menghadapi ujian sekolah dan seleksi masuk SMA favorit.',
     subjects: ['Matematika', 'IPA', 'IPS', 'Bahasa Inggris', 'Bahasa Indonesia'],
-    image: 'https://placehold.co/300x300/E8EAFF/050A30/png?text=Program+SMP',
+    image: '/program-smp.png',
     accent: 'navy',
     popular: true,
   },
@@ -31,7 +31,7 @@ const PROGRAMS: ProgramData[] = [
     grades: 'Kelas 10–12',
     description: 'Bimbingan intensif persiapan UTBK/SNBT dan ujian sekolah untuk masuk perguruan tinggi impian.',
     subjects: ['Matematika', 'Fisika', 'Kimia', 'Biologi', 'Ekonomi', 'Bahasa Inggris', 'Geografi'],
-    image: 'https://placehold.co/300x300/FFE7E7/FF0303/png?text=Program+SMA',
+    image: '/program-sma.png',
     accent: 'redorange',
   },
 ]

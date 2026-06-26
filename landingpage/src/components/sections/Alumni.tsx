@@ -21,19 +21,19 @@ const ALUMNI: AlumniData[] = [
     name: 'I Kadek Arya Wibawa',
     acceptedTo: 'Teknik Informatika — ITB 2023',
     quote: 'Metode belajar Triton bikin saya paham konsep, bukan sekadar menghafal. Itu yang mengantarkan saya lolos.',
-    image: 'https://placehold.co/150x150/E8EAFF/0309FF/png?text=Alumni',
+    image: '/alumni-1.png',
   },
   {
     name: 'Ni Putu Gita Cahyani',
     acceptedTo: 'Kedokteran — UNUD 2024',
     quote: 'Tryout rutin dan bimbingan intensif menjelang UTBK benar-benar mengubah hasil belajar saya.',
-    image: 'https://placehold.co/150x150/E8EAFF/0309FF/png?text=Alumni',
+    image: '/alumni-2.png',
   },
   {
     name: 'I Gede Bagus Mahendra',
     acceptedTo: 'Manajemen — UGM 2023',
     quote: 'Pengajarnya selalu memotivasi. Triton bukan cuma bimbel, tapi rumah kedua untuk belajar.',
-    image: 'https://placehold.co/150x150/E8EAFF/0309FF/png?text=Alumni',
+    image: '/alumni-3.png',
   },
 ]
 

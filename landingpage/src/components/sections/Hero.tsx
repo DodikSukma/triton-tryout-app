@@ -130,7 +130,7 @@ export default function Hero() {
 
             <div className="relative">
               <Image
-                src="https://placehold.co/600x400/0309FF/ffffff/png?text=Triton+Hero"
+                src="/hero.png"
                 alt="Ilustrasi siswa Triton Denpasar yang berprestasi"
                 width={600}
                 height={400}

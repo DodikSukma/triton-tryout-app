@@ -6,12 +6,12 @@ import SectionLabel from '@/components/ui/SectionLabel'
 
 // Varied heights produce the masonry rhythm (CSS multi-column layout).
 const GALLERY = [
-  { src: 'https://placehold.co/600x450/E8EAFF/0309FF/png?text=Gallery+1', caption: 'Kelas Modern', h: 450 },
-  { src: 'https://placehold.co/600x650/E8EAFF/0309FF/png?text=Gallery+2', caption: 'Meja Belajar Siswa', h: 650 },
-  { src: 'https://placehold.co/600x450/E8EAFF/0309FF/png?text=Gallery+3', caption: 'Guru Mengajar Matematika', h: 450 },
-  { src: 'https://placehold.co/600x550/E8EAFF/0309FF/png?text=Gallery+4', caption: 'Perayaan Lulus UTBK', h: 550 },
-  { src: 'https://placehold.co/600x430/E8EAFF/0309FF/png?text=Gallery+5', caption: 'Area Belajar Kolaboratif', h: 430 },
-  { src: 'https://placehold.co/600x520/E8EAFF/0309FF/png?text=Gallery+6', caption: 'Konsultasi Akademik', h: 520 },
+  { src: '/gallery-1.png', caption: 'Kelas Modern', h: 450 },
+  { src: '/gallery-2.png', caption: 'Meja Belajar Siswa', h: 650 },
+  { src: '/gallery-3.png', caption: 'Guru Mengajar Matematika', h: 450 },
+  { src: '/gallery-4.png', caption: 'Perayaan Lulus UTBK', h: 550 },
+  { src: '/gallery-5.png', caption: 'Area Belajar Kolaboratif', h: 430 },
+  { src: '/gallery-6.png', caption: 'Konsultasi Akademik', h: 520 },
 ]
 
 export default function Gallery() {
