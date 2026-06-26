@@ -1,6 +1,7 @@
 SHELL := /bin/bash
-.PHONY: install build start run dev stop restart health logs logs-error logs-clean \
-        seed db-create db-init db-clear db-clean clean frontend
+.PHONY: install build start run dev stop stop-frontend stop-landingpage restart \
+        health logs logs-error logs-clean \
+        seed db-create db-init db-clear db-clean clean frontend landingpage
 
 # ─────────────────────────────────────────────────────────────
 #  INSTALL
@@ -14,6 +15,8 @@ install:
 	done
 	@echo "   → frontend"
 	@(cd frontend && npm install --silent)
+	@echo "   → landingpage"
+	@(cd landingpage && npm install --silent)
 	@echo "   → scripts"
 	@(cd scripts && npm install --silent)
 	@echo "✅ Done"
@@ -28,6 +31,10 @@ build:
 		echo "   → $$dir"; \
 		(cd $$dir && npm run build --silent); \
 	done
+	@echo "   → frontend"
+	@(cd frontend && npm run build)
+	@echo "   → landingpage"
+	@(cd landingpage && npm run build)
 	@echo "✅ Build complete"
 
 # ─────────────────────────────────────────────────────────────
@@ -43,10 +50,21 @@ dev:
 	@bash scripts/dev.sh
 
 # ─────────────────────────────────────────────────────────────
-#  STOP
+#  STOP  (all services + web apps)
 # ─────────────────────────────────────────────────────────────
 stop:
 	@bash scripts/stop.sh
+
+# Stop a single web app by its port (handy for restarting just one).
+stop-frontend:
+	@echo "🛑 Stopping frontend (port 3000)..."
+	@pid=$$(lsof -ti :3000 2>/dev/null); \
+	if [ -n "$$pid" ]; then kill $$pid 2>/dev/null && echo "  Killed PID $$pid"; else echo "  Frontend not running."; fi
+
+stop-landingpage:
+	@echo "🛑 Stopping landing page (port 3001)..."
+	@pid=$$(lsof -ti :3001 2>/dev/null); \
+	if [ -n "$$pid" ]; then kill $$pid 2>/dev/null && echo "  Killed PID $$pid"; else echo "  Landing page not running."; fi
 
 # ─────────────────────────────────────────────────────────────
 #  RESTART
@@ -112,11 +130,18 @@ db-clean:
 
 
 # ─────────────────────────────────────────────────────────────
-#  FRONTEND
+#  FRONTEND  (core app — dashboards + exam engine, port 3000)
 # ─────────────────────────────────────────────────────────────
 frontend:
-	@echo "🖥️  Starting frontend dev server..."
+	@echo "🖥️  Starting frontend dev server (port 3000)..."
 	@(cd frontend && npm run dev)
+
+# ─────────────────────────────────────────────────────────────
+#  LANDINGPAGE  (public marketing site, port 3001)
+# ─────────────────────────────────────────────────────────────
+landingpage:
+	@echo "🌐 Starting landing page dev server (port 3001)..."
+	@(cd landingpage && npm run dev)
 
 # ─────────────────────────────────────────────────────────────
 #  CLEAN
@@ -140,9 +165,11 @@ help:
 	@echo "  make build         Compile TypeScript for all services"
 	@echo "  make start / run   Build + start all services (production)"
 	@echo "  make dev           Start all services with hot-reload (dev)"
-	@echo "  make stop          Stop all running services"
+	@echo "  make stop          Stop all running services + web apps"
+	@echo "  make stop-frontend Stop only the frontend (port 3000)"
+	@echo "  make stop-landingpage  Stop only the landing page (port 3001)"
 	@echo "  make restart       Stop then start again"
-	@echo "  make health        Check all service health endpoints"
+	@echo "  make health        Check all services + frontend/landing page status"
 	@echo "  make logs          Tail all log files"
 	@echo "  make logs-error    Tail error logs only"
 	@echo "  make logs-auth     Tail auth-service logs only"
@@ -153,7 +180,8 @@ help:
 	@echo "  make db-clear      Clear tryout records only (db_sd/smp/sma)"
 	@echo "  make db-clean      Wipe all data except users/profiles (local only)"
 	@echo "  make seed          Seed users + per-level tryouts (SD/SMP/SMA)"
-	@echo "  make frontend      Start Next.js dev server"
+	@echo "  make frontend      Start core app dev server (port 3000)"
+	@echo "  make landingpage   Start marketing landing page dev server (port 3001)"
 	@echo "  make clean         Remove all dist/ build artifacts"
 	@echo "  ─────────────────────────────────────────────────────────────"
 	@echo ""

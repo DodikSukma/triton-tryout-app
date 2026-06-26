@@ -23,15 +23,31 @@ check "api-gateway  (4000)" "http://localhost:4000/health"
 
 echo "────────────────────────────────────"
 
+# Web apps (Next.js — no /health endpoint, so check the port is listening)
+check_port() {
+  local NAME=$1
+  local PORT=$2
+  if nc -z localhost "$PORT" 2>/dev/null; then
+    echo "  ✅  $NAME"
+  else
+    echo "  ❌  $NAME  →  port $PORT not responding"
+  fi
+}
+
+check_port "frontend    (3000)" 3000
+check_port "landingpage (3001)" 3001
+
+echo "────────────────────────────────────"
+
 # Redis check
-if redis-cli ping > /dev/null 2>&1; then
+if nc -z localhost 6379 2>/dev/null; then
   echo "  ✅  Redis (6379)"
 else
   echo "  ❌  Redis (6379) not responding"
 fi
 
 # PostgreSQL check
-if pg_isready -h localhost -p 5432 -q 2>/dev/null; then
+if nc -z localhost 5432 2>/dev/null; then
   echo "  ✅  PostgreSQL (5432)"
 else
   echo "  ❌  PostgreSQL (5432) not responding"

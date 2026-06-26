@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    // Placeholder imagery for the marketing landing page (Bimbel Triton).
-    // placehold.co serves SVG by default, so SVG handling must be allowed.
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co' },
-    ],
-  },
+  // TRN-24: the public marketing site now lives in the standalone `landingpage`
+  // app. This app serves only the authenticated dashboards + exam engine.
+  reactStrictMode: true,
 }
 
 export default nextConfig

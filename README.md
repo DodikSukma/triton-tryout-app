@@ -3,6 +3,8 @@
 Platform tryout ujian online (Computer Based Test) terintegrasi yang dirancang khusus untuk **Triton Denpasar**.  
 Dibangun dengan arsitektur **Microservices** — Next.js 14 di frontend client, Node/Express.js di backend API, PostgreSQL untuk penyimpanan data terisolasi, dan Redis untuk session caching.
 
+> **Arsitektur web terpisah (TRN-24):** Situs marketing publik (**landing page**, port `3001`) dipisah dari aplikasi inti (**frontend** dashboard & exam engine, port `3000`) agar halaman publik ringan, cepat (SSG), dan SEO-friendly tanpa membawa logika auth aplikasi. Keduanya **berdiri sendiri** — landing page tidak menautkan ke login, dan frontend mengarahkan root (`/`) langsung ke halaman login.
+
 ---
 
 ## 📋 Daftar Isi
@@ -18,8 +20,8 @@ Dibangun dengan arsitektur **Microservices** — Next.js 14 di frontend client, 
    - [5. Menginisialisasi Skema Tabel (Migration)](#5-menginisialisasi-skema-tabel-migration)
    - [6. Install Dependencies](#6-install-dependencies)
    - [7. Seed Data Awal](#7-seed-data-awal)
-   - [8. Jalankan Backend Services](#8-jalankan-backend-services)
-   - [9. Jalankan Frontend Client](#9-jalankan-frontend-client)
+   - [8. Jalankan Semua Layanan](#8-jalankan-semua-layanan)
+   - [9. Menjalankan Web App Terpisah (Opsional)](#9-menjalankan-web-app-terpisah)
    - [10. Verifikasi Kesehatan Layanan](#10-verifikasi-kesehatan-layanan)
 5. [Daftar Akun Default](#-akun-default)
 6. [Referensi Perintah Make](#-referensi-perintah-make)
@@ -53,6 +55,11 @@ tritonapp/
 │   ├── src/components/         # Reusable UI components (shadcn/tailwind)
 │   └── public/                 # Aset statis & logo.png (logo triton)
 │
+├── landingpage/                # Situs marketing publik — Next.js 14 SSG (port 3001)
+│   ├── src/app/                # Landing page statis (SEO-optimized), berdiri sendiri
+│   ├── src/components/         # Section & UI marketing (Hero, Pricing, FAQ, dll.)
+│   └── public/                 # Aset statis & logo.png
+│
 ├── services/
 │   ├── api-gateway/            # Reverse proxy port 4000 & middleware session
 │   ├── auth-service/           # Manajemen login & express-session (port 4001)
@@ -80,7 +87,8 @@ tritonapp/
 
 | Service | Port | Database | Keterangan |
 |---------|------|----------|------------|
-| Frontend Client | **3000** | — | Server pengembang Next.js |
+| Frontend Client | **3000** | — | Aplikasi inti Next.js (dashboard & exam engine) |
+| Landing Page | **3001** | — | Situs marketing publik (SSG), terpisah dari aplikasi |
 | API Gateway | **4000** | — | Titik masuk utama HTTP request browser |
 | Auth Service | **4001** | `db_auth` | Autentikasi user & cache session Redis |
 | User Service | **4002** | `db_user` | Profil & logs pengguna |
@@ -138,19 +146,39 @@ Isi database dengan kelas, mapel master, dan beberapa akun dummy siap pakai:
 make seed
 ```
 
-### 8. Jalankan Backend Services
-Jalankan seluruh Express.js microservices (termasuk API Gateway) di latar belakang:
+### 8. Jalankan Semua Layanan
+Perintah `make dev` menjalankan **seluruh backend microservices + frontend (3000) + landing page (3001)** sekaligus di latar belakang dengan hot-reload:
 ```bash
 make dev
 ```
-Log keluaran services dapat dipantau di direktori `logs/` menggunakan perintah `make logs` atau `make logs-error`.
+Setelah berjalan, akses di browser:
 
-### 9. Jalankan Frontend Client
-Jalankan server Next.js lokal:
+| Layanan | URL |
+|---------|-----|
+| 🖥️ Frontend (dashboard & exam) | **http://localhost:3000** |
+| 🌐 Landing page (marketing) | **http://localhost:3001** |
+| 🔌 API Gateway | **http://localhost:4000** |
+
+Log keluaran dapat dipantau di direktori `logs/` menggunakan perintah `make logs` atau `make logs-error` (termasuk `logs/frontend.log` & `logs/landingpage.log`).
+
+### 9. Menjalankan Web App Terpisah
+> **Opsional.** Lewati langkah ini jika sudah memakai `make dev` di atas.
+
+Bila Anda hanya ingin menjalankan satu web app di **foreground** (misalnya untuk melihat output hot-reload langsung di terminal), jalankan tanpa `make dev`:
 ```bash
-make frontend
+make frontend     # hanya aplikasi inti  → http://localhost:3000
+make landingpage  # hanya landing page   → http://localhost:3001
 ```
-Aplikasi frontend akan tersedia di alamat browser: **http://localhost:3000**
+
+ℹ️ **Tentang Landing Page (berdiri sendiri):**
+- Bersifat **statis (SSG)** & **fully standalone** — murni situs marketing, **tidak ada tautan ke halaman login** aplikasi.
+- Bisa dibuka tanpa backend/auth menyala (loading instan).
+
+ℹ️ **Tentang Frontend (alur login):**
+- Mengakses root aplikasi `http://localhost:3000` otomatis diarahkan **langsung ke halaman login** (`/login`).
+- Pengguna yang sudah login otomatis diarahkan ke dashboard sesuai role.
+
+> ⚠️ Jangan menjalankan `make frontend`/`make landingpage` bersamaan dengan `make dev` — port 3000/3001 akan bentrok.
 
 ### 10. Verifikasi Kesehatan Layanan
 Jalankan status checking untuk memastikan seluruh koneksi database dan microservices berjalan baik:
@@ -179,12 +207,15 @@ Semua perintah dijalankan di root direktori proyek `tritonapp/`:
 
 | Perintah | Fungsi / Kegunaan |
 |----------|-------------------|
-| `make install` | Menginstal dependencies npm untuk semua modul &amp; frontend |
-| `make dev` | Menjalankan seluruh backend microservices dalam mode hot-reload |
-| `make frontend` | Menjalankan server pengembang Next.js |
-| `make stop` | Menghentikan paksa semua proses backend microservices |
+| `make install` | Menginstal dependencies npm untuk semua modul, frontend &amp; landing page |
+| `make dev` | Menjalankan backend microservices + frontend (3000) + landing page (3001), hot-reload |
+| `make frontend` | Menjalankan aplikasi inti Next.js saja (port 3000) |
+| `make landingpage` | Menjalankan situs marketing/landing page saja (port 3001) |
+| `make stop` | Menghentikan paksa semua proses backend microservices &amp; web app (port 4000–4007, 3000, 3001) |
+| `make stop-frontend` | Menghentikan hanya frontend (port 3000) |
+| `make stop-landingpage` | Menghentikan hanya landing page (port 3001) |
 | `make restart` | Menghentikan lalu menjalankan kembali semua backend |
-| `make health` | Memeriksa status kesehatan koneksi semua layanan |
+| `make health` | Memeriksa status semua layanan + frontend (3000) &amp; landing page (3001) |
 | `make logs` | Memantau seluruh file log secara real-time |
 | `make logs-error` | Memantau log error saja |
 | `make logs-clean` | Menghapus semua file log di direktori logs/ |
@@ -217,8 +248,8 @@ Atau jalankan `make stop` untuk membersihkan seluruh sisa background node proces
 
 ## 🛑 Cara Stop Semua Service
 
-1. Hentikan frontend: Tekan `Ctrl + C` pada terminal Next.js.
-2. Hentikan backend microservices: Jalankan `make stop`.
+1. Hentikan semua backend microservices **dan** web app (frontend + landing page): Jalankan `make stop`. Perintah ini menyapu seluruh port (4000–4007, 3000, 3001).
+2. Jika menjalankan `make frontend`/`make landingpage` di foreground: tekan `Ctrl + C` pada terminal tersebut.
 3. Hentikan container Docker: Jalankan `docker compose down`.
 
 ---
