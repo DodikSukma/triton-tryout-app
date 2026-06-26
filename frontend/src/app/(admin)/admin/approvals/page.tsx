@@ -195,7 +195,8 @@ export default function AdminApprovalPage() {
                     {expandedId === t.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     Lihat Soal ({t.soal_count ?? 0})
                   </button>
-                  {t.status !== 'published' && (
+                  {/* Publish only AFTER approval — enforces the review workflow. */}
+                  {t.status === 'approved' && (
                     <button onClick={() => setStatus(t, 'published')} disabled={busy}
                       className="inline-flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-xl px-4 py-2 transition-colors disabled:opacity-50">
                       <Send size={14} /> Publikasikan

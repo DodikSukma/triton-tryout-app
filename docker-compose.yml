@@ -72,6 +72,8 @@ services:
       POSTGRES_USER: triton_user
       POSTGRES_PASSWORD: triton_secret_2024
       POSTGRES_DB: db_sd
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       USER_SERVICE_URL: http://user-service:4002
       PORT: 4005
     ports:
@@ -90,6 +92,8 @@ services:
       POSTGRES_USER: triton_user
       POSTGRES_PASSWORD: triton_secret_2024
       POSTGRES_DB: db_smp
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       USER_SERVICE_URL: http://user-service:4002
       PORT: 4006
     ports:
@@ -108,6 +112,8 @@ services:
       POSTGRES_USER: triton_user
       POSTGRES_PASSWORD: triton_secret_2024
       POSTGRES_DB: db_sma
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       USER_SERVICE_URL: http://user-service:4002
       PORT: 4007
     ports:

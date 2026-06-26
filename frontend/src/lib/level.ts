@@ -59,7 +59,7 @@ export function subscribeLevel(fn: (level: Level) => void): () => void {
 // Route prefixes owned by the level services. Requests to these paths are
 // rewritten to include the active level prefix; everything else (e.g. /auth,
 // /users) is left untouched.
-const LEVEL_ROUTES = ['/tryouts', '/soal', '/sesi', '/hasil', '/riwayat']
+const LEVEL_ROUTES = ['/tryouts', '/soal', '/sesi', '/hasil', '/riwayat', '/leaderboard']
 
 /** True when `url` targets a level service route that must be prefixed. */
 export function isLevelRoute(url: string): boolean {

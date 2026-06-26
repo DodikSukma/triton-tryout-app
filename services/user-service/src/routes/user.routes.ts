@@ -34,6 +34,25 @@ const AvatarSchema = z.object({
 // Approx max size: 2MB raw → ~2.8MB base64
 const MAX_AVATAR_BASE64_LEN = 2_800_000
 
+// POST /users/profile/batch — TRN-27 (internal, service-to-service).
+// Returns minimal, public-safe profile fields for a set of user ids. Used by the
+// level services to enrich the leaderboard with names/classes/avatars.
+router.post('/profile/batch', async (req: Request, res: Response) => {
+  try {
+    const raw = (req.body?.ids ?? []) as unknown[]
+    const ids = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : []
+    if (ids.length === 0) return res.json({ success: true, data: [] })
+    const result = await pool.query(
+      'SELECT user_id, nama_lengkap, kelas, avatar_url FROM profiles WHERE user_id = ANY($1)',
+      [ids]
+    )
+    res.json({ success: true, data: result.rows })
+  } catch (err) {
+    logger.error('[users/profile/batch]', { error: err })
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+})
+
 // GET /users — admin only — joins profile + auth data
 router.get('/', async (req: Request, res: Response) => {
   try {

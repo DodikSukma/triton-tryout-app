@@ -7,7 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   LogOut, LayoutDashboard, Users, BookOpen, GraduationCap,
   User, BarChart2, FileText, X, Database, ClipboardCheck, ScrollText,
-  Sun, Moon,
+  Sun, Moon, Trophy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
@@ -44,6 +44,7 @@ const siswaNav: NavItem[] = [
   { type: 'link', label: 'Dashboard',       href: '/siswa/dashboard', icon: <LayoutDashboard size={18} /> },
   { type: 'link', label: 'Tryout Tersedia', href: '/siswa/tryout',    icon: <FileText size={18} /> },
   { type: 'link', label: 'Riwayat & Nilai', href: '/siswa/riwayat',   icon: <BarChart2 size={18} /> },
+  { type: 'link', label: 'Papan Peringkat', href: '/siswa/leaderboard', icon: <Trophy size={18} /> },
   { type: 'divider' },
   { type: 'link', label: 'Profil Saya',     href: '/siswa/profil',    icon: <User size={18} /> },
 ]

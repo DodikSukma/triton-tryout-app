@@ -6,6 +6,11 @@ import pool from '../db/pool'
 import logger from '../lib/logger'
 import { parseDocxHtml } from '../lib/docxParser'
 import { auditLog } from '../lib/audit'
+import { cacheGet, cacheSet, cacheDel, tryoutDetailKey } from '../lib/cache'
+
+// TRN-26: static exam data is cached for 2 hours (an exam window) and explicitly
+// invalidated whenever the tryout or its questions change.
+const TRYOUT_CACHE_TTL = 2 * 60 * 60
 
 const router = Router()
 
@@ -203,30 +208,46 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const role = req.headers['x-user-role'] as string
-    const tryout = await pool.query('SELECT * FROM tryouts WHERE id = $1', [req.params.id])
-    if (!tryout.rows[0]) return res.status(404).json({ success: false, error: 'Tryout tidak ditemukan' })
+    const cacheKey = tryoutDetailKey(req.params.id)
 
-    const soalList = await pool.query(
-      `SELECT s.*,
-              COALESCE(
-                json_agg(json_build_object(
-                  'id', o.id,
-                  'huruf', o.huruf,
-                  'teks', o.teks,
-                  'teks_html', o.teks_html,
-                  'is_benar', o.is_benar
-                ) ORDER BY o.huruf) FILTER (WHERE o.id IS NOT NULL),
-                '[]'::json
-              ) AS opsi
-         FROM soal s
-         LEFT JOIN opsi_jawaban o ON o.soal_id = s.id
-        WHERE s.tryout_id = $1
-        GROUP BY s.id
-        ORDER BY s.nomor_soal`,
-      [req.params.id]
-    )
+    // The cached payload is the RAW data (tryout row + soal with answer keys).
+    // Answer-key stripping for siswa happens per-request below, so one cache
+    // entry safely serves every role.
+    let raw: { tryout: Record<string, unknown>; soal: any[] } | null = null
 
-    let soal = soalList.rows
+    const cached = await cacheGet(cacheKey)
+    if (cached) {
+      raw = JSON.parse(cached) as { tryout: Record<string, unknown>; soal: any[] }
+    } else {
+      // Cache miss → read from PostgreSQL, then populate the cache.
+      const tryout = await pool.query('SELECT * FROM tryouts WHERE id = $1', [req.params.id])
+      if (!tryout.rows[0]) return res.status(404).json({ success: false, error: 'Tryout tidak ditemukan' })
+
+      const soalList = await pool.query(
+        `SELECT s.*,
+                COALESCE(
+                  json_agg(json_build_object(
+                    'id', o.id,
+                    'huruf', o.huruf,
+                    'teks', o.teks,
+                    'teks_html', o.teks_html,
+                    'is_benar', o.is_benar
+                  ) ORDER BY o.huruf) FILTER (WHERE o.id IS NOT NULL),
+                  '[]'::json
+                ) AS opsi
+           FROM soal s
+           LEFT JOIN opsi_jawaban o ON o.soal_id = s.id
+          WHERE s.tryout_id = $1
+          GROUP BY s.id
+          ORDER BY s.nomor_soal`,
+        [req.params.id]
+      )
+
+      raw = { tryout: tryout.rows[0], soal: soalList.rows }
+      await cacheSet(cacheKey, JSON.stringify(raw), TRYOUT_CACHE_TTL)
+    }
+
+    let soal = raw.soal
     if (role === 'siswa') {
       // Hide answer keys, grading guides, and solutions while taking the exam.
       soal = soal.map((s) => {
@@ -250,7 +271,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       })
     }
 
-    res.json({ success: true, data: { ...tryout.rows[0], soal } })
+    res.json({ success: true, data: { ...raw.tryout, soal } })
   } catch (err) {
     logger.error('[tryouts/:id]', { error: err })
     res.status(500).json({ success: false, error: 'Internal server error' })
@@ -281,6 +302,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       ]
     )
     if (!result.rows[0]) return res.status(404).json({ success: false, error: 'Tryout tidak ditemukan' })
+    await cacheDel(tryoutDetailKey(req.params.id)) // TRN-26: settings changed
     res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -338,6 +360,7 @@ async function handleStatusChange(req: Request, res: Response) {
       : null
     if (entry) auditLog(req, { action: entry[0], target_id: t.id, description: entry[1] })
 
+    await cacheDel(tryoutDetailKey(req.params.id)) // TRN-26: status/visibility changed
     res.json({ success: true, data: result.rows[0] })
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -359,6 +382,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
   try {
     if (!(await guruOwnsTryout(req, req.params.id))) return res.status(403).json(NOT_OWNER)
     await pool.query('DELETE FROM tryouts WHERE id = $1', [req.params.id])
+    await cacheDel(tryoutDetailKey(req.params.id)) // TRN-26: tryout removed
     res.json({ success: true, data: null, message: 'Tryout dihapus' })
   } catch (err) {
     logger.error('[tryouts/:id DELETE]', { error: err })
@@ -417,6 +441,7 @@ router.post('/:id/soal', async (req: Request, res: Response) => {
     }
 
     await client.query('COMMIT')
+    await cacheDel(tryoutDetailKey(req.params.id)) // TRN-26: question added
     res.status(201).json({ success: true, data: { ...soal, opsi: opsiList } })
   } catch (err) {
     await client.query('ROLLBACK')
@@ -516,6 +541,7 @@ router.post('/:id/upload-docx', upload.single('file'), async (req: Request, res:
       client.release()
     }
 
+    await cacheDel(tryoutDetailKey(req.params.id)) // TRN-26: questions imported
     res.json({ success: true, message: `${parsed.length} questions uploaded successfully.`, data: null })
   } catch (err) {
     logger.error('[tryouts/:id/upload-docx]', { error: err })
@@ -604,6 +630,7 @@ router.post('/:id/import-questions', async (req: Request, res: Response) => {
       description: `Imported ${imported} question(s) from Bank Soal into a Super Tryout`,
     })
 
+    await cacheDel(tryoutDetailKey(targetId)) // TRN-26: questions imported
     res.json({ success: true, data: { imported }, message: `${imported} soal diimpor.` })
   } catch (err) {
     await client.query('ROLLBACK').catch(() => null)

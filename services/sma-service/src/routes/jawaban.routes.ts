@@ -12,6 +12,95 @@ const router = Router()
 // read directly from this service's own database.
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL ?? 'http://localhost:4002'
 
+// ─── TRN-27: National Leaderboard ───────────────────────────────────────────
+interface LeaderboardProfile {
+  user_id: string
+  nama_lengkap: string | null
+  kelas: string | null
+  avatar_url: string | null
+}
+interface RankRow { siswa_id: string; nilai: number; completion_seconds: number; rank: number }
+
+// Batch-fetch public-safe profile fields from the user-service to enrich the board.
+async function fetchProfiles(ids: string[]): Promise<Map<string, LeaderboardProfile>> {
+  if (ids.length === 0) return new Map()
+  try {
+    const r = await fetch(`${USER_SERVICE_URL}/users/profile/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    })
+    const j = (await r.json()) as { success: boolean; data?: LeaderboardProfile[] }
+    const rows = j.success && j.data ? j.data : []
+    return new Map(rows.map((p) => [p.user_id, p]))
+  } catch (err) {
+    logger.error('[leaderboard/profiles]', { error: (err as Error)?.message })
+    return new Map()
+  }
+}
+
+// GET /leaderboard?tryout_id={id}&limit=100 — ranking for one tryout.
+// Highest score first; ties broken by faster completion time (then earliest finish).
+// Returns the top N plus the requesting student's own absolute rank.
+router.get('/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const tryoutId = (req.query.tryout_id as string | undefined)?.trim()
+    if (!tryoutId) {
+      return res.status(400).json({ success: false, error: 'Parameter tryout_id wajib diisi.' })
+    }
+    const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500)
+    const meId = req.headers['x-user-id'] as string | undefined
+
+    const ranked = await pool.query(
+      `SELECT h.siswa_id,
+              h.nilai::float AS nilai,
+              GREATEST(EXTRACT(EPOCH FROM (s.selesai_at - s.mulai_at)), 0)::int AS completion_seconds,
+              ROW_NUMBER() OVER (
+                ORDER BY h.nilai DESC,
+                         EXTRACT(EPOCH FROM (s.selesai_at - s.mulai_at)) ASC,
+                         h.dihitung_at ASC
+              )::int AS rank
+         FROM hasil h
+         JOIN sesi_tryout s ON s.id = h.sesi_id
+        WHERE h.tryout_id = $1 AND s.selesai_at IS NOT NULL`,
+      [tryoutId]
+    )
+
+    const all = ranked.rows as RankRow[]
+    const total = all.length
+    const top = all.slice(0, limit)
+    const meRow = meId ? (all.find((r) => r.siswa_id === meId) ?? null) : null
+
+    const ids = [...new Set([...top.map((r) => r.siswa_id), ...(meRow ? [meRow.siswa_id] : [])])]
+    const profiles = await fetchProfiles(ids)
+
+    const decorate = (r: RankRow) => {
+      const p = profiles.get(r.siswa_id)
+      return {
+        rank: r.rank,
+        siswa_id: r.siswa_id,
+        nama: p?.nama_lengkap ?? 'Siswa',
+        kelas: p?.kelas ?? null,
+        avatar_url: p?.avatar_url ?? null,
+        nilai: r.nilai,
+        completion_seconds: r.completion_seconds,
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total_peserta: total,
+        entries: top.map(decorate),
+        me: meRow ? decorate(meRow) : null,
+      },
+    })
+  } catch (err) {
+    logger.error('[leaderboard]', { error: err })
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+})
+
 const StartSesiSchema = z.object({ tryout_id: z.string().uuid() })
 
 const JawabSchema = z.object({

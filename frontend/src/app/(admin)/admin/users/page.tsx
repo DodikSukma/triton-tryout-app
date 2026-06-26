@@ -8,7 +8,7 @@ import {
   CheckCircle2, XCircle, Loader2, X, Mail, Lock, Eye, EyeOff, AlertTriangle,
 } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
-import { ApiResponse, EducationLevel, Role } from '@/types'
+import { ApiResponse, EducationLevel, MasterKelas, Role } from '@/types'
 import { formatTanggal } from '@/lib/utils'
 
 const EDU_LEVELS: EducationLevel[] = ['SD', 'SMP', 'SMA']
@@ -30,11 +30,6 @@ interface UserRow {
     bio: string | null
   } | null
 }
-
-const KELAS_OPTIONS = [
-  'Kelas 10 IPA', 'Kelas 10 IPS', 'Kelas 11 IPA', 'Kelas 11 IPS',
-  'Kelas 12 IPA', 'Kelas 12 IPS', 'Kelas 10 (SMK)', 'Kelas 11 (SMK)', 'Kelas 12 (SMK)',
-]
 
 const MAPEL_OPTIONS = [
   'Matematika', 'Fisika', 'Kimia', 'Biologi', 'Bahasa Indonesia',
@@ -332,6 +327,24 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
   )
   const [saving, setSaving] = useState(false)
 
+  // Master kelas list (from /admin/master), so the Kelas dropdown matches the
+  // real master data and cascades from the selected jenjang.
+  const [masterKelas, setMasterKelas] = useState<MasterKelas[]>([])
+  useEffect(() => {
+    if (isGuru) return // guru has no kelas
+    api.get<ApiResponse<MasterKelas[]>>('/master/kelas')
+      .then((res) => setMasterKelas(res.data.data ?? []))
+      .catch(() => toast.error('Gagal memuat data kelas master.'))
+  }, [isGuru])
+
+  // Kelas options for the chosen jenjang. Preserve an existing value (edit mode)
+  // even if it predates the current master data.
+  const kelasList = useMemo(() => {
+    const names = masterKelas.filter((k) => k.level === eduLevel).map((k) => k.nama)
+    if (kelas && !names.includes(kelas)) return [kelas, ...names]
+    return names
+  }, [masterKelas, eduLevel, kelas])
+
   function toggleMapel(m: string) {
     setMapel((prev) => prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m])
   }
@@ -429,21 +442,41 @@ function UserDialog({ mode, role, initialUser, onClose, onSaved }: {
             </Field>
           )}
 
-          {!isGuru && (
-            <Field label="Kelas">
-              <select value={kelas} onChange={(e) => setKelas(e.target.value)} className={inputCls}>
-                <option value="">Pilih kelas...</option>
-                {KELAS_OPTIONS.map((k) => <option key={k} value={k}>{k}</option>)}
-              </select>
-            </Field>
-          )}
-
-          <Field label="Jenjang Pendidikan" hint={isGuru ? 'Opsional untuk guru.' : 'Menentukan tryout jenjang mana yang dapat diakses siswa.'}>
-            <select value={eduLevel} onChange={(e) => setEduLevel(e.target.value)} className={inputCls}>
+          <Field
+            label="Jenjang Pendidikan"
+            hint={isGuru ? 'Opsional untuk guru.' : 'Pilih jenjang dulu — pilihan kelas akan menyesuaikan.'}
+          >
+            <select
+              value={eduLevel}
+              onChange={(e) => { setEduLevel(e.target.value); setKelas('') }}
+              className={inputCls}
+            >
               <option value="">Pilih jenjang...</option>
               {EDU_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
           </Field>
+
+          {!isGuru && (
+            <Field
+              label="Kelas"
+              hint={!eduLevel ? 'Pilih jenjang pendidikan terlebih dahulu.' : 'Sesuai data master kelas jenjang ini.'}
+            >
+              <select
+                value={kelas}
+                onChange={(e) => setKelas(e.target.value)}
+                disabled={!eduLevel}
+                className={`${inputCls} disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed`}
+              >
+                <option value="">{eduLevel ? 'Pilih kelas...' : 'Pilih jenjang dulu'}</option>
+                {kelasList.map((k) => <option key={k} value={k}>{k}</option>)}
+              </select>
+              {eduLevel && kelasList.length === 0 && (
+                <p className="text-xs text-amber-500 mt-1.5">
+                  Belum ada kelas master untuk jenjang {eduLevel}. Tambahkan dulu di menu Master Data.
+                </p>
+              )}
+            </Field>
+          )}
 
           {isGuru && (
             <Field label="Mata Pelajaran">

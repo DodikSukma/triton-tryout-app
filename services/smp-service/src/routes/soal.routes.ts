@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import pool from '../db/pool'
 import logger from '../lib/logger'
+import { cacheDel, tryoutDetailKey } from '../lib/cache' // TRN-26
 
 const router = Router()
 
@@ -161,6 +162,7 @@ router.put('/:soalId', async (req: Request, res: Response) => {
     }
 
     await client.query('COMMIT')
+    await cacheDel(tryoutDetailKey(result.rows[0].tryout_id)) // TRN-26: question edited
 
     const enriched = await pool.query(
       `SELECT s.*,
@@ -198,7 +200,10 @@ router.put('/:soalId', async (req: Request, res: Response) => {
 router.delete('/:soalId', async (req: Request, res: Response) => {
   try {
     if (!(await guruOwnsSoal(req, req.params.soalId))) return res.status(403).json(NOT_OWNER)
+    // Capture the owning tryout before deletion so we can invalidate its cache.
+    const owner = await pool.query('SELECT tryout_id FROM soal WHERE id = $1', [req.params.soalId])
     await pool.query('DELETE FROM soal WHERE id = $1', [req.params.soalId])
+    if (owner.rows[0]) await cacheDel(tryoutDetailKey(owner.rows[0].tryout_id)) // TRN-26: question removed
     res.json({ success: true, data: null, message: 'Soal dihapus' })
   } catch (err) {
     logger.error('[soal/:soalId DELETE]', { error: err })
