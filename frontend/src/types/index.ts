@@ -147,7 +147,8 @@ export interface SesiTryout {
   tryout_id: string
   mulai_at: string
   selesai_at?: string | null
-  status: 'berlangsung' | 'selesai' | 'timeout'
+  // 'violated' = auto-submitted after exceeding the proctor warning limit (TRN-25)
+  status: 'berlangsung' | 'selesai' | 'timeout' | 'violated'
   question_order?: string[] | null
   option_order?: Record<string, string[]> | null
 }

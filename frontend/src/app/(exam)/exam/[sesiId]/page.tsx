@@ -15,6 +15,7 @@ import { ApiResponse, SesiTryout, Soal, SOAL_TIPE_LABELS, TryoutDetail } from '@
 import RenderHTML from '@/components/shared/RenderHTML'
 import TritonLoader from '@/components/common/TritonLoader'
 import { useLevelTheme } from '@/components/shared/LevelTheme'
+import useAntiCheat from '@/hooks/useAntiCheat'
 
 interface SesiWithAnswers {
   sesi: SesiTryout
@@ -124,11 +125,49 @@ export default function ExamPage() {
   const [warnings, setWarnings] = useState(0)
   const [fsExited, setFsExited] = useState(false)
   const [disqualified, setDisqualified] = useState(false)
+  const [kicked, setKicked] = useState(false) // TRN-25: session invalidated by a login elsewhere
   const examStartedRef = useRef(false)
   const disqualifiedRef = useRef(false)
   const warningsRef = useRef(0)
   const lastViolationRef = useRef(0)
+  const lastBlockToastRef = useRef(0)
   const doSubmitRef = useRef<(opts?: { disqualified?: boolean }) => void>(() => {})
+
+  // ─── TRN-25: client-side browser restrictions (right-click, clipboard,
+  // keyboard shortcuts incl. Ctrl+C/V/P + F12 DevTools). Active once the exam
+  // begins. The tab-switch / fullscreen strike system stays below.
+  const onBlockedAction = useCallback(() => {
+    const now = Date.now()
+    if (now - lastBlockToastRef.current < 1500) return // throttle toast spam
+    lastBlockToastRef.current = now
+    toast.warning('Aksi ini dinonaktifkan selama ujian berlangsung.')
+  }, [])
+  useAntiCheat({ enabled: examStarted && !disqualified, onBlocked: onBlockedAction })
+
+  // ─── TRN-25: concurrent-login guard ──────────────────────
+  // Poll the session while the exam runs. If the account logs in elsewhere, the
+  // auth-service destroys this session → /auth/me returns 401 → boot the student.
+  // A raw fetch is used so the global 401 interceptor doesn't redirect first.
+  useEffect(() => {
+    if (!examStarted || disqualified) return
+    const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+    let active = true
+    async function verifySession() {
+      try {
+        const r = await fetch(`${API}/auth/me`, { credentials: 'include', cache: 'no-store' })
+        if (active && r.status === 401) setKicked(true)
+      } catch { /* transient network blip — ignore, offline backup keeps answers */ }
+    }
+    const id = setInterval(verifySession, 20000)
+    return () => { active = false; clearInterval(id) }
+  }, [examStarted, disqualified])
+
+  // Once kicked, auto-return to login after a short grace period.
+  useEffect(() => {
+    if (!kicked) return
+    const t = setTimeout(() => router.replace('/login'), 6000)
+    return () => clearTimeout(t)
+  }, [kicked, router])
 
   // ─── Essay equation helper (TRN-09 Feature 3) ────────────
   const essayRef = useRef<HTMLTextAreaElement>(null)
@@ -590,23 +629,16 @@ export default function ExamPage() {
         setFsExited(false)
       }
     }
-    const prevent = (e: Event) => e.preventDefault()
 
+    // Tab-switch / focus-loss / fullscreen-exit detection (the strike system).
+    // Right-click, clipboard and keyboard-shortcut blocking live in useAntiCheat.
     document.addEventListener('visibilitychange', onVisibility)
     window.addEventListener('blur', onBlur)
     document.addEventListener('fullscreenchange', onFsChange)
-    document.addEventListener('contextmenu', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('paste', prevent)
     return () => {
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('blur', onBlur)
       document.removeEventListener('fullscreenchange', onFsChange)
-      document.removeEventListener('contextmenu', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('paste', prevent)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -1153,6 +1185,26 @@ export default function ExamPage() {
               className="mt-6 bg-white text-slate-900 font-bold rounded-xl px-6 py-3 hover:bg-slate-100 transition-colors"
             >
               Lihat Hasil
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Anti-cheat: concurrent-login boot (TRN-25) ─── */}
+      {kicked && (
+        <div className="fixed inset-0 z-[320] bg-slate-900/[0.97] flex items-center justify-center p-6 text-center">
+          <div className="max-w-md">
+            <ShieldAlert size={56} className="mx-auto text-amber-400 mb-4" />
+            <h2 className="text-2xl font-black text-white">Sesi Berakhir</h2>
+            <p className="text-slate-300 mt-2 text-sm leading-relaxed">
+              Akun Anda baru saja digunakan untuk masuk di perangkat lain. Demi keamanan, sesi ujian
+              di perangkat ini dihentikan. Jawaban yang sudah Anda isi tersimpan otomatis.
+            </p>
+            <button
+              onClick={() => router.replace('/login')}
+              className="mt-6 bg-white text-slate-900 font-bold rounded-xl px-6 py-3 hover:bg-slate-100 transition-colors"
+            >
+              Masuk Ulang
             </button>
           </div>
         </div>

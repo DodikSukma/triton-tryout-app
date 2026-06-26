@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Calendar, CheckCircle2, Hourglass, TrendingUp, FileText } from 'lucide-react'
+import { Calendar, CheckCircle2, Hourglass, TrendingUp, FileText, ShieldAlert } from 'lucide-react'
 import api, { getErrorMessage } from '@/lib/api'
 import TritonLoader from '@/components/common/TritonLoader'
 import { ApiResponse } from '@/types'
@@ -14,7 +14,7 @@ interface RiwayatRow {
   tryout_id: string
   mulai_at: string
   selesai_at: string | null
-  status: 'berlangsung' | 'selesai' | 'timeout'
+  status: 'berlangsung' | 'selesai' | 'timeout' | 'violated'
   nilai: number | string | null
   total_benar: number | null
   total_soal: number | null
@@ -144,6 +144,11 @@ export default function RiwayatPage() {
                         {r.status === 'timeout' && (
                           <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 rounded-full px-2.5 py-1 text-xs font-semibold">
                             Timeout
+                          </span>
+                        )}
+                        {r.status === 'violated' && (
+                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 rounded-full px-2.5 py-1 text-xs font-semibold">
+                            <ShieldAlert size={11} /> Pelanggaran
                           </span>
                         )}
                       </td>
